@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Escape 20 Chambers</string>
+    <string name="title_activity_main">Escape 20 Chambers</string>
+    <string name="package_name">com.ahmadessam.escapechambers</string>
+    <string name="custom_url_scheme">com.ahmadessam.escapechambers</string>
+</resources>

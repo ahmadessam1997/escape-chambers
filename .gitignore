@@ -1,0 +1,29 @@
+# --- secrets: never commit ---
+# This repo is PUBLIC. Losing the keystore means the app can never be
+# updated again; leaking it is worse.
+*.jks
+*.keystore
+keystore.properties
+# Google Cloud downloads a service-account private key with a name like
+# <project>-3ca7be6e54e8.json straight into the browser download folder.
+# On a sibling project that landed in the repo root, one `git add -A` away
+# from being pushed to a public repo with access to Play financial data.
+*-[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f].json
+google-services.json
+client_secret*.json
+
+# --- build output ---
+node_modules/
+android/app/build/
+android/build/
+android/.gradle/
+android/capacitor-cordova-android-plugins/build/
+android/local.properties
+*.aab
+*.apk
+
+# --- editor / OS ---
+.DS_Store
+Thumbs.db
+.idea/
+*.iml

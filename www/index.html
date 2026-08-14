@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Escape: 20 Chambers</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;overflow:hidden;font-family:-apple-system,'Segoe UI',Roboto,sans-serif;
+    user-select:none;-webkit-user-select:none;touch-action:manipulation;
+    background:var(--bg);color:var(--ink);transition:background .5s;}
+
+  /* ------- 5 themes ------- */
+  body{--ink:#e9dcc0;}
+  body.t0{--bg:#0d1322;--wall:#1d2a40;--wall2:#152036;--floor:#4a352b;--floor2:#2c1e18;
+    --accent:#e8a84c;--soft:#8fa3c8;--panel:#182338;--line:#2c3d5e;--glow:#ffd98a;}
+  body.t1{--bg:#0b0f0c;--wall:#232d24;--wall2:#1a221b;--floor:#33291d;--floor2:#1f1912;
+    --accent:#a8c47a;--soft:#93a88c;--panel:#1b241c;--line:#334131;--glow:#d9e8a0;}
+  body.t2{--bg:#07130d;--wall:#16382a;--wall2:#102b20;--floor:#4a3a24;--floor2:#2b2114;
+    --accent:#7de3a0;--soft:#88b89b;--panel:#123024;--line:#25523d;--glow:#baf5c9;}
+  body.t3{--bg:#070b1c;--wall:#16204a;--wall2:#101838;--floor:#2e2a44;--floor2:#1b1930;
+    --accent:#7fb8ff;--soft:#8f9cc8;--panel:#141d40;--line:#293770;--glow:#b8dcff;}
+  body.t4{--bg:#150e08;--wall:#3d2c1b;--wall2:#2e2113;--floor:#4e3a22;--floor2:#2e2213;
+    --accent:#ffca7a;--soft:#c4a98c;--panel:#33261a;--line:#54402a;--glow:#ffe0a8;}
+
+  #app{height:100%;display:flex;flex-direction:column;}
+  #topbar{display:flex;justify-content:space-between;align-items:center;gap:8px;
+    padding:calc(10px + env(safe-area-inset-top)) 14px 10px;
+    background:linear-gradient(color-mix(in srgb,var(--bg) 70%,black),var(--bg));
+    border-bottom:1px solid var(--line);z-index:5;}
+  #topbar h1{font-family:Georgia,'Times New Roman',serif;font-size:13px;
+    letter-spacing:.13em;font-weight:400;color:var(--accent);white-space:nowrap;
+    overflow:hidden;text-overflow:ellipsis;}
+  #timer{font-variant-numeric:tabular-nums;font-size:13px;color:var(--soft);}
+  .pill{background:none;border:1px solid var(--line);color:var(--soft);border-radius:20px;
+    padding:5px 12px;font-size:12px;flex-shrink:0;font-variant-numeric:tabular-nums;}
+  .pill:active{filter:brightness(1.5);}
+  #hintBtn{border-color:var(--accent);color:var(--accent);}
+
+  #sceneWrap{flex:1;position:relative;display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(ellipse at 50% 40%, color-mix(in srgb,var(--wall) 70%,var(--glow) 6%) 0%, var(--bg) 75%);}
+  svg{width:100%;height:100%;}
+  .hot{cursor:pointer;}
+  .hot:active{filter:brightness(1.3);}
+
+  /* theme-driven SVG fills */
+  .fWall{fill:var(--wall);} .fWall2{fill:var(--wall2);}
+  .fFloorA{fill:var(--floor);} .fFloorB{fill:var(--floor2);}
+  .fAccent{fill:var(--accent);} .sAccent{stroke:var(--accent);}
+
+  @keyframes flick{0%,100%{opacity:.85;transform:scale(1);}50%{opacity:1;transform:scale(1.06);}}
+  #flame{animation:flick 1.6s ease-in-out infinite;transform-origin:center 80%;}
+  #glowE{animation:flick 2.3s ease-in-out infinite;}
+  @media (prefers-reduced-motion: reduce){#flame,#glowE{animation:none;}}
+
+  /* searched visuals */
+  .tiltable{transform-box:fill-box;transform-origin:center;transition:transform .4s;}
+  .searched .tiltable{transform:rotate(-5deg);}
+  #plant.searched .tiltable{transform:rotate(9deg);}
+  #clock.searched .tiltable{transform:rotate(6deg);}
+
+  /* UV mode */
+  body.uv #sceneWrap{background:radial-gradient(ellipse at 50% 40%, #0a1c33 0%, #04070d 78%);}
+  body.uv svg{filter:saturate(.45) brightness(.55);}
+  .uv-ink{opacity:0;transition:opacity .5s;fill:#8fe4ff;}
+  body.uv .uv-ink{opacity:1;}
+  body.uv #glowE,body.uv #flame{opacity:.12 !important;animation:none;}
+
+  #inv{display:flex;gap:9px;padding:10px 12px calc(12px + env(safe-area-inset-bottom));
+    background:color-mix(in srgb,var(--bg) 80%,black);border-top:1px solid var(--line);
+    min-height:76px;align-items:center;}
+  .slot{width:54px;height:54px;border-radius:12px;background:var(--panel);
+    border:1.5px solid var(--line);display:flex;align-items:center;justify-content:center;
+    font-size:26px;position:relative;flex-shrink:0;}
+  .slot.item{border-color:var(--accent);}
+  .slot.sel{border-color:#fff;box-shadow:0 0 12px rgba(255,255,255,.4);}
+  .slot .lbl{position:absolute;bottom:-1px;left:0;right:0;font-size:8px;text-align:center;color:var(--soft);}
+  #invHint{font-size:11.5px;color:var(--soft);margin-left:auto;max-width:40%;text-align:right;
+    line-height:1.35;opacity:.85;}
+
+  #toast{position:absolute;left:50%;top:14px;transform:translateX(-50%) translateY(-8px);
+    background:rgba(0,0,0,.86);border:1px solid var(--accent);color:var(--ink);
+    padding:10px 16px;border-radius:10px;font-size:13px;max-width:86%;text-align:center;
+    opacity:0;transition:all .3s;pointer-events:none;z-index:10;line-height:1.4;}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.82);display:none;
+    align-items:center;justify-content:center;z-index:20;padding:20px;}
+  .overlay.show{display:flex;}
+  .card{background:linear-gradient(#20293e,#131a2c);border:1px solid #3a4a70;border-radius:18px;
+    padding:24px 20px;max-width:350px;width:100%;text-align:center;max-height:88vh;overflow:auto;}
+  .card h2{font-family:Georgia,serif;font-weight:400;color:#e8a84c;letter-spacing:.1em;
+    font-size:19px;margin-bottom:8px;}
+  .card p{font-size:13px;color:#aab8d6;line-height:1.55;margin-bottom:16px;}
+  .btn{display:inline-block;background:linear-gradient(#e8a84c,#c98a2e);color:#241708;border:none;
+    border-radius:26px;padding:12px 30px;font-size:15px;font-weight:700;letter-spacing:.05em;margin:4px;}
+  .btn:active{transform:scale(.96);}
+  .btn.ghostb{background:none;border:1px solid #3a4a70;color:#8fa3c8;}
+
+  #grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin:12px 0;}
+  .lv{aspect-ratio:1;border-radius:12px;border:1px solid #3a4a70;font-weight:800;font-size:15px;
+    background:#20293e;color:#e9dcc0;}
+  .lv:active{background:#2c3a5c;}
+  .lv.done{background:#274035;border-color:#4a7a5f;color:#8fe3b0;}
+  .lv.lock{background:#141a28;color:#3a4a70;pointer-events:none;}
+
+  #menuHints{font-size:12px;color:#e8a84c;margin-bottom:10px;letter-spacing:.05em;}
+
+  /* ---- shop ---- */
+  .srow{display:flex;align-items:center;gap:12px;text-align:left;
+    background:#1a2338;border:1px solid #3a4a70;border-radius:14px;
+    padding:12px 14px;margin-bottom:10px;}
+  .srow .em{font-size:26px;flex-shrink:0;width:32px;text-align:center;}
+  .srow .tx{flex:1;min-width:0;}
+  .srow .tt{font-size:13.5px;color:#e9dcc0;font-weight:600;}
+  .srow .ds{font-size:11px;color:#8fa3c8;line-height:1.35;margin-top:2px;}
+  .sbuy{background:linear-gradient(#e8a84c,#c98a2e);color:#241708;border:none;border-radius:20px;
+    padding:9px 14px;font-size:12.5px;font-weight:700;flex-shrink:0;min-width:76px;}
+  .sbuy:disabled{background:none;border:1px solid #3a4a70;color:#63739a;font-weight:500;}
+  .sbuy.ownedb{background:none;border:1px solid #4a7a5f;color:#8fe3b0;}
+  .sbuy:active:not(:disabled){transform:scale(.96);}
+  #shopWallet{font-size:15px;color:#e8a84c;margin-bottom:14px;letter-spacing:.05em;}
+  #shopNote{font-size:11px;color:#8fa3c8;line-height:1.45;margin:4px 0 14px;}
+
+  #code{font-size:28px;letter-spacing:12px;color:#e8a84c;font-variant-numeric:tabular-nums;
+    background:#0b101d;border-radius:10px;padding:10px 0 10px 12px;margin-bottom:14px;
+    border:1px solid #3a4a70;min-height:52px;font-family:Georgia,serif;}
+  #pad,#sympad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+  #sympad{grid-template-columns:repeat(4,1fr);}
+  #pad button,#sympad button{background:#22304e;border:1px solid #3a4c70;color:#e9dcc0;
+    border-radius:12px;padding:13px 0;font-size:18px;}
+  #pad button:active,#sympad button:active{background:#33456a;}
+  #seqShow{font-size:24px;letter-spacing:8px;min-height:40px;margin-bottom:12px;color:#8fe4ff;}
+  .shake{animation:sh .4s;}
+  @keyframes sh{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+</style>
+</head>
+<body class="t0">
+<div id="app">
+  <div id="topbar">
+    <h1 id="roomTitle">CHAMBER I</h1>
+    <span id="timer">0:00</span>
+    <button class="pill" id="hintBtn">💡 5</button>
+    <button class="pill" id="menuBtn">rooms</button>
+  </div>
+
+  <div id="sceneWrap">
+    <div id="toast"></div>
+    <svg id="scene" viewBox="0 0 800 560" preserveAspectRatio="xMidYMid meet">
+      <defs>
+        <radialGradient id="candleGlow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#ffd98a" stop-opacity=".5"/>
+          <stop offset="45%" stop-color="#e8a84c" stop-opacity=".16"/>
+          <stop offset="100%" stop-color="#e8a84c" stop-opacity="0"/>
+        </radialGradient>
+        <linearGradient id="parchG" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#e9dcc0"/><stop offset="100%" stop-color="#cbb98f"/>
+        </linearGradient>
+      </defs>
+
+      <!-- walls & floor -->
+      <rect x="0" y="0" width="800" height="400" class="fWall"/>
+      <rect x="0" y="0" width="800" height="400" fill="url(#candleGlow)" opacity=".22" pointer-events="none"/>
+      <rect x="0" y="392" width="800" height="10" class="fWall2"/>
+      <rect x="0" y="400" width="800" height="160" class="fFloorA"/>
+      <g stroke="black" stroke-opacity=".35" stroke-width="2" pointer-events="none">
+        <line x1="0" y1="442" x2="800" y2="442"/><line x1="0" y1="487" x2="800" y2="487"/>
+        <line x1="0" y1="530" x2="800" y2="530"/>
+        <line x1="180" y1="400" x2="140" y2="560"/><line x1="420" y1="400" x2="410" y2="560"/>
+        <line x1="640" y1="400" x2="680" y2="560"/>
+      </g>
+
+      <!-- DOOR -->
+      <g id="door" class="hot">
+        <rect x="626" y="118" width="140" height="282" rx="6" class="fFloorA" stroke="black" stroke-opacity=".6" stroke-width="4"/>
+        <rect x="642" y="138" width="108" height="112" rx="4" fill="none" stroke="black" stroke-opacity=".45" stroke-width="3"/>
+        <rect x="642" y="266" width="108" height="118" rx="4" fill="none" stroke="black" stroke-opacity=".45" stroke-width="3"/>
+        <circle cx="654" cy="262" r="7" class="fAccent"/>
+        <rect x="650" y="272" width="8" height="12" rx="2" fill="#000" fill-opacity=".7"/>
+        <g id="sigilBadge" style="display:none">
+          <circle cx="696" cy="200" r="24" fill="#0b101d" stroke="#8fe4ff" stroke-width="2"/>
+          <text x="696" y="208" text-anchor="middle" font-size="22" fill="#8fe4ff">✦</text>
+        </g>
+      </g>
+
+      <!-- CABINET (tall) -->
+      <g id="cab" class="hot">
+        <rect x="528" y="202" width="76" height="198" rx="5" class="fFloorA" stroke="black" stroke-opacity=".6" stroke-width="4"/>
+        <line x1="566" y1="208" x2="566" y2="394" stroke="black" stroke-opacity=".45" stroke-width="3"/>
+        <circle id="cabSocket" cx="566" cy="300" r="9" fill="none" class="sAccent" stroke-width="3"/>
+        <path d="M566 293 l6 3.5 v7 l-6 3.5 l-6 -3.5 v-7 z" fill="black" fill-opacity=".55"/>
+        <g id="cabOpenG" style="display:none">
+          <rect x="533" y="207" width="66" height="188" fill="black" fill-opacity=".65"/>
+          <text x="566" y="310" text-anchor="middle" font-size="26">🔑</text>
+        </g>
+      </g>
+
+      <!-- PAINTING A: the map -->
+      <g id="pA" class="hot"><g class="tiltable">
+        <rect x="128" y="88" width="212" height="146" rx="4" class="fFloorB" stroke="black" stroke-opacity=".6" stroke-width="5"/>
+        <rect x="141" y="101" width="186" height="120" fill="url(#parchG)"/>
+        <path d="M158 190 q26 -46 60 -34 q30 10 47 -15 q21 -30 55 -17" fill="none" stroke="#8a6b3f" stroke-width="3" stroke-linecap="round"/>
+        <path d="M170 145 q34 19 77 7 q42 -12 72 17" fill="none" stroke="#a5854f" stroke-width="2" stroke-dasharray="5 6"/>
+        <circle cx="182" cy="200" r="4" fill="#9a2f2f"/><circle cx="292" cy="128" r="4" fill="#9a2f2f"/>
+        <text id="uvA" class="uv-ink" x="234" y="172" text-anchor="middle" font-family="Georgia" font-size="38" letter-spacing="8"></text>
+      </g></g>
+
+      <!-- PAINTING B: portrait -->
+      <g id="pB" class="hot"><g class="tiltable">
+        <rect x="362" y="98" width="104" height="88" rx="4" class="fFloorB" stroke="black" stroke-opacity=".6" stroke-width="5"/>
+        <rect x="372" y="108" width="84" height="68" fill="#20293e"/>
+        <circle cx="414" cy="132" r="14" fill="#c9b490"/>
+        <path d="M394 176 q20 -26 40 0 z" fill="#3a3350"/>
+        <text id="uvB" class="uv-ink" x="414" y="150" text-anchor="middle" font-family="Georgia" font-size="26" letter-spacing="5"></text>
+      </g></g>
+
+      <!-- CLOCK -->
+      <g id="clock" class="hot"><g class="tiltable">
+        <circle cx="500" cy="140" r="36" class="fFloorB" stroke="black" stroke-opacity=".6" stroke-width="5"/>
+        <circle cx="500" cy="140" r="27" fill="url(#parchG)"/>
+        <line x1="500" y1="140" x2="500" y2="122" stroke="#3a2a1a" stroke-width="3" stroke-linecap="round"/>
+        <line x1="500" y1="140" x2="513" y2="146" stroke="#3a2a1a" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="500" cy="140" r="3" fill="#3a2a1a"/>
+        <text id="uvC" class="uv-ink" x="500" y="196" text-anchor="middle" font-family="Georgia" font-size="26" letter-spacing="5"></text>
+      </g></g>
+
+      <!-- SHELF with books -->
+      <g id="shelf" class="hot"><g class="tiltable">
+        <rect x="358" y="248" width="152" height="10" rx="3" class="fFloorB" stroke="black" stroke-opacity=".5" stroke-width="3"/>
+        <rect x="368" y="214" width="16" height="34" fill="#7a4a3a"/>
+        <rect x="388" y="210" width="14" height="38" fill="#4a6a5a"/>
+        <rect x="406" y="218" width="16" height="30" fill="#8a7a3a"/>
+        <rect x="426" y="212" width="14" height="36" fill="#5a4a7a"/>
+        <rect x="444" y="216" width="16" height="32" fill="#9a4a4a" transform="rotate(8 452 232)"/>
+      </g></g>
+
+      <!-- DESK + DRAWER + CANDLE -->
+      <g id="deskG">
+        <rect x="118" y="320" width="300" height="18" rx="4" class="fFloorA" stroke="black" stroke-opacity=".6" stroke-width="3"/>
+        <rect x="136" y="338" width="22" height="92" class="fFloorB"/>
+        <rect x="378" y="338" width="22" height="92" class="fFloorB"/>
+        <g id="drawer" class="hot">
+          <rect x="198" y="344" width="140" height="42" rx="4" class="fFloorB" stroke="black" stroke-opacity=".6" stroke-width="3"/>
+          <circle cx="268" cy="365" r="6" class="fAccent"/>
+          <circle cx="268" cy="365" r="2.4" fill="black" fill-opacity=".7"/>
+          <g id="drawerOpenG" style="display:none">
+            <rect x="194" y="386" width="148" height="30" rx="4" fill="black" fill-opacity=".55" stroke="black" stroke-opacity=".6" stroke-width="3"/>
+            <text id="drawerItem" x="268" y="409" text-anchor="middle" font-size="20"></text>
+          </g>
+        </g>
+        <g id="candleG" class="hot">
+          <!-- pointer-events="none" is load-bearing. This glow is a 105px-radius
+               circle painted AFTER the drawer and shelf, and SVG hit-testing
+               ignores gradient alpha, so without it the candle swallowed every
+               tap on the right half of the drawer and the right half of the
+               shelf. Both are search targets; a chamber whose brass key was
+               behind the shelf could look unsolvable. -->
+          <circle id="glowE" cx="352" cy="284" r="105" fill="url(#candleGlow)" pointer-events="none"/>
+          <rect x="344" y="286" width="16" height="34" rx="3" fill="#e9dcc0"/>
+          <ellipse cx="352" cy="320" rx="16" ry="5" class="fAccent"/>
+          <path id="flame" d="M352 260 q9 12 0 24 q-9 -12 0 -24" fill="#ffcf6e" stroke="#ff9d3c" stroke-width="2"/>
+        </g>
+      </g>
+
+      <!-- PLANT -->
+      <g id="plant" class="hot"><g class="tiltable">
+        <path d="M78 470 q-34 -30 -22 -78 q26 22 26 62 M78 470 q4 -52 40 -66 q-6 44 -34 68 M78 470 q-2 -36 -2 -60" fill="none" stroke="#4a7a4a" stroke-width="7" stroke-linecap="round"/>
+        <path d="M56 468 h44 l-6 36 h-32 z" fill="#8a4a34" stroke="black" stroke-opacity=".5" stroke-width="3"/>
+      </g></g>
+
+      <!-- SAFE -->
+      <g id="safe" class="hot">
+        <rect x="126" y="432" width="98" height="78" rx="7" fill="#333a4a" stroke="black" stroke-opacity=".6" stroke-width="4"/>
+        <circle cx="175" cy="468" r="17" fill="#20293e" class="sAccent" stroke-width="3"/>
+        <line x1="175" y1="468" x2="175" y2="455" class="sAccent" stroke-width="3" stroke-linecap="round"/>
+        <rect x="205" y="460" width="8" height="18" rx="3" class="fAccent"/>
+        <g id="safeOpenG" style="display:none">
+          <rect x="132" y="438" width="86" height="66" fill="black" fill-opacity=".6"/>
+          <text id="safeItem" x="175" y="478" text-anchor="middle" font-size="24"></text>
+        </g>
+      </g>
+
+      <!-- RUG -->
+      <g id="rug" class="hot">
+        <ellipse cx="330" cy="502" rx="126" ry="38" fill="#5e2f3a" stroke="#3d1e26" stroke-width="4"/>
+        <ellipse cx="330" cy="502" rx="90" ry="25" fill="none" stroke="#8a4a58" stroke-width="3" stroke-dasharray="10 8"/>
+        <path id="rugFold" style="display:none" d="M412 522 q40 -8 46 -27 l-52 -8 z" fill="#8a4a58"/>
+        <text id="uvRug" class="uv-ink" x="330" y="510" text-anchor="middle" font-size="26" letter-spacing="10"></text>
+      </g>
+
+      <!-- CHEST -->
+      <g id="chest" class="hot">
+        <rect x="480" y="432" width="120" height="76" rx="8" class="fFloorB" stroke="black" stroke-opacity=".6" stroke-width="4"/>
+        <path id="chestLid" d="M480 454 q60 -34 120 0" class="fFloorA" stroke="black" stroke-opacity=".6" stroke-width="4"/>
+        <rect x="480" y="454" width="120" height="8" fill="black" fill-opacity=".5"/>
+        <rect x="528" y="450" width="24" height="26" rx="4" class="fAccent" stroke="black" stroke-opacity=".5" stroke-width="2.5"/>
+        <path id="chestOpenG" style="display:none" d="M480 450 q60 -58 120 0 l0 6 l-120 0 z" class="fFloorA" stroke="black" stroke-opacity=".6" stroke-width="4"/>
+      </g>
+    </svg>
+  </div>
+
+  <div id="inv">
+    <div class="slot" id="s0"></div><div class="slot" id="s1"></div>
+    <div class="slot" id="s2"></div><div class="slot" id="s3"></div>
+    <div id="invHint">Tap everything.<br>Select an item, then tap where to use it.</div>
+  </div>
+</div>
+
+<div class="overlay show" id="menu">
+  <div class="card">
+    <h2>20 CHAMBERS</h2>
+    <p>Twenty locked rooms across five strange places.<br>Hidden keys, glowing ink, safes, and sigils.<br>Escape them all.</p>
+    <div id="menuHints">5 hints left</div>
+    <div id="grid"></div>
+    <button class="btn ghostb" id="resumeBtn" style="display:none">Resume chamber</button>
+    <button class="btn ghostb" id="shopBtn">🕯️ Hints &amp; extras</button>
+  </div>
+</div>
+
+<div class="overlay" id="hintOv"><div class="card">
+  <h2>OUT OF HINTS</h2>
+  <p id="hintOvWhy"></p>
+  <button class="btn" id="hintOvWatch">🎬 Watch for +2</button>
+  <button class="btn ghostb" id="hintOvShop">Get more hints</button>
+  <button class="btn ghostb" id="hintOvClose">Keep trying</button>
+</div></div>
+
+<div class="overlay" id="shopOv"><div class="card">
+  <h2>HINTS &amp; EXTRAS</h2>
+  <div id="shopWallet"></div>
+
+  <div class="srow" id="shopWatch">
+    <div class="em">🎬</div>
+    <div class="tx"><div class="tt">Watch a short video</div>
+      <div class="ds" id="shopWatchLbl"></div></div>
+    <button class="sbuy" id="shopWatchBtn">Watch</button>
+  </div>
+
+  <div class="srow">
+    <div class="em">🕯️</div>
+    <div class="tx"><div class="tt">25 hints</div>
+      <div class="ds">A generous stack. Use them whenever you like.</div></div>
+    <button class="sbuy" id="buyHints" data-product="hints_25">—</button>
+  </div>
+
+  <div class="srow">
+    <div class="em">♾️</div>
+    <div class="tx"><div class="tt">Never run out</div>
+      <div class="ds">Unlimited hints, forever. One payment.</div></div>
+    <button class="sbuy" id="buyUnlimited" data-product="hints_unlimited">—</button>
+  </div>
+
+  <div class="srow">
+    <div class="em">🚫</div>
+    <div class="tx"><div class="tt">Remove ads</div>
+      <div class="ds">No more ads between chambers. Hint videos stay if you want them.</div></div>
+    <button class="sbuy" id="buyRemoveAds" data-product="remove_ads">—</button>
+  </div>
+
+  <p id="shopNote"></p>
+  <button class="btn ghostb" id="shopRestore">Restore purchases</button>
+  <button class="btn ghostb" id="shopClose">Back</button>
+</div></div>
+
+<div class="overlay" id="padOv"><div class="card" id="padCard">
+  <h2>THE SAFE</h2><p id="padSub"></p>
+  <div id="code"></div><div id="pad"></div>
+</div></div>
+
+<div class="overlay" id="symOv"><div class="card" id="symCard">
+  <h2>SIGIL LOCK</h2><p>The door demands four sigils, in order.</p>
+  <div id="seqShow"></div><div id="sympad"></div>
+</div></div>
+
+<div class="overlay" id="winOv"><div class="card">
+  <h2 id="winTitle">ESCAPED</h2><p id="winText"></p>
+  <button class="btn" id="nextBtn">Next chamber</button>
+  <button class="btn ghostb" id="backBtn">All rooms</button>
+</div></div>
+
+<script src="js/config.js"></script>
+<script src="js/save.js"></script>
+<script src="js/billing.js"></script>
+<script src="js/ads.js"></script>
+<script src="js/shop.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>
