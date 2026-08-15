@@ -305,19 +305,61 @@ block the closed test.
 > away from being pushed to a public repo with access to Play financial
 > data. `.gitignore` here now blocks the pattern, but do not rely on it.
 
-### 7. Register your device as an AdMob test device — **before installing**
+### 7. ~~Register your device as an AdMob test device~~ — **ALREADY COVERED**
 
 The build ships **real** ad unit IDs. Tapping your own live ads is invalid
 traffic and the most common way to get an AdMob account suspended.
 
-**Route A — AdMob console, no rebuild, protects the build already uploaded:**
-On the phone, Settings → Google → All services → **Ads** → *Your advertising
-ID*. Then AdMob → Settings → Test devices → Add → Android → paste it.
+**This was already done — by Frost Tower, and it carries over.** AdMob test
+devices are **publisher-account-level, not per-app**, so the one registered
+device already gets test ads from every app under
+`ca-app-pub-7898882561225435`, this game included. Nothing to add.
 
-**Route B — baked in.** `www/js/config.js` → `admob.testDeviceIds`. The value
-is **NOT** the advertising ID; install the build, then
+| Field | Value |
+|---|---|
+| Device | `Ahmad phone (all apps: Frost Tower, Escape 20 Chambers)` |
+| Platform | Android |
+| Advertising ID | `9da360bf-4ad0-41a1-b114-588f4f48e2e6` |
+| Ad inspector gesture | None |
+
+> **You cannot create a second entry for the same phone.** Attempting one
+> for this game was rejected with **"Test device already exists"** — AdMob
+> dedupes on the *advertising ID*, and the name is only a label. The entry
+> was therefore **renamed** from `Ahmad phone (Frost Tower testing)`, which
+> read as if it only covered that game, to the name above. If you ever test
+> on a *different* phone, that one does need its own entry.
+
+**Route B — baked in.** `www/js/config.js` → `admob.testDeviceIds` (still
+empty, and it does not need to be filled given the above). The value is
+**NOT** the advertising ID; install the build, then
 `adb logcat | grep -i setTestDeviceIds` and take the **hash** the SDK logs.
 Mixing the two values up silently does nothing.
+
+### 7b. ⚠️ No GDPR / US-state consent message exists — and the app cannot show one
+
+**Found 2026-08-15, not fixed.** AdMob → Privacy & messaging shows
+**European regulations** and **US state regulations** both offering only
+*Create* — no message has ever been made on this account.
+
+This matters because the closed test targets **177 countries**, the EEA and
+UK among them, and the app serves personalised ads with `AD_ID`.
+
+**Creating the message in the console alone would do nothing.** It is only
+half the mechanism: the app has to call the UMP SDK to fetch and display it,
+and `www/js/ads.js` never does — it calls `AdMob.initialize()` and nothing
+else. There is no `requestConsentInfo` / `showConsentForm` anywhere in
+`www/js/`. So closing this properly is:
+
+1. a code change in `ads.js` to run the UMP consent flow *before*
+   `initialize()`,
+2. a consent message created in the AdMob console,
+3. a versionCode bump, `npx cap sync android`, a fresh `bundleRelease`, and
+4. **an upload by you** — the AAB is over the 10 MB agent cap.
+
+Deliberately left alone rather than half-done: a console message with no SDK
+call is worse than nothing, because the dashboard then reads as compliant
+while no user is ever asked. **Top candidate for v1.1 alongside the
+letterboxing fix.**
 
 ### 8. The 12-tester, 14-day clock
 

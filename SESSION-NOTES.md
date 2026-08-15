@@ -20,12 +20,16 @@
 >    is yours to create and upload to RevenueCat. Until it exists all three
 >    products read `Store Status: Could not check` and purchases are not
 >    server-verified. Do **not** let it land in the repo folder.
-> 3. **Register your device as an AdMob test device before installing.** The
->    build ships real ad unit IDs; tapping your own live ads is the fastest
->    way to get an AdMob account suspended.
-> 4. **Everything the browser could not prove** — a real interstitial, a
+> 3. **Everything the browser could not prove** — a real interstitial, a
 >    rewarded video paying +2, buying `hints_25` twice, and Restore after
 >    reinstall.
+> 4. **A v1.1 decision: no GDPR/US-state consent message exists**, and the
+>    app could not display one if it did — `ads.js` never calls the UMP SDK.
+>    Needs code + console + a rebuild you upload. See `GO-LIVE.md` step 7b.
+>
+> **AdMob test device is NOT outstanding** — it was already covered by the
+> Frost Tower registration, because test devices are account-level. See
+> step 7.
 >
 > Ordered next steps and every gotcha are in **`GO-LIVE.md`**.
 >
@@ -53,6 +57,29 @@ is the finished state.
 Worth reading the code before following your own runbook: the runbook was
 written before the consumable design settled, and the code is the newer
 document.
+
+### AdMob, same sitting
+
+- **The test device was already registered and nobody needed to do anything.**
+  AdMob test devices are **publisher-account-level**, so Frost Tower's entry
+  already covered this game. Trying to add a second entry for the same phone
+  failed with **"Test device already exists"** — it dedupes on advertising
+  ID, not name. The entry was renamed to
+  `Ahmad phone (all apps: Frost Tower, Escape 20 Chambers)` so the label
+  stops implying it is Frost-Tower-only and nobody re-litigates this.
+- **The consent gap is real and was deliberately not half-fixed.** No GDPR
+  or US-state message exists, and `ads.js` never calls the UMP SDK, so
+  creating one in the console would leave the dashboard reading compliant
+  while no user is ever prompted. Written up as `GO-LIVE.md` step 7b.
+- **AdMob deep links render an empty pane**, same as the Play Console. Load
+  a settings page, then click the tab. And its **table rows paint blank**
+  while the data is present — `get_page_text` returned nothing but
+  `querySelectorAll('a[href*="edit"]')` had the row. Believe the DOM here;
+  this is the opposite of the Play Console's data-safety form, where pixels
+  beat the DOM.
+- **The page reflows between screenshot and click here too** — the Platform
+  radio moved ~180px left between the screenshot and the click, so the first
+  attempt missed and Android stayed unselected.
 
 ### Gotchas
 
