@@ -66,7 +66,7 @@ build.
 | AdMob | App + both ad units created and verified. Registered as **not listed on a store** — AdMob's store search reads the *public* Play listing, which will not exist while the app is closed-testing only. Link it once the app reaches production. |
 | RevenueCat | Project + Play Store app config + public SDK key. **No service account JSON yet** (see step 3). |
 | GitHub | Repo public, Pages serving `/docs`. All three URLs verified **HTTP 200**. |
-| Play Console | App created. **9 of 10 App content declarations done.** Content rating **Submitted**. |
+| Play Console | App created. **All 10 App content declarations done** (Data safety finished 2026-08-14). Content rating **Submitted**. Store listing complete, category + contact details set, closed-test track at **3 of 4** — only the AAB is missing. |
 
 **App content — completed and verified**
 
@@ -81,13 +81,30 @@ build.
 | Government apps | No |
 | Financial features | None |
 | Health apps | None |
-| Data safety | **Steps 1–3 done and saved as a draft.** Step 4 remains. |
+| Data safety | **Done.** All 5 steps saved 2026-08-14; six data types declared collected+shared, none ephemeral. |
 
 ---
 
 ## ⬜ WHAT IS LEFT
 
-### 1. Upload the AAB — **YOURS, and it blocks the most**
+### 1. ~~Upload the AAB~~ — **DONE 2026-08-14, by the owner**
+
+versionCode 1 / 1.0.0 is uploaded and **live on `Closed testing - Alpha`**
+(*Available to selected testers*, released 14 Aug 19:25, 177 countries).
+The track is **Active**; Publishing overview reads *Last published on
+14 August 2026* with no pending changes.
+
+> **It landed on Internal testing first**, which produced two confusing
+> errors on the closed-testing draft: *"This release does not add or remove
+> any app bundles"* and *"You can't roll out this release because it doesn't
+> allow any existing users to upgrade…"*. Both mean one thing: **the release
+> you are editing contains zero bundles.** The second is only a knock-on of
+> the first — it is not a signing, versionCode or upgrade-path problem.
+> Fix is either *Promote release* from Internal, or *Edit release → Add from
+> library*. Internal testing still holds its own copy; harmless, but it does
+> **not** count toward the 12-tester rule.
+
+Original instructions, kept for the next upload:
 
 ```
 android/app/build/outputs/bundle/release/app-release.aab
@@ -100,8 +117,12 @@ ProGuard, and this project sets `minifyEnabled false` deliberately to avoid
 ProGuard surprises with exactly those SDKs.
 
 Play Console → **Test and release → Testing → Closed testing** →
-`Closed testing - Alpha` → **Create new release** → upload → opt in to Play
-App Signing when offered.
+`Closed testing - Alpha` → Releases tab → **Untitled release (Draft) → Edit
+release** → upload → opt in to Play App Signing when offered.
+
+> The draft release, the 177 countries and the tester list are already in
+> place, so the only thing that release is missing is the bundle. The track
+> reads **3 of 4 complete**; dropping the AAB in finishes it.
 
 > Do **not** use Internal testing. It does not count toward the 12-tester
 > rule, which is the only thing setting the launch date.
@@ -110,10 +131,12 @@ App Signing when offered.
 until a BILLING-permission build is on a track), which in turn unblocks the
 RevenueCat product wiring.
 
-### 2. Finish Data safety — step 4, "Data usage and handling"
+### 2. ~~Finish Data safety~~ — **DONE 2026-08-14**
 
-The draft holds steps 1–3. Step 4 needs all six rows answered. Every row is
-**Collected AND Shared**, and **none is ephemeral**:
+Saved and verified after a reload; the store-listing preview shows all six
+types under both *Data shared* and *Data collected*. Recorded here because a
+resubmission would need the same answers. Every row is **Collected AND
+Shared**, and **none is ephemeral**:
 
 | Data type | Required? | Purposes (collected = shared) |
 |---|---|---|
@@ -138,50 +161,85 @@ buy. Everything else is ad-SDK driven and cannot be turned off.
 > checkbox query can report a tick missing when it is actually fine. Trust
 > the `n/m data types selected` counters over a checkbox query.
 
-### 3. Store listing
+### 3. ~~Store listing~~ — **DONE 2026-08-14**
 
-Nothing is filled in yet. All the copy is in `store-listing.md`, already
-written for a game that has ads and purchases. Assets are ready:
+App name, short description (80/80), full description (1800/4000), icon,
+feature graphic and all six screenshots are live in the default en-US
+listing, plus **Store settings**: category *Game → Puzzle*, contact email
+`ahmadessam1997@gmail.com`, website the GitHub Pages URL, phone left blank.
+
+> **New question this time: an "AI asset declaration" on the Review step.**
+> Answered **Don't label assets** — the screenshots are Puppeteer captures of
+> the real game and the owner confirmed the icon and feature graphic are not
+> AI-generated. If either is ever regenerated with AI, this must change.
+
+The copy lives in `store-listing.md`. Assets used:
 
 - `play-assets/screenshot-1..6.png` — 1080×1920, regenerated this session
 - `play-assets/feature-graphic.png` — 1024×500
 - `play-assets/play-icon-512.png`
 
-> **Play Console's asset picker needs three steps, not one.** Uploading into
-> the hidden `input[type=file]` only puts the file in the asset *library*.
-> You then have to click the asset row, click the `arrow_right_alt` (open
-> detail), and click **Add**. Closing the panel instead discards the
-> selection and the slot stays empty. The Add button's `innerText` is
-> `"add_photo_alternate Add"`, so an exact `=== 'Add'` match silently fails.
+> **The asset picker is two steps, not one.** Uploading into the hidden
+> `input[type=file]` only puts the file in the asset *library* — it lands
+> already selected, and you then click **Add** in the panel footer to bind it
+> to the slot. Closing the panel instead discards the selection and the slot
+> stays empty.
+>
+> **Multi-file upload scrambles the order.** Six screenshots pushed in one
+> `file_upload` call came back as 3,1,5,4,6,2 (upload-completion order, not
+> filename order) and were added in that order. Drag-to-reorder *within a
+> row* works; dragging into the second row silently no-ops. The reliable fix
+> is to delete the stragglers and re-add them one at a time — each `Add`
+> appends to the end.
 
-### 4. Track setup
+### 4. ~~Track setup~~ — **DONE 2026-08-14**
 
-- **Countries/regions** — target all available (177 on the sibling apps).
-- **Testers** — an email list, plus the feedback address
-  `ahmadessam1997@gmail.com`.
+- **Countries/regions** — all **177** targeted on `Closed testing - Alpha`.
+  Tick the header checkbox, then **Save**; the rows still read *Not targeted*
+  until the save lands, which is not a failure.
+- **Testers** — email list `Escape 20 Chambers Closed Testers` created at
+  account level and attached, feedback address `ahmadessam1997@gmail.com`.
+  Creating the list opens a *"available across all apps"* confirm dialog that
+  must be clicked.
 
-### 5. Create the three in-app products (after step 1)
+> ⚠️ **The list currently holds one address — yours.** It exists to unblock
+> the track, not to satisfy the 12-tester rule. See step 8.
 
-Play Console → Monetise → Products → **One-time products**:
+### 5. ~~Create the three in-app products~~ — **DONE 2026-08-15**
 
-| Product ID | Name | Price | Type |
+All three exist and are **Active**, each with one purchase option:
+
+| Product ID | Name | Price | Purchase option ID |
 |---|---|---|---|
-| `remove_ads` | Remove ads | $2.99 | one-time, **non-consumable** |
-| `hints_25` | 25 hints | $1.99 | one-time, **CONSUMABLE** |
-| `hints_unlimited` | Never run out | $4.99 | one-time, **non-consumable** |
+| `remove_ads` | Remove ads | $2.99 | `remove-ads` |
+| `hints_25` | 25 hints | $1.99 | `hints-25` |
+| `hints_unlimited` | Never run out | $4.99 | `hints-unlimited` |
 
-> `hints_25` **must be consumable.** A non-consumable would be permanently
-> "owned" after the first purchase and every later pack would take the money
-> and grant nothing. `www/js/billing.js` pays out per RevenueCat
-> **transaction id** precisely because of this.
+Each is *Purchase type* **Buy**, *Digital content*, tax category **Digital
+app sales**, multi-quantity **off**, priced in USD with Play's automatic
+local conversion (tax-inclusive where applicable).
 
-Then **Settings → Licence testing** → add the tester list, response
-`RESPOND_NORMALLY`, so test purchases are not charged.
+> **There is no consumable toggle in the console — do not go looking for
+> one.** Play's one-time-product UI has no such field; consumability is
+> decided entirely by the app. `www/js/config.js` carries
+> `consumable: true` for `hints_25` and `false` for the other two, and
+> `billing.js` pays out per RevenueCat **transaction id** so a repeat
+> purchase credits again without ever double-paying. The old note that
+> `hints_25` "must be created as CONSUMABLE" was describing app behaviour,
+> not a console setting.
+>
+> **Purchase option IDs cannot contain underscores** (numbers, lowercase
+> letters and hyphens only), so they are hyphenated while the product IDs —
+> the ones the app and RevenueCat actually resolve — stay `snake_case` and
+> match `config.js` exactly.
 
-> That account-level Save opens a *"these changes will affect all of your
-> apps"* confirmation dialog. It **must** be confirmed or the change silently
-> reverts — and `element.click()` from JS does not open that dialog at all.
-> Use a real mouse click.
+**Settings → Licence testing** — done: `Escape 20 Chambers Closed Testers`
+added alongside the sibling apps' lists, response `RESPOND_NORMALLY`.
+Verified by reloading the page.
+
+> That account-level Save does open the *"These changes will affect all of
+> your apps"* dialog, exactly as the sibling notes warned. Confirm it with a
+> real mouse click.
 
 ### 6. Wire RevenueCat products (after step 5)
 
@@ -229,6 +287,12 @@ before production access.
 
 Opt-in link: Closed testing → Testers → *How testers join your test* → Copy
 link (`play.google.com/apps/testing/com.ahmadessam.escapechambers`).
+**This section is now live** — both *Join on Android* and *Join on the web*
+are present, so the link can be handed out immediately.
+
+> As of 2026-08-15 the tester list holds **1** address (the owner's). Eleven
+> more real testers must opt in, install from Play, and stay for 14
+> continuous days before production access can be requested.
 
 > Tester-exchange sites satisfy the count mechanically, but the production
 > application asks how testers were recruited and what feedback they gave,

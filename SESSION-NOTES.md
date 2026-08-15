@@ -1,15 +1,29 @@
 # Session notes
 
-> ## ▶ RESUME HERE (as of 2026-08-13)
+> ## ▶ RESUME HERE (as of 2026-08-15)
 >
-> The game is **monetized, bug-fixed, tested and signed**, and the Play app
-> exists with **9 of 10 App content declarations done** and the IARC content
-> rating **submitted**.
+> **The closed test is live.** versionCode 1 / 1.0.0 is rolled out on
+> `Closed testing - Alpha` (*Available to selected testers*, 177 countries),
+> all 10 App content declarations and the full store listing are **published**
+> (Publishing overview is clear), and the three one-time products
+> `remove_ads` / `hints_25` / `hints_unlimited` are **Active** with licence
+> testing switched on.
 >
-> **The one thing blocking everything else is the AAB upload, and it has to
-> be yours:** the browser bridge caps uploads at 10 MB and the AAB is
-> 10.6 MB. Product creation — and therefore the RevenueCat product wiring —
-> is gated behind having a BILLING build on a track.
+> **What is left is no longer console work — it is people and devices:**
+>
+> 1. **Eleven more testers.** The list holds 1 address (yours). Production
+>    access needs **12 opted in for 14 continuous days**, and the clock
+>    starts at the *twelfth install*, not at a console edit.
+> 2. **RevenueCat product wiring** — three products, three entitlements with
+>    the same ids, a `default` offering. Plus the Google service account
+>    JSON, which produces a private key and so is yours. Until it exists
+>    every product reads `Store Status: Could not check`.
+> 3. **Register your device as an AdMob test device before installing.** The
+>    build ships real ad unit IDs; tapping your own live ads is the fastest
+>    way to get an AdMob account suspended.
+> 4. **Everything the browser could not prove** — a real interstitial, a
+>    rewarded video paying +2, buying `hints_25` twice, and Restore after
+>    reinstall.
 >
 > Ordered next steps and every gotcha are in **`GO-LIVE.md`**.
 >
@@ -17,6 +31,63 @@
 > completes all 20 chambers.
 
 ---
+
+## 2026-08-15 — the build went up, and the rest fell out
+
+The owner uploaded the AAB. The closed test went live, which unblocked
+products; those and licence testing were finished the same sitting.
+
+### Gotchas
+
+- **"This release does not add or remove any app bundles" + "can't roll out …
+  doesn't allow any existing users to upgrade" are the same error.** They
+  mean the release being edited has **zero** bundles. Here the AAB had gone
+  to *Internal testing* while the closed-testing draft stayed empty. Nothing
+  to do with signing, version codes or upgrade paths — read the second error
+  as noise and go find the bundle.
+- **The console's zoom level flipped by itself mid-form, three times**, and
+  once it wiped a field I had just typed. Coordinate clicks are unusable
+  across that; `find` → ref + `form_input` survived every flip. A stale ref
+  clicked after a re-render triggered a *"Leave page?"* dialog — answer
+  **Stay**, and the whole form is still intact behind it.
+- **There is no consumable checkbox for one-time products.** Hunting for one
+  wastes time. Consumability is an app-side decision; see `GO-LIVE.md` step 5.
+- **Purchase option IDs reject underscores.** Product IDs keep `snake_case`
+  to match `config.js`; the purchase options are hyphenated. Only the product
+  ID is what the app and RevenueCat resolve.
+- The **AI asset declaration** answer (*Don't label assets*) survived into the
+  published listing.
+
+## 2026-08-14 — finished every console step the build does not gate
+
+Data safety step 4 (all six rows), the whole default store listing, store
+settings, and the closed-test track's countries and testers. The track went
+from 1 of 5 to **3 of 4**; what remains needs the AAB.
+
+### Gotchas from this session
+
+- **The console scrolls between the screenshot and the click.** Four clicks
+  in the data-safety purpose lists landed one row *below* the intended
+  checkbox — Fraud prevention instead of Advertising, Personalisation instead
+  of Fraud prevention, Developer communications instead of Analytics. The
+  drift is about one row (~98px) and it happens on the *first* click after a
+  scroll, when the dialog is still settling. Every checkbox was therefore
+  screenshotted back before saving the row, and four wrong ticks were caught
+  and undone. **Never fire two positional clicks in a row without looking.**
+- **A JS checkbox query lied in the opposite direction.** Querying
+  `aria-checked` on the data-types step reported *Approximate location*
+  unselected when the screenshot showed it plainly ticked. This is the
+  sibling-notes rule restated: on this form, believe pixels over the DOM.
+- **The store listing now asks for an "AI asset declaration"** before it will
+  save. It is a regulatory labelling answer about who made the art, not
+  something to guess — the owner confirmed *no AI*.
+- **Six screenshots uploaded in one call arrive in completion order**, not
+  filename order, and are added to the slot in that order. Drag-reorder works
+  along a row and fails across rows; delete-and-re-add appends predictably.
+- **Play deep links still bounce to the app list when loaded cold** — even
+  `/app-content` did. Load `app-dashboard` first, then click through.
+  `Page.captureScreenshot` still times out every few calls; retrying once
+  always worked.
 
 ## 2026-08-13 — monetization, five real bugs, and the publishing pipeline
 
