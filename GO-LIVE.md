@@ -21,6 +21,8 @@ build.
 | RevenueCat project | `Escape 20 Chambers` — `8fc1ec67` |
 | RevenueCat app | `Escape 20 Chambers (Play Store)` — `app6d4c25efde`, Capacitor |
 | RevenueCat public key | `goog_GdqWuAnFGZXdSJqvndlXrAeqtNP` |
+| RevenueCat offering | `default` — `ofrngcfc44f8e05` (Default Offering) |
+| RevenueCat entitlements | `remove_ads` `entl11e1dd91f1` · `hints_unlimited` `entlad13f5e24e` |
 | GitHub repo | https://github.com/ahmadessam1997/escape-chambers (public) |
 | Privacy policy | https://ahmadessam1997.github.io/escape-chambers/privacy-policy.html |
 | Data deletion | https://ahmadessam1997.github.io/escape-chambers/delete-data.html |
@@ -241,19 +243,61 @@ Verified by reloading the page.
 > your apps"* dialog, exactly as the sibling notes warned. Confirm it with a
 > real mouse click.
 
-### 6. Wire RevenueCat products (after step 5)
+### 6. ~~Wire RevenueCat products~~ — **DONE 2026-08-15**
 
-Create the three products by hand as the matching type, three entitlements
-with the **same ids**, and a `default` offering with one Custom package per
-product. `Import Products` needs Play API credentials that do not exist yet.
+Built by hand; `Import Products` still needs Play API credentials that do not
+exist yet (see the service-account note below).
 
-**Also still needed — this one produces a private key, so it is yours:**
+**Products** — all three under `Escape 20 Chambers (Play Store)`, the
+*Google product identifier* typed to match `config.js` exactly, which makes
+RevenueCat mirror it into the *RevenueCat product identifier* the SDK
+resolves:
+
+| Product | RevenueCat type |
+|---|---|
+| `remove_ads` | Non-consumable |
+| `hints_25` | **Consumable** |
+| `hints_unlimited` | Non-consumable |
+
+**Entitlements — two, not three.** `remove_ads` and `hints_unlimited` exist
+with their product attached. **`hints_25` deliberately has none.**
+
+> The runbook used to say "three entitlements with the same ids". That was
+> wrong for the consumable, and the code already knew it:
+> `billing.js._applyCustomerInfo` filters the entitlement mirror on
+> `!Cfg.products[k].consumable`, so a `hints_25` entitlement could never be
+> read — it would only sit in the dashboard reading permanently active and
+> mislead the next person. Hints are paid per transaction id instead. The
+> products list is *meant* to read `hints_25 → Attach`; that empty cell is
+> the design, not an unfinished step.
+
+**Offering `default`** ("Escape 20 Chambers shop"), already flagged Default
+Offering, with one **Custom** package per product — identifier, description
+and product all matching:
+
+| Package | Product |
+|---|---|
+| `remove_ads` | Remove ads |
+| `hints_25` | 25 hints |
+| `hints_unlimited` | Never run out |
+
+> Two console quirks here. **New packages are prepended**, not appended, so
+> the block you just added is at the *top* of the list. And this console
+> **swallows the first click after a page load** — the product-type radio
+> and `New Entitlement` both needed a second click. Screenshot after every
+> selection; the second click always took.
+
+All three products read **`Store Status: Could not check`**, which is
+expected until the service account below exists.
+
+**Still needed — this one produces a private key, so it is yours:**
 a Google service account JSON with Play access, uploaded to RevenueCat →
 Project settings → Apps → Escape 20 Chambers (Play Store).
 
 Until it exists, every RevenueCat product reads
-**`Store Status: Could not check`** and real transactions are not
-server-verified. The SDK still works, so it does not block the closed test.
+**`Store Status: Could not check`** — as all three do now — and real
+transactions are not server-verified. The SDK still works, so it does not
+block the closed test.
 
 > **Do not download that JSON into the project folder.** Google Cloud
 > defaults to the browser download directory; on a sibling project the key

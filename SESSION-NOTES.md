@@ -2,22 +2,24 @@
 
 > ## ▶ RESUME HERE (as of 2026-08-15)
 >
-> **The closed test is live.** versionCode 1 / 1.0.0 is rolled out on
-> `Closed testing - Alpha` (*Available to selected testers*, 177 countries),
-> all 10 App content declarations and the full store listing are **published**
-> (Publishing overview is clear), and the three one-time products
-> `remove_ads` / `hints_25` / `hints_unlimited` are **Active** with licence
-> testing switched on.
+> **The closed test is live and the whole product catalogue is built.**
+> versionCode 1 / 1.0.0 is rolled out on `Closed testing - Alpha`
+> (*Available to selected testers*, 177 countries), all 10 App content
+> declarations and the full store listing are **published**, the three
+> one-time products are **Active** in Play with licence testing on, and
+> **RevenueCat is now wired** — three products, two entitlements, and a
+> `default` offering carrying one package each.
 >
-> **What is left is no longer console work — it is people and devices:**
+> **Nothing console-shaped is left. What remains is people, keys and
+> devices:**
 >
 > 1. **Eleven more testers.** The list holds 1 address (yours). Production
 >    access needs **12 opted in for 14 continuous days**, and the clock
 >    starts at the *twelfth install*, not at a console edit.
-> 2. **RevenueCat product wiring** — three products, three entitlements with
->    the same ids, a `default` offering. Plus the Google service account
->    JSON, which produces a private key and so is yours. Until it exists
->    every product reads `Store Status: Could not check`.
+> 2. **The Google service account JSON** — it produces a private key, so it
+>    is yours to create and upload to RevenueCat. Until it exists all three
+>    products read `Store Status: Could not check` and purchases are not
+>    server-verified. Do **not** let it land in the repo folder.
 > 3. **Register your device as an AdMob test device before installing.** The
 >    build ships real ad unit IDs; tapping your own live ads is the fastest
 >    way to get an AdMob account suspended.
@@ -31,6 +33,42 @@
 > completes all 20 chambers.
 
 ---
+
+## 2026-08-15 (later) — RevenueCat wired, and one entitlement deliberately not created
+
+The catalogue was built by hand: three products, a `default` offering with
+three Custom packages, and **two** entitlements. Details in `GO-LIVE.md`
+step 6.
+
+### The entitlement that should not exist
+
+The runbook said "three entitlements with the same ids". Checking
+`billing.js` first showed that was wrong for `hints_25`:
+`_applyCustomerInfo` mirrors only `!consumable` products, so a `hints_25`
+entitlement is unreachable by construction — it would sit in the dashboard
+reading permanently active and tell the next reader the opposite of how the
+payout works. Two entitlements, and `hints_25 → Attach` in the products list
+is the finished state.
+
+Worth reading the code before following your own runbook: the runbook was
+written before the consumable design settled, and the code is the newer
+document.
+
+### Gotchas
+
+- **This console swallows the first click after a page load.** The product-
+  type radio stayed on *Subscription* and `New Entitlement` opened nothing,
+  twice each; the identical second click always worked. Screenshot after
+  every selection rather than trusting the click.
+- **New packages are prepended to the offering, not appended.** After
+  clicking *New Package*, the empty block is at the *top*, above the one you
+  just finished — easy to fill the wrong one.
+- **The package identifier dropdown hides `Custom` at the bottom** under the
+  subscription durations (Monthly … Lifetime), and it is not a native
+  `<select>`, so a `document.querySelectorAll('select')` probe returns `[]`.
+  Reading back `input.value` across the form is the reliable verification.
+- `Page.captureScreenshot` timed out on roughly every third call here too.
+  Retrying once always worked, exactly as on the Play Console.
 
 ## 2026-08-15 — the build went up, and the rest fell out
 
