@@ -23,9 +23,13 @@
 > 3. **Everything the browser could not prove** — a real interstitial, a
 >    rewarded video paying +2, buying `hints_25` twice, and Restore after
 >    reinstall.
-> 4. **A v1.1 decision: no GDPR/US-state consent message exists**, and the
->    app could not display one if it did — `ads.js` never calls the UMP SDK.
->    Needs code + console + a rebuild you upload. See `GO-LIVE.md` step 7b.
+> 4. **Upload versionCode 2 / 1.0.1.** Built, signed and verified at
+>    `android/app/build/outputs/bundle/release/app-release.aab` (10.6 MB, so
+>    yours). It carries the new UMP consent flow; both AdMob consent
+>    messages are already Published and reach nobody until it lands.
+> 5. **Wire `ECAds.showPrivacyOptions()` to a shop/settings button**, shown
+>    only when `ECAds.privacyOptionsRequired`. The one loose end of the
+>    consent work. See `GO-LIVE.md` step 7b.
 >
 > **AdMob test device is NOT outstanding** — it was already covered by the
 > Frost Tower registration, because test devices are account-level. See
@@ -80,6 +84,16 @@ document.
 - **The page reflows between screenshot and click here too** — the Platform
   radio moved ~180px left between the screenshot and the click, so the first
   attempt missed and Android stayed unselected.
+- **`form_input` silently does NOT stick on the consent message-name field.**
+  It set the DOM value, the screenshot showed the new name, and the message
+  published as *"Untitled European regulations message"* anyway — the
+  framework never registered the change. `triple_click` + `type` worked.
+  Every other field on the page (RevenueCat's whole catalogue included) was
+  fine with `form_input`, so this is a per-widget trap: **after publishing,
+  re-read the list row, not the editor.**
+- The consent editor's right-hand settings panel is **clipped off-screen** at
+  1156px wide and its Publish button is simply not in the DOM. `resize_window`
+  to 1600 brought it back.
 
 ### Gotchas
 

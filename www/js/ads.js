@@ -43,33 +43,136 @@
 
       var testDevices = (Cfg.admob.testDeviceIds || []).filter(Boolean);
 
-      return AdMob.initialize({
-        /* The plugin IGNORES testingDevices unless this flag is true
-           (AdMob.java: initializeForTesting ? getArray(...) : EMPTY), so
-           it has to be on whenever there is a device list — even with
-           real ad unit IDs. It is not a global test switch: all it does
-           is feed RequestConfiguration.setTestDeviceIds(). */
-        initializeForTesting: !!Cfg.admob.isTest || testDevices.length > 0,
-        testingDevices: testDevices,
-        tagForChildDirectedTreatment: false,
-        tagForUnderAgeOfConsent: false,
-        /* MUST be one of the plugin's exact enum strings — General,
-           ParentalGuidance, Teen, MatureAudience. Frost Tower passed 'G',
-           which matches no case in the Android switch, so the rating
-           silently stayed UNSPECIFIED and every ad request from an
-           Everyone-rated game carried no content cap at all. Invisible
-           under test units, real the moment live units ship. */
-        maxAdContentRating: 'General'
+      /* Consent BEFORE initialize. Google's UMP flow has to resolve first
+         so the SDK knows whether it may request personalised ads at all;
+         running it afterwards means the first ad request goes out under
+         an unknown consent state. Never rejects — a consent failure must
+         not cost the player their ads *or* their game. */
+      return self._requestConsent(testDevices).then(function () {
+        return AdMob.initialize({
+          /* The plugin IGNORES testingDevices unless this flag is true
+             (AdMob.java: initializeForTesting ? getArray(...) : EMPTY), so
+             it has to be on whenever there is a device list — even with
+             real ad unit IDs. It is not a global test switch: all it does
+             is feed RequestConfiguration.setTestDeviceIds(). */
+          initializeForTesting: !!Cfg.admob.isTest || testDevices.length > 0,
+          testingDevices: testDevices,
+          tagForChildDirectedTreatment: false,
+          tagForUnderAgeOfConsent: false,
+          /* MUST be one of the plugin's exact enum strings — General,
+             ParentalGuidance, Teen, MatureAudience. Frost Tower passed 'G',
+             which matches no case in the Android switch, so the rating
+             silently stayed UNSPECIFIED and every ad request from an
+             Everyone-rated game carried no content cap at all. Invisible
+             under test units, real the moment live units ship. */
+          maxAdContentRating: 'General'
+        });
       }).then(function () {
         self.available = true;
         self._wireListeners();
-        self.preloadInterstitial();
-        self.preloadRewarded();
+        /* Only warm the cache if the SDK says we may actually request
+           ads. Preloading under a REQUIRED-but-unanswered consent state
+           burns a request that comes back empty and leaves _ready false
+           anyway. */
+        if (self.canRequestAds) {
+          self.preloadInterstitial();
+          self.preloadRewarded();
+        } else {
+          console.info('[ads] canRequestAds=false — not preloading.');
+        }
         return true;
       }).catch(function (e) {
         console.warn('[ads] initialize failed:', e);
         return false;
       });
+    },
+
+    /* ------------------------------------------------------------------
+       UMP consent. Resolves ALWAYS — the caller continues to initialize()
+       whatever happens here.
+
+       `canRequestAds` is the only field worth branching on. It is true
+       when consent was obtained, when consent was never required (most of
+       the world), and when the user accepted a limited-ads path; false
+       only when a form is genuinely outstanding. Defaults to true so a
+       consent *failure* degrades to today's behaviour rather than
+       silently switching ads off everywhere.
+       ------------------------------------------------------------------ */
+    canRequestAds: true,
+    consentStatus: 'UNKNOWN',
+    privacyOptionsRequired: false,
+
+    _requestConsent: function (testDevices) {
+      var self = this, m = self._m;
+      var cc = (Cfg.admob && Cfg.admob.consent) || {};
+
+      if (cc.enabled === false) {
+        console.info('[ads] consent flow disabled by config.');
+        return Promise.resolve();
+      }
+      if (!m.requestConsentInfo) {
+        console.warn('[ads] plugin has no consent API — update the plugin.');
+        return Promise.resolve();
+      }
+
+      return m.requestConsentInfo({
+        /* NUMBER, not a string — AdConsentExecutor reads it with
+           call.getInt(). 0 = DISABLED. */
+        debugGeography: cc.debugGeography || 0,
+        /* Hashed SDK ids, the same ones setTestDeviceIds wants. */
+        testDeviceIdentifiers: testDevices || [],
+        tagForUnderAgeOfConsent: false
+      })
+        .then(function (info) {
+          self._applyConsent(info);
+          /* A form is only shown when one is actually available AND the
+             user still owes an answer. Showing it unconditionally would
+             re-prompt on every cold start. */
+          if (info && info.isConsentFormAvailable && info.status === 'REQUIRED') {
+            return m.showConsentForm().then(function (after) {
+              self._applyConsent(after);
+            });
+          }
+          return null;
+        })
+        .catch(function (e) {
+          /* The commonest cause here is NO MESSAGE CONFIGURED in the
+             AdMob console — the SDK reports no form available, or errors
+             outright. That is a dashboard problem, not a code one, and it
+             must not take the game's ads down with it. */
+          console.warn('[ads] consent failed (is a message configured in ' +
+            'AdMob → Privacy & messaging?):', e && (e.message || e));
+        });
+    },
+
+    _applyConsent: function (info) {
+      if (!info) return;
+      if (typeof info.canRequestAds === 'boolean') {
+        this.canRequestAds = info.canRequestAds;
+      }
+      if (info.status) this.consentStatus = info.status;
+      this.privacyOptionsRequired =
+        info.privacyOptionsRequirementStatus === 'REQUIRED';
+      console.info('[ads] consent status=' + this.consentStatus +
+        ' canRequestAds=' + this.canRequestAds +
+        ' privacyOptions=' + this.privacyOptionsRequired);
+    },
+
+    /* Regulators require a persistent way to CHANGE a consent choice, not
+       just make it once. Surface this from the shop/settings only when
+       privacyOptionsRequired is true — Google hides the entry point
+       otherwise, and a dead button is worse than no button. */
+    showPrivacyOptions: function () {
+      var self = this, m = self._m;
+      if (!m || !m.showPrivacyOptionsForm) {
+        return Promise.resolve({ ok: false });
+      }
+      return m.showPrivacyOptionsForm()
+        .then(function () { return { ok: true }; })
+        .catch(function (e) {
+          console.warn('[ads] privacy options form:', e && (e.message || e));
+          return { ok: false };
+        });
     },
 
     _wireListeners: function () {

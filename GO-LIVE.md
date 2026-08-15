@@ -335,31 +335,70 @@ empty, and it does not need to be filled given the above). The value is
 `adb logcat | grep -i setTestDeviceIds` and take the **hash** the SDK logs.
 Mixing the two values up silently does nothing.
 
-### 7b. ⚠️ No GDPR / US-state consent message exists — and the app cannot show one
+### 7b. ~~GDPR / US-state consent~~ — **BUILT 2026-08-15, awaiting your upload**
 
-**Found 2026-08-15, not fixed.** AdMob → Privacy & messaging shows
-**European regulations** and **US state regulations** both offering only
-*Create* — no message has ever been made on this account.
+Both halves are done. Neither works without the other, which is why they
+were done together.
 
-This matters because the closed test targets **177 countries**, the EEA and
-UK among them, and the app serves personalised ads with `AD_ID`.
+**Console — both messages Published**, each bound to **Escape 20 Chambers
+only** (Frost Tower deliberately untouched):
 
-**Creating the message in the console alone would do nothing.** It is only
-half the mechanism: the app has to call the UMP SDK to fetch and display it,
-and `www/js/ads.js` never does — it calls `AdMob.initialize()` and nothing
-else. There is no `requestConsentInfo` / `showConsentForm` anywhere in
-`www/js/`. So closing this properly is:
+| Message | Name | Notes |
+|---|---|---|
+| European regulations | `Escape 20 Chambers - EEA/UK consent` | Consent On, Manage options On, **Do not consent On for every country** |
+| US state regulations | `Escape 20 Chambers - US states opt-out` | Opt out On |
 
-1. a code change in `ads.js` to run the UMP consent flow *before*
-   `initialize()`,
-2. a consent message created in the AdMob console,
-3. a versionCode bump, `npx cap sync android`, a fresh `bundleRelease`, and
-4. **an upload by you** — the AAB is over the 10 MB agent cap.
+Privacy policy URL required before publishing:
+`https://ahmadessam1997.github.io/escape-chambers/privacy-policy.html`.
 
-Deliberately left alone rather than half-done: a console message with no SDK
-call is worse than nothing, because the dashboard then reads as compliant
-while no user is ever asked. **Top candidate for v1.1 alongside the
-letterboxing fix.**
+> **"Do not consent" was switched On deliberately**, via the master toggle
+> at the top of the per-country list. Google warns it "may lead to lower
+> consent rates", and that is the real trade — but a reject button no less
+> prominent than accept is the defensible reading of GDPR, and it matches
+> this game's existing refusal to use dark patterns (the out-of-hints
+> dialog offers the free video *before* it sells). **Reversible** if you
+> disagree: Privacy & messaging → European regulations → the message →
+> *Do not consent* → Off → Publish changes.
+
+**Code — `ads.js` now runs the UMP flow before `initialize()`.**
+`_requestConsent()` calls `requestConsentInfo`, shows the form only when
+`isConsentFormAvailable && status === 'REQUIRED'` (unconditional would
+re-prompt every cold start), and gates preloading on `canRequestAds`. It
+**always resolves** — a consent failure must not take the game's ads down,
+and the commonest cause of failure is a withdrawn console message.
+
+> **`debugGeography` is a NUMBER.** `AdConsentExecutor` reads it with
+> `call.getInt()`, so `'EEA'` would silently do nothing — the identical
+> failure mode to the `maxAdContentRating: 'G'` bug on Frost Tower. Ships
+> as `0`; set `config.js → admob.consent.debugGeography = 1` on a test
+> device to force the EEA form from outside the EEA.
+>
+> **`testDeviceIdentifiers` takes the SDK's *hashed* id**, the same value as
+> `admob.testDeviceIds` — not the advertising ID from the AdMob console. It
+> reuses that same array on purpose, so there is only one place to get it
+> wrong.
+>
+> Unlike RevenueCat's `configure`, none of the four consent methods are
+> `RETURN_NONE` — plain `@PluginMethod` in `AdMob.java`, so they return real
+> promises and chaining is safe.
+
+**`ECAds.showPrivacyOptions()` exists but is not wired to any button yet.**
+Regulators want a persistent way to *change* a choice. Surface it from the
+shop/settings only when `ECAds.privacyOptionsRequired` is true — Google
+hides the entry point otherwise and a dead button is worse than none.
+**This is the one loose end of the consent work.**
+
+**⬜ YOUR STEP — upload versionCode 2.** Built and verified already:
+
+```
+android/app/build/outputs/bundle/release/app-release.aab
+10,620,569 bytes · versionCode 2 / 1.0.1 · META-INF/UPLOAD.{SF,RSA} present
+```
+
+Consent code confirmed *inside* the bundle, not merely in the source tree.
+Still 10.6 MB against the 10 MB agent cap, so the upload is yours. Until it
+lands, the published messages reach nobody — the shipped versionCode 1 has
+no UMP call in it.
 
 ### 8. The 12-tester, 14-day clock
 

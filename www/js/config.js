@@ -52,7 +52,35 @@
          and that *hash* is what goes here. The AdMob console's Test
          devices page wants the raw advertising ID instead. Mixing the two
          up silently does nothing at all. */
-      testDeviceIds: []
+      testDeviceIds: [],
+
+      /* ---------------- UMP consent (GDPR / US states) ----------------
+         The app serves personalised ads and ships AD_ID, and the closed
+         test targets 177 countries including the EEA and UK, so a consent
+         form has to be REQUESTED here and CREATED in the AdMob console
+         (Privacy & messaging). Neither half works alone: without the
+         console message the SDK reports no form available, and without
+         this call the console message is never shown to anyone.
+
+         debugGeography is read natively with call.getInt(), so it is a
+         NUMBER, not a string. Passing 'EEA' silently does nothing — the
+         same failure mode as the maxAdContentRating enum below.
+             0 DISABLED   1 EEA   2 NOT_EEA (deprecated)
+             3 US         4 OTHER
+         Set it to 1 on a test device to force the EEA form outside the
+         EEA; ship it as 0.
+
+         testDeviceIdentifiers takes the SDK's *hashed* device id — the
+         same value as testDeviceIds above, and NOT the advertising ID
+         from the AdMob console. It reuses that list on purpose so there
+         is only one place to get it wrong. */
+      consent: {
+        debugGeography: 0,
+        /* Set false to skip the whole flow (e.g. if the console message
+           is ever withdrawn). Ads then still run, but only with whatever
+           consent state the SDK already has. */
+        enabled: true
+      }
     },
 
     /* ---------------- RevenueCat ----------------
