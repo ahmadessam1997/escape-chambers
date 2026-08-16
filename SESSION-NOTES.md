@@ -16,10 +16,12 @@
 > 1. **Eleven more testers.** The list holds 1 address (yours). Production
 >    access needs **12 opted in for 14 continuous days**, and the clock
 >    starts at the *twelfth install*, not at a console edit.
-> 2. **The Google service account JSON** — it produces a private key, so it
->    is yours to create and upload to RevenueCat. Until it exists all three
->    products read `Store Status: Could not check` and purchases are not
->    server-verified. Do **not** let it land in the repo folder.
+> 2. **Service account — built 2026-08-16, now waiting on Google.** GCP
+>    project `escape-20-chambers`, service account
+>    `revenuecat-play@escape-20-chambers...`, both APIs enabled, Pub/Sub
+>    Admin granted, Play access Active, JSON uploaded. All three products
+>    still read `Store Status: Could not check` — that is propagation (up
+>    to 24h), not misconfiguration. **Re-check before changing anything.**
 > 3. **Everything the browser could not prove** — a real interstitial, a
 >    rewarded video paying +2, buying `hints_25` twice, and Restore after
 >    reinstall.
@@ -41,6 +43,57 @@
 > completes all 20 chambers.
 
 ---
+
+## 2026-08-16 — the service account, and three errors that look like one
+
+Built the whole Google side: GCP project `escape-20-chambers`, service
+account `revenuecat-play@`, both APIs, the IAM role, Play access. Full
+values in `GO-LIVE.md` step 6.
+
+### The three-step trap
+
+RevenueCat's "service account credentials" is not one setting, it is three,
+and each failure reports as if it were the previous one:
+
+1. **Enable `androidpublisher.googleapis.com`** → without it, nothing.
+2. **Enable `pubsub.googleapis.com`** → without it, upload fails with
+   *"Google Cloud Pub/Sub API must first be enabled"*.
+3. **Grant the service account the `Pub/Sub Admin` IAM role** → without it,
+   upload fails with *"credentials do not have permissions to access the
+   Google Cloud Pub/Sub API"*. **Enabling an API is not granting access to
+   it.** This is the step that is easy to miss, because the error names the
+   API and reads like step 2 again.
+
+I enabled only `androidpublisher` at first, because the GCP notification
+history showed Frost Tower enabling both and I acted on one. The history
+was the clue and I half-used it.
+
+### Prior art beats invention, twice
+
+- **The AdMob test device was already registered** account-wide by Frost
+  Tower, so nothing needed creating (see below).
+- **A working Play service-account key already existed** —
+  frost-tower's has *account-level* financial permissions, so it covers
+  every app on the developer account including this one. A dedicated one
+  was created anyway, by choice, for independent revocability.
+
+**Play permissions must be ACCOUNT permissions.** All the sibling service
+accounts have an empty App-permissions list; access comes from the Account
+tab, which Play states grants "access to all apps in your developer
+account". Granting per-app would have worked too but diverges from the
+known-good shape.
+
+**Frost Tower has no GCP IAM role for its own service account** — its
+project IAM lists only the owner. It is therefore almost certainly showing
+the same *Credentials need attention* banner and receiving no real-time
+refund/cancellation events. Worth fixing there.
+
+### Still open
+
+`Store Status: Could not check` on all three products *after* everything
+above was verified correct. Google documents up to **24 hours** for new
+Play API access to propagate. The temptation is to re-do the setup; don't,
+until a day has passed.
 
 ## 2026-08-15 (later) — RevenueCat wired, and one entitlement deliberately not created
 

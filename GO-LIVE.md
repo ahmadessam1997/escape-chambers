@@ -290,20 +290,52 @@ and product all matching:
 All three products read **`Store Status: Could not check`**, which is
 expected until the service account below exists.
 
-**Still needed — this one produces a private key, so it is yours:**
-a Google service account JSON with Play access, uploaded to RevenueCat →
-Project settings → Apps → Escape 20 Chambers (Play Store).
+**Service account — built 2026-08-16, waiting on Google propagation.**
 
-Until it exists, every RevenueCat product reads
-**`Store Status: Could not check`** — as all three do now — and real
-transactions are not server-verified. The SDK still works, so it does not
-block the closed test.
+There was **no** GCP project for this game; the pattern is one per app. All
+of the following now exists:
+
+| Piece | Value |
+|---|---|
+| GCP project | `escape-20-chambers` ("Escape 20 Chambers") |
+| Service account | `revenuecat-play@escape-20-chambers.iam.gserviceaccount.com` |
+| GCP IAM role | **Pub/Sub Admin** on that project |
+| APIs enabled | `androidpublisher.googleapis.com` **and** `pubsub.googleapis.com` |
+| Play Console | Invited as a user, **Active**, *account* permissions: View financial data + Manage orders and subscriptions |
+| RevenueCat | JSON uploaded — reads *File saved* |
+
+> **BOTH APIs are required, and this is the trap.** Enabling only
+> `androidpublisher` gets you as far as *"Google Cloud Pub/Sub API must
+> first be enabled"* on upload. Enabling Pub/Sub then gets you
+> *"Your Google service account credentials do not have permissions to
+> access the Google Cloud Pub/Sub API"* — because enabling the API is not
+> the same as granting the **Pub/Sub Admin** IAM role to the service
+> account. Three separate steps, three separate error messages.
+>
+> **Play permissions must be ACCOUNT permissions, not app permissions.**
+> The sibling accounts have an *empty* App-permissions list; their access
+> comes entirely from the Account-permissions tab, which Play's own help
+> text says "grant access to all apps in your developer account".
+>
+> **Frost Tower's service account has NO GCP IAM role at all** — only the
+> owner appears in its project IAM. So Frost Tower almost certainly shows
+> the same *Credentials need attention* banner and has never had developer
+> notifications connected. Worth fixing there too; it means no real-time
+> refund or cancellation events.
+
+**As of 2026-08-16 all three products still read `Store Status: Could not
+check`.** Everything above is verified correct, so this is Google
+propagation, which is documented as taking **up to 24 hours**. Do not
+re-do the setup on the strength of that message alone — re-check the next
+day first. Real transactions are not server-verified until it clears, but
+the SDK works regardless, so it does not block the closed test.
 
 > **Do not download that JSON into the project folder.** Google Cloud
 > defaults to the browser download directory; on a sibling project the key
-> landed in the repo root, untracked but not gitignored, one `git add -A`
-> away from being pushed to a public repo with access to Play financial
-> data. `.gitignore` here now blocks the pattern, but do not rely on it.
+> landed in the repo root — it turned out to be gitignored
+> (`frost-tower/.gitignore:17: frost-tower-*.json`) and was never pushed,
+> but the margin was one line of config. Google also auto-disables service
+> account keys it detects in public repositories.
 
 ### 7. ~~Register your device as an AdMob test device~~ — **ALREADY COVERED**
 
