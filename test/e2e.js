@@ -395,6 +395,30 @@ async function solveChamber(page, i) {
          return revoked;
        }));
 
+    /* ================= 7c. every chamber looks different =================
+       The v1 build set body.className = 't' + (i % 5), so chambers I, VI,
+       XI and XVI were pixel-identical and the game read as one room
+       repainted. Twenty distinct palettes AND twenty distinct names. */
+    console.log('\n-- room styling --');
+    const looks = await page.evaluate(() => {
+      const seen = [], names = [];
+      for (let i = 0; i < 20; i++) {
+        window.ECGame.startLevel(i);
+        const cs = getComputedStyle(document.body);
+        seen.push(['--wall', '--floor', '--accent']
+          .map(v => cs.getPropertyValue(v).trim()).join('|'));
+        names.push(document.getElementById('roomTitle').textContent.split('·')[0].trim());
+      }
+      return { palettes: seen, names: names };
+    });
+    eq('all 20 chambers have a distinct palette',
+       new Set(looks.palettes).size, 20);
+    eq('all 20 chambers have a distinct name',
+       new Set(looks.names).size, 20);
+    ok('no chamber leaves a palette variable empty',
+       looks.palettes.every(p => p.split('|').every(v => v.length > 0)),
+       JSON.stringify(looks.palettes.slice(0, 3)));
+
     /* ================= 7b. ad-consent privacy button ================= */
     console.log('\n-- consent --');
     /* The failure this guards is a DEAD BUTTON: outside the EEA/UK and the

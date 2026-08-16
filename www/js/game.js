@@ -63,7 +63,18 @@
     return a;
   }
 
-  var THEMES = ['THE STUDY', 'THE CELLAR', 'THE GREENHOUSE', 'THE OBSERVATORY', 'THE ATTIC'];
+  /* Twenty names, not five cycled. The old build set
+     `body.className = 't' + (i % 5)`, so chambers I, VI, XI and XVI were
+     pixel-identical and the game read as one room repainted — which is
+     exactly what it was. Each chamber now gets its own name, its own
+     seeded palette (paletteFor) and its own seeded layout (layoutFor). */
+  var THEMES = [
+    'THE STUDY',      'THE CELLAR',      'THE GREENHOUSE',  'THE OBSERVATORY',
+    'THE ATTIC',      'THE APOTHECARY',  'THE MAP ROOM',    'THE CONSERVATORY',
+    'THE ARCHIVE',    'THE CLOCKWORKS',  'THE SCULLERY',    'THE AVIARY',
+    'THE DARKROOM',   'THE ORANGERY',    'THE MUNIMENT',    'THE BOILER ROOM',
+    'THE LONG GALLERY','THE ICEHOUSE',   'THE BELFRY',      'THE VAULT'
+  ];
   var ROMAN = ['I','II','III','IV','V','VI','VII','VIII','IX','X',
                'XI','XII','XIII','XIV','XV','XVI','XVII','XVIII','XIX','XX'];
   var SEARCH = ['rug','plant','clock','pA','pB','shelf','chest'];
@@ -75,6 +86,76 @@
   var ICON = { brassKey:'🗝️', ironKey:'🔑', uv:'🔦', note:'📜', crank:'⚙️' };
   var LBL  = { brassKey:'brass key', ironKey:'iron key', uv:'UV lamp',
                note:'note', crank:'crank' };
+
+  /* ---------------- per-chamber look ----------------
+     Palettes are generated rather than hand-written, so twenty chambers
+     cost twenty seeds instead of twenty stylesheets. Everything derives
+     from one base hue, which keeps a room internally harmonious while
+     making neighbouring chambers unmistakably different.
+
+     The lightness figures are deliberately low and narrow. --ink is a warm
+     near-white applied over --wall and --panel, so a wall that drifts
+     bright enough to fight it makes the whole room unreadable. Keep walls
+     under ~22% lightness if you retune these. */
+  function hsl(h, s, l) { return 'hsl(' + ((h % 360) + 360) % 360 + ',' + s + '%,' + l + '%)'; }
+
+  function paletteFor(i) {
+    var R = mulberry(i * 2654435761 + 12345);
+    /* Spread hues around the wheel by index first, then jitter, so no two
+       consecutive chambers land in the same family even by chance. */
+    var base = (i * 360 / 20 + R() * 24 - 12 + 200) % 360;
+    /* Floors lean warm and walls lean cool in most rooms; flipping that on
+       some chambers is what stops the set feeling like one tinted image. */
+    var warmFloor = R() > 0.35;
+    var fh = warmFloor ? (base + 150) % 360 : (base + 20) % 360;
+    var ah = (base + (R() > 0.5 ? 40 : -40) + 180) % 360;   // accent opposes
+    var sat = 16 + Math.floor(R() * 14);
+    return {
+      '--bg':     hsl(base, sat + 8, 5),
+      '--wall':   hsl(base, sat, 17),
+      '--wall2':  hsl(base, sat, 12),
+      '--floor':  hsl(fh, sat + 6, 20),
+      '--floor2': hsl(fh, sat + 6, 12),
+      '--panel':  hsl(base, sat + 2, 13),
+      '--line':   hsl(base, sat + 6, 26),
+      '--accent': hsl(ah, 62, 62),
+      '--soft':   hsl(base, 18, 66),
+      '--glow':   hsl(ah, 82, 80)
+    };
+  }
+
+  /* Geometry variation, kept to transforms of the existing scene rather
+     than twenty hand-drawn SVGs. Mirroring is safe because no hint or clue
+     ever says "left" or "right" — they name objects — but if that ever
+     changes, this is the thing that breaks it. */
+  function layoutFor(i) {
+    var R = mulberry(i * 40503 + 7);
+    return {
+      mirror: R() > 0.5,
+      /* A small skew of the whole room reads as a different perspective
+         without moving any hit target off its shape. */
+      tilt: (R() * 2 - 1) * 1.4,
+      scale: 0.965 + R() * 0.07
+    };
+  }
+
+  function applyRoomStyle(i) {
+    var pal = paletteFor(i);
+    Object.keys(pal).forEach(function (k) {
+      document.body.style.setProperty(k, pal[k]);
+    });
+    var lay = layoutFor(i);
+    var sc = $('scene');
+    /* transform-box/origin keep the mirror centred on the viewBox rather
+       than the element's padded bounds, which otherwise slides the room
+       sideways and clips the door. */
+    sc.style.transformBox = 'fill-box';
+    sc.style.transformOrigin = 'center';
+    sc.style.transform =
+      (lay.mirror ? 'scaleX(-1) ' : '') +
+      'rotate(' + lay.tilt.toFixed(2) + 'deg) scale(' + lay.scale.toFixed(3) + ')';
+    return lay;
+  }
 
   function genLevel(i) {
     var R = mulberry(i * 7919 + 31);
@@ -178,8 +259,12 @@
           uvOn: false, seqDone: L.tier < 5, escaped: false,
           paidHints: {}, hintsUsed: 0 };
 
-    document.body.className = 't' + (i % 5);
-    $('roomTitle').textContent = THEMES[i % 5] + ' · CHAMBER ' + ROMAN[i];
+    /* className is still reset (not left stale) because body.uv is toggled
+       on it during UV mode; the palette now comes from inline custom
+       properties instead of a t0..t4 class. */
+    document.body.className = '';
+    applyRoomStyle(i);
+    $('roomTitle').textContent = THEMES[i] + ' · CHAMBER ' + ROMAN[i];
 
     /* reset scene visuals */
     SEARCH.forEach(function (id) { $(id).classList.remove('searched'); });
