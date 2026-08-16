@@ -253,15 +253,34 @@
   var ORD = ['', 'first', 'second', 'third', 'fourth'];
   function numeral(n) { return ORD[n] || ('#' + n); }
 
+  /* A paid hint should advance the player one step, not hand over the
+     answer. Names the first number still missing — which is exactly what a
+     good escape-room host does when a team stalls. */
+  function nextStepHint() {
+    if (!L.puzzle) return '';
+    var missing = L.puzzle.facts.filter(function (f) {
+      return typeof f.value === 'number' && !S.factsFound[f.spot];
+    });
+    if (!missing.length) return ' You have every number — now apply the rule.';
+    return ' You are still missing one: look at the ' + missing[0].spotName + '.';
+  }
+
   /* A found number, told in the room's own language. The ordinal is NOT
      decoration: every rule refers to "the first two numbers", so without it
      the player has facts they cannot order and the puzzle is unfair. */
   function factLine(f, again) {
     var lore = L.puzzle && L.puzzle.lore;
     var what = lore ? lore.unit : 'marks';
-    return (again ? 'Again — ' : '') +
-           f.value + ' ' + what +
-           '  ·  the ' + numeral(f.order) + ' of ' + L.puzzle.facts.length;
+    var line = (again ? 'Again — ' : '') +
+               f.value + ' ' + what +
+               '  ·  the ' + numeral(f.order) + ' of ' + L.puzzle.facts.length;
+    /* The trail: point at the next find, but only while it is still
+       unfound, so a player re-reading an old clue is not sent back to a
+       spot they have already emptied. */
+    if (f.pointsTo && !S.factsFound[f.pointsTo]) {
+      line += '.  Beneath it, an arrow toward the ' + f.pointsToName + '.';
+    }
+    return line;
   }
 
   /* ---------------- hint wallet ---------------- */
@@ -292,7 +311,7 @@
       return { key: 'note',
                text: L.puzzle
                  ? 'Read the note in your bag — it gives the RULE, not the number. ' +
-                   L.puzzle.hintText
+                   L.puzzle.hintText + nextStepHint()
                  : 'The note in your bag knows the safe code. Tap the note to read it, then tap the safe.' };
     if (L.tier >= 4 && has('uv') && !S.uvOn && !S.safe)
       return { key: 'uvOn', text: 'Switch the UV lamp on (tap it in your bag), then look around.' };
@@ -432,8 +451,14 @@
     /* Under UV the wall no longer spells out the answer — it spells out
        the RULE. Reading it is now the start of the puzzle, not the end. */
     if (id === L.clueSpot && L.tier >= 4) {
-      toast(S.uvOn ? '✨ Ghostly ink blazes: ' + (L.puzzle ? L.puzzle.ruleText : '"' + L.code + '"')
-                   : 'The surface shimmers oddly in the low light…');
+      toast(S.uvOn
+        ? '✨ Ghostly ink blazes: ' +
+          (L.puzzle
+            ? L.puzzle.ruleText +
+              (L.puzzle.startSpotName && !S.factsFound[L.puzzle.startSpot]
+                ? '  Begin at the ' + L.puzzle.startSpotName + '.' : '')
+            : '"' + L.code + '"')
+        : 'The surface shimmers oddly in the low light…');
       return;
     }
     var rf = L.factAt && L.factAt[id];
@@ -549,8 +574,15 @@
           return;
         }
         if (n === 'note') {
-          toast(L.puzzle ? 'The note reads: ' + L.puzzle.ruleText
-                         : 'The note reads: "' + L.code + '". Someone circled it twice.');
+          /* The note gives the rule AND the head of the trail. Without the
+             starting point the player has a rule and no idea where the
+             numbers are, which is the "guess what the designer meant"
+             failure real escape rooms are warned against. */
+          toast(L.puzzle
+            ? L.puzzle.ruleText +
+              (L.puzzle.startSpotName && !S.factsFound[L.puzzle.startSpot]
+                ? '  Begin at the ' + L.puzzle.startSpotName + '.' : '')
+            : 'The note reads: "' + L.code + '". Someone circled it twice.');
           return;
         }
         S.sel = (S.sel === n) ? null : n;

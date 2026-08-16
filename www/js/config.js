@@ -29,7 +29,7 @@
        rooms menu so a tester can say which build they are on — without it,
        "purchases don't work" is indistinguishable from "you are still
        running last week's APK", which cost a full debugging round. */
-    build: '1.1.2 (5)',
+    build: '1.2.0 (6)',
 
     /* ---------------- AdMob ----------------
        The app ID ALSO has to be written into

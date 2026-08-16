@@ -481,6 +481,55 @@ async function solveChamber(page, i) {
        new Set(puzzled.map(p => p.family)).size >= 3,
        JSON.stringify([...new Set(puzzled.map(p => p.family))]));
 
+    /* ================= 7e. the clue trail =================
+       Real escape rooms chain: each solve points at the next thing. The
+       trail must GUIDE without GATING — every fact stays findable by
+       searching its own spot, so a player who ignores the trail is never
+       stuck. The auto-solver proves that second half by taps alone. */
+    console.log('\n-- clue trail --');
+    const trail = await page.evaluate(() => {
+      const out = [];
+      for (let i = 0; i < 20; i++) {
+        window.ECGame.startLevel(i);
+        const s = window.ECGame.state();
+        if (!s.L.puzzle) continue;
+        /* `logic` carries a single placeholder fact with value:null -- its
+           rule is self-contained and needs no scattered numbers -- so the
+           trail assertions below only apply to families that HAVE numbers. */
+        const all = s.L.puzzle.facts;
+        const f = all.filter(x => typeof x.value === 'number');
+        if (!f.length) continue;
+        out.push({
+          i,
+          chain: f.map(x => x.pointsTo),
+          spots: f.map(x => x.spot),
+          start: all[0].spot,
+          lore: s.L.puzzle.lore.unit,
+          rule: s.L.puzzle.ruleText
+        });
+      }
+      return out;
+    });
+
+    ok('every fact but the last points at the next one',
+       trail.every(t => t.chain.slice(0, -1).every((p, k) => p === t.spots[k + 1])),
+       JSON.stringify(trail[0]));
+    ok('the last fact points nowhere',
+       trail.every(t => t.chain[t.chain.length - 1] === null));
+    ok('the trail starts at the first fact',
+       trail.every(t => t.start === t.spots[0]));
+    ok('a trail never points at a spot with no number',
+       trail.every(t => t.chain.filter(Boolean).every(p => t.spots.includes(p))));
+    ok('each chamber counts its own themed unit',
+       new Set(trail.map(t => t.lore)).size === trail.length,
+       JSON.stringify(trail.map(t => t.lore).slice(0, 3)));
+    ok('numbered chambers really do chain (not a vacuous pass)',
+       trail.length >= 6 && trail.every(t => t.spots.length >= 3),
+       'chambers with numbered trails: ' + trail.length);
+    ok('the rule is told in the room’s own voice',
+       trail.every(t => /^On (a|an) /.test(t.rule)),
+       JSON.stringify(trail.filter(t => !/^On (a|an) /.test(t.rule))[0]));
+
     /* ================= 7b. ad-consent privacy button ================= */
     console.log('\n-- consent --');
     /* The failure this guards is a DEAD BUTTON: outside the EEA/UK and the

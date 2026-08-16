@@ -134,6 +134,25 @@
          puzzle. */
       p.lore = lore;
       p.ruleText = 'On ' + lore.vessel + ', ' + lore.verb + ' plainly: ' + p.ruleText;
+
+      /* ---------------- the trail ----------------
+         Real escape rooms chain: one solve POINTS AT the next thing. A flat
+         set of facts makes the room a tapping exercise, which is what this
+         game was. Each fact now names where the next one is, so a player
+         who finds one has a reason to go somewhere specific.
+
+         The trail is a CONVENIENCE, never a gate. Every fact stays findable
+         by searching its own spot directly, so a player who ignores the
+         trail (or taps everything, as the auto-solver does) is never stuck.
+         That keeps "all 20 completable" true without the trail having to be
+         correct. */
+      p.facts.forEach(function (f, k) {
+        var next = p.facts[k + 1];
+        f.pointsTo = next ? next.spot : null;
+        f.pointsToName = next ? next.spotName : null;
+      });
+      p.startSpot = p.facts[0] ? p.facts[0].spot : null;
+      p.startSpotName = p.facts[0] ? p.facts[0].spotName : null;
       return p;
     },
 
