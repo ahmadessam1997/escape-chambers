@@ -169,8 +169,25 @@
              'Empty. Suspiciously empty.', 'Just old memories.',
              'You find lint. Congratulations.', 'A faded receipt from long ago.'];
     SEARCH.forEach(function (s) { L.taunts[s] = pick(T); });
-    L.code = Array.from({ length: tier >= 4 ? 4 : 3 },
-                        function () { return Math.floor(R() * 10); }).join('');
+    /* The code is now the ANSWER to a puzzle rather than a number lying
+       around to be found. Tiers 1-2 have no safe, so they carry no puzzle
+       and stay a pure search — that progression is deliberate: the first
+       chambers teach the room before they ask you to think about it. */
+    var codeLen = tier >= 4 ? 4 : 3;
+    if (tier >= 3 && global.ECPuzzle) {
+      /* brassSpot is passed in so the generator never places a fact on the
+         key's spot. Filtering here instead would silently delete a needed
+         number and leave the chamber unwinnable. */
+      L.puzzle = global.ECPuzzle.generate(i, codeLen, null, L.brassSpot);
+      L.code = L.puzzle.code;
+      L.factAt = {};
+      L.puzzle.facts.forEach(function (f) {
+        if (f.spot && typeof f.value === 'number') L.factAt[f.spot] = f;
+      });
+    } else {
+      L.code = Array.from({ length: codeLen },
+                          function () { return Math.floor(R() * 10); }).join('');
+    }
     L.hides[L.brassSpot] = (tier === 1) ? 'ironKey' : 'brassKey';
     if (tier === 2) L.drawerHas = 'ironKey';
     if (tier === 3) { L.drawerHas = 'note';  L.safeHas = 'ironKey'; }
@@ -188,6 +205,9 @@
   var fmt = function (s) { return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
 
   function inChamber() { return !!(L && S && !S.escaped); }
+
+  var ORD = ['', 'first', 'second', 'third', 'fourth'];
+  function numeral(n) { return ORD[n] || ('#' + n); }
 
   /* ---------------- hint wallet ---------------- */
   function hintLabel() {
@@ -214,7 +234,11 @@
     if (L.tier > 1 && !S.drawer && has('brassKey'))
       return { key: 'useBrass', text: 'Select the brass key, then tap the desk drawer.' };
     if (L.tier === 3 && S.drawer && !S.safe)
-      return { key: 'note', text: 'The note in your bag knows the safe code. Tap the note to read it, then tap the safe.' };
+      return { key: 'note',
+               text: L.puzzle
+                 ? 'Read the note in your bag — it gives the RULE, not the number. ' +
+                   L.puzzle.hintText
+                 : 'The note in your bag knows the safe code. Tap the note to read it, then tap the safe.' };
     if (L.tier >= 4 && has('uv') && !S.uvOn && !S.safe)
       return { key: 'uvOn', text: 'Switch the UV lamp on (tap it in your bag), then look around.' };
     if (L.tier >= 4 && S.uvOn && !S.safe)
@@ -257,7 +281,7 @@
     entry = ''; symEntry = [];
     S = { found: {}, items: {}, sel: null, drawer: false, safe: false, cab: false,
           uvOn: false, seqDone: L.tier < 5, escaped: false,
-          paidHints: {}, hintsUsed: 0 };
+          paidHints: {}, hintsUsed: 0, factsFound: {} };
 
     /* className is still reset (not left stale) because body.uv is toggled
        on it during UV mode; the palette now comes from inline custom
@@ -278,7 +302,14 @@
     $('cabOpenG').style.display = 'none';
     $('sigilBadge').style.display = L.tier >= 5 ? '' : 'none';
     ['uvA','uvB','uvC'].forEach(function (u) { $(u).textContent = ''; });
-    if (L.tier >= 4) $(UVEL[L.clueSpot]).textContent = L.code.split('').join(' ');
+    /* The wall glows the RULE, never the answer. Printing L.code here was
+       the tier 4-5 half of "the game is just search": the code was simply
+       written on the wall in invisible ink. */
+    if (L.tier >= 4) {
+      $(UVEL[L.clueSpot]).textContent = L.puzzle
+        ? L.puzzle.shortRule
+        : L.code.split('').join(' ');
+    }
     $('uvRug').textContent = L.tier >= 5 ? L.seq.join(' ') : '';
 
     renderInv();
@@ -330,13 +361,31 @@
         toast((id === 'rug' ? 'Under the rug' : 'Behind the ' + SPOTNAME[id]) + ' — a ' + LBL[hid] + '!');
         return;
       }
+      /* A numbered fact reads as a find, not a taunt. It is worthless on
+         its own — the note's rule is what turns it into a code — which is
+         the whole point of the redesign. */
+      var f = L.factAt && L.factAt[id];
+      if (f) {
+        S.factsFound[id] = true;
+        toast('A number, scratched deep: ' + f.value +
+              '   (' + numeral(f.order) + ' of ' + L.puzzle.facts.length + ')');
+        return;
+      }
       toast(L.taunts[id]);
       return;
     }
     /* already searched: contextual re-read */
+    /* Under UV the wall no longer spells out the answer — it spells out
+       the RULE. Reading it is now the start of the puzzle, not the end. */
     if (id === L.clueSpot && L.tier >= 4) {
-      toast(S.uvOn ? '✨ Ghostly ink blazes: "' + L.code + '"'
+      toast(S.uvOn ? '✨ Ghostly ink blazes: ' + (L.puzzle ? L.puzzle.ruleText : '"' + L.code + '"')
                    : 'The surface shimmers oddly in the low light…');
+      return;
+    }
+    var rf = L.factAt && L.factAt[id];
+    if (rf) {
+      toast('The number again: ' + rf.value +
+            '   (' + numeral(rf.order) + ' of ' + L.puzzle.facts.length + ')');
       return;
     }
     if (id === 'rug' && L.tier >= 5) {
@@ -444,7 +493,8 @@
           return;
         }
         if (n === 'note') {
-          toast('The note reads: "' + L.code + '". Someone circled it twice.');
+          toast(L.puzzle ? 'The note reads: ' + L.puzzle.ruleText
+                         : 'The note reads: "' + L.code + '". Someone circled it twice.');
           return;
         }
         S.sel = (S.sel === n) ? null : n;
@@ -680,7 +730,27 @@
     showMenu: showMenu,
     genLevel: genLevel,
     state: function () {
+      /* Puzzle state is exposed at exactly the fidelity the PLAYER has:
+         the rule only once it has been read, and only the facts already
+         dug out of the room. The answer is never exposed. The e2e solver
+         uses these fields, so "all 20 completable" keeps meaning "a
+         player could do this", not "the generator says so".
+         (L is still handed out whole for the older assertions — anything
+         reading L.code would be cheating and must not be added.) */
+      var pz = null;
+      if (L && L.puzzle && S) {
+        var revealed = (L.tier === 3) ? !!S.items.note : !!S.uvOn;
+        pz = {
+          family: L.puzzle.family,
+          rule: revealed ? L.puzzle.ruleText : null,
+          total: L.puzzle.facts.length,
+          facts: Object.keys(S.factsFound || {}).map(function (spot) {
+            return { order: L.factAt[spot].order, value: L.factAt[spot].value };
+          })
+        };
+      }
       return { cur: cur, tier: L && L.tier, t: t,
+               puzzle: pz, codeLen: L ? L.code.length : 0,
                L: L, S: S,
                hints: Save.data.hints,
                unlimited: Save.data.unlimitedHints,

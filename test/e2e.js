@@ -107,6 +107,19 @@ async function typeCode(page, code) {
   await sleep(320);           // the pad checks after 200ms
 }
 
+/* Derive the safe code from PUBLIC information only — the rule the player
+   has read and the facts they have already dug out of the room. It never
+   touches L.code; if it could, "all 20 completable" would be circular. */
+async function solvePuzzle(page) {
+  return page.evaluate(() => {
+    const s = window.ECGame.state();
+    const p = s.puzzle;
+    if (!p || !p.rule) return null;
+    if (p.facts.length < p.total && p.family !== 'logic') return null;
+    return window.ECPuzzle.solveFromFacts(p.family, p.rule, p.facts, s.codeLen);
+  });
+}
+
 async function tapSigils(page, seq) {
   for (const s of seq) {
     await page.evaluate(sym => {
@@ -148,16 +161,16 @@ async function solveChamber(page, i) {
   }
 
   if (tier === 3) {
-    // Read the code the way a player does: tap the note, read the toast.
+    // Read the RULE the way a player does: tap the note. Then WORK OUT the
+    // code from the facts already dug out of the room. Never L.code.
     await selectItem(page, 'note');
-    const t = await text(page, 'toast');
-    const m = t.match(/"(\d+)"/);
-    if (!m) return { ok: false, why: 'note did not reveal a code (toast: ' + t + ')' };
+    const code = await solvePuzzle(page);
+    if (!code) return { ok: false, why: 'could not derive the code from the note rule + facts' };
     await clickId(page, 'safe');
     if (!await shown(page, 'padOv')) return { ok: false, why: 'safe pad did not open' };
-    await typeCode(page, m[1]);
+    await typeCode(page, code);
     st = await state(page);
-    if (!st.safe) return { ok: false, why: 'safe did not open with the note code' };
+    if (!st.safe) return { ok: false, why: 'safe did not open with the derived code ' + code };
   }
 
   if (tier >= 4) {
@@ -165,20 +178,23 @@ async function solveChamber(page, i) {
     st = await state(page);
     if (!st.uvOn) return { ok: false, why: 'UV lamp would not switch on' };
 
-    const code = await page.evaluate(() => {
+    // The UV ink shows the RULE now, not the answer. Derive the code.
+    const glow = await page.evaluate(() => {
       for (const id of ['uvA','uvB','uvC']) {
-        const v = (document.getElementById(id).textContent || '').replace(/\s+/g, '');
+        const v = (document.getElementById(id).textContent || '').trim();
         if (v) return v;
       }
       return '';
     });
-    if (!/^\d{4}$/.test(code)) return { ok: false, why: 'no 4-digit code glowed under UV (got "' + code + '")' };
+    if (!glow) return { ok: false, why: 'nothing glowed under UV' };
+    const code = await solvePuzzle(page);
+    if (!code) return { ok: false, why: 'could not derive the code from the UV rule + facts' };
 
     await clickId(page, 'safe');
     if (!await shown(page, 'padOv')) return { ok: false, why: 'safe pad did not open' };
     await typeCode(page, code);
     st = await state(page);
-    if (!st.safe) return { ok: false, why: 'safe did not open with the UV code' };
+    if (!st.safe) return { ok: false, why: 'safe did not open with the derived code ' + code };
   }
 
   if (tier === 5) {
@@ -418,6 +434,52 @@ async function solveChamber(page, i) {
     ok('no chamber leaves a palette variable empty',
        looks.palettes.every(p => p.split('|').every(v => v.length > 0)),
        JSON.stringify(looks.palettes.slice(0, 3)));
+
+    /* ================= 7d. puzzles, not just search =================
+       The old build wrote the answer straight into the room: the note
+       toast read `"4821"` and the UV ink spelled the same digits on the
+       wall. Finding it WAS the puzzle. These assertions are what stop
+       that regressing. */
+    console.log('\n-- puzzles --');
+    const pz = await page.evaluate(() => {
+      const out = [];
+      for (let i = 0; i < 20; i++) {
+        window.ECGame.startLevel(i);
+        const s = window.ECGame.state();
+        if (!s.L.puzzle) { out.push({ i, tier: s.tier, none: true }); continue; }
+        out.push({
+          i, tier: s.tier,
+          family: s.L.puzzle.family,
+          code: s.L.puzzle.code,
+          rule: s.L.puzzle.ruleText,
+          short: s.L.puzzle.shortRule,
+          factSpots: s.L.puzzle.facts.map(f => f.spot),
+          brass: s.L.brassSpot,
+          codeLen: s.L.code.length
+        });
+      }
+      return out;
+    });
+    const puzzled = pz.filter(p => !p.none);
+
+    ok('every tier 3+ chamber has a puzzle',
+       pz.every(p => p.none ? p.tier < 3 : p.tier >= 3));
+    ok('the answer is never written in the rule text',
+       puzzled.every(p => !p.rule.includes(p.code)),
+       JSON.stringify(puzzled.filter(p => p.rule.includes(p.code)).slice(0, 2)));
+    ok('the answer is never written in the UV ink',
+       puzzled.every(p => !String(p.short).includes(p.code)),
+       JSON.stringify(puzzled.filter(p => String(p.short).includes(p.code)).slice(0, 2)));
+    ok('no fact is hidden on the brass key spot',
+       puzzled.every(p => !p.factSpots.includes(p.brass)),
+       JSON.stringify(puzzled.filter(p => p.factSpots.includes(p.brass)).slice(0, 2)));
+    ok('facts never share a spot with each other',
+       puzzled.every(p => new Set(p.factSpots).size === p.factSpots.length));
+    ok('the code always matches the keypad length',
+       puzzled.every(p => p.code.length === p.codeLen));
+    ok('all three kinds of thinking appear across the 20',
+       new Set(puzzled.map(p => p.family)).size >= 3,
+       JSON.stringify([...new Set(puzzled.map(p => p.family))]));
 
     /* ================= 7b. ad-consent privacy button ================= */
     console.log('\n-- consent --');
