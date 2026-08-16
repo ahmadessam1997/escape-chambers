@@ -169,11 +169,22 @@
       return true;
     },
 
-    /* ---- entitlement mirrors ---- */
-    setEntitlements: function (owns) {
-      this.data.removeAds = !!owns('remove_ads');
-      this.data.unlimitedHints = !!owns('hints_unlimited');
-      return this.save();
+    /* ---- entitlement mirrors ----
+       `authoritative` says whether the store actually answered. When it
+       did, this is a full sync and a refund CAN revoke an unlock. When it
+       did not, only upgrades are applied: an empty entitlement set from an
+       unreachable store is not evidence the player owns nothing, and
+       writing it through would strip a paid unlock from someone who is
+       merely offline. Losing a paying customer's purchase is the far more
+       expensive failure. */
+    setEntitlements: function (owns, authoritative) {
+      var self = this;
+      [['removeAds', 'remove_ads'], ['unlimitedHints', 'hints_unlimited']]
+        .forEach(function (pair) {
+          var owned = !!owns(pair[1]);
+          if (owned || authoritative) self.data[pair[0]] = owned;
+        });
+      return self.save();
     }
   };
 

@@ -549,7 +549,14 @@
             refreshHintUI();
             return true;
           }).then(function () {
-            Save.setEntitlements(function (id) { return Billing.owns(id); });
+            /* Only mirror when the store actually answered. If billing is
+               unavailable — no network, no key, plugin missing — then
+               `entitlements` is an empty guess, and writing it over the
+               save file would silently strip a paid unlock from a player
+               who is merely offline. Trust the last known-good mirror
+               instead; a real refund still revokes on the next good read. */
+            Save.setEntitlements(function (id) { return Billing.owns(id); },
+                                 Billing.hasAuthoritativeInfo);
             Ads.setRemoveAds(Save.data.removeAds);
             refreshHintUI();
           });

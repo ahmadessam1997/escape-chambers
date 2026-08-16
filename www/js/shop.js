@@ -174,7 +174,9 @@
         if (res.cancelled) return;                 // never an error
         if (!res.ok) { self._toast(res.error || 'Purchase failed.'); return; }
 
-        Save.setEntitlements(function (id) { return Billing.owns(id); });
+        /* Not authoritative: a resolved purchase proves the player owns
+           THIS item, not that they own nothing else. Upgrade only. */
+        Save.setEntitlements(function (id) { return Billing.owns(id); }, false);
         Ads.setRemoveAds(Save.data.removeAds);
 
         if (productId === 'remove_ads') self._toast('Ads removed. Enjoy the quiet. 🕯️');
@@ -197,7 +199,9 @@
       Billing.restore().then(function (res) {
         self._busy = false;
         if (!res.ok) { self._toast(res.error || 'Could not reach the store.'); return; }
-        Save.setEntitlements(function (id) { return Billing.owns(id); });
+        /* Restore succeeded, so this IS a full picture of the account and
+           may legitimately revoke something that was refunded. */
+        Save.setEntitlements(function (id) { return Billing.owns(id); }, true);
         Ads.setRemoveAds(Save.data.removeAds);
         var any = Save.data.removeAds || Save.data.unlimitedHints;
         self._toast(any ? 'Purchases restored.' : 'Nothing to restore on this account.');

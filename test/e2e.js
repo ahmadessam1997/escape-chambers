@@ -348,6 +348,53 @@ async function solveChamber(page, i) {
        await page.evaluate(() => window.ECSave.data.hints), before);
     eq('hint button shows the infinity marker', (await text(page, 'hintBtn')).trim(), '💡 ♾');
 
+    /* ---- the two money bugs reported from device, 2026-08-16 ----
+       Both had the same shape: the player paid, and the game showed the
+       purchase as not owned. */
+
+    /* A: a purchase whose customerInfo comes back STALE (empty) must still
+       register. This is what happens while the Play service account cannot
+       validate — _applyCustomerInfo rebuilt entitlements from scratch and
+       wiped the item that was just bought. */
+    ok('a purchase survives an empty customerInfo response',
+       await page.evaluate(async () => {
+         const B = window.ECBilling;
+         B.entitlements = {};
+         window.ECSave.data.unlimitedHints = false;
+         // Force the device-shaped path: resolve with an empty customerInfo.
+         const realState = B.state, realP = B._p;
+         B.state = 'ready';
+         B._p = { purchaseStoreProduct: () => Promise.resolve({ customerInfo: {} }),
+                  getProducts: () => Promise.resolve({ products: [{ identifier: 'hints_unlimited' }] }) };
+         const res = await B.purchase('hints_unlimited');
+         B.state = realState; B._p = realP;
+         return res.ok === true && B.owns('hints_unlimited') === true;
+       }));
+
+    /* B: an unreachable store must NOT erase a paid unlock from the save.
+       Boot used to mirror an empty entitlement set over the save file, so
+       launching offline stripped the purchase. */
+    ok('an unreachable store does not erase a paid unlock',
+       await page.evaluate(() => {
+         window.ECSave.data.removeAds = true;
+         window.ECSave.data.unlimitedHints = true;
+         // owns() says nothing is owned, and the read was NOT authoritative.
+         window.ECSave.setEntitlements(() => false, false);
+         return window.ECSave.data.removeAds === true &&
+                window.ECSave.data.unlimitedHints === true;
+       }));
+
+    /* ...but a trustworthy read still revokes, or refunds would be free. */
+    ok('an authoritative read still revokes a refunded unlock',
+       await page.evaluate(() => {
+         window.ECSave.data.removeAds = true;
+         window.ECSave.setEntitlements(() => false, true);
+         const revoked = window.ECSave.data.removeAds === false;
+         window.ECSave.data.removeAds = true;
+         window.ECSave.data.unlimitedHints = true;
+         return revoked;
+       }));
+
     /* ================= 7b. ad-consent privacy button ================= */
     console.log('\n-- consent --');
     /* The failure this guards is a DEAD BUTTON: outside the EEA/UK and the

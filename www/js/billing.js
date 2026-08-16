@@ -39,6 +39,13 @@
     prices: {},         // productId -> localized price string
     lastError: null,
 
+    /* False until the store has answered us at least once in this session.
+       While false, `entitlements` is an EMPTY GUESS, not a statement that
+       the player owns nothing — so it must never be written over the save
+       file. Mirroring it blindly used to erase a paid unlock every time
+       the app launched without a reachable store. */
+    hasAuthoritativeInfo: false,
+
     isMock:  function () { return this.state === 'mock'; },
     isReady: function () { return this.state === 'mock' || this.state === 'ready'; },
     owns:    function (id) { return !!this.entitlements[id]; },
@@ -69,6 +76,9 @@
           }
         } catch (e) {}
         self._mockTx = self._mockTx || [];
+        /* localStorage IS the store in the browser, so it is authoritative
+           and the e2e suite exercises the same mirroring path as device. */
+        self.hasAuthoritativeInfo = true;
         self._payOutConsumables(self._mockTx);
         return Promise.resolve(self.state);
       }
@@ -202,6 +212,9 @@
     _applyCustomerInfo: function (info) {
       var self = this;
       var next = {};
+      /* Reaching here at all means the store answered, so from now on an
+         empty entitlement set is a real answer and may revoke a refund. */
+      if (info) self.hasAuthoritativeInfo = true;
       if (info) {
         var active = (info.entitlements && info.entitlements.active) || {};
         Object.keys(active).forEach(function (k) {
@@ -324,7 +337,22 @@
              is credited from the same authoritative source that a restore
              would use — not from an optimistic local increment here. */
           if (res && res.customerInfo) self._applyCustomerInfo(res.customerInfo);
-          else if (prod && !prod.consumable) self.entitlements[productId] = true;
+
+          /* THEN grant the non-consumable unconditionally.
+
+             This used to be an `else if`, and that was a real money bug:
+             customerInfo is frequently present but STALE right after a
+             purchase (most visibly while the Play service account cannot
+             validate, when entitlements come back empty). _applyCustomerInfo
+             rebuilds `entitlements` from scratch, so the fresh purchase was
+             wiped by the very response that was supposed to confirm it —
+             the player paid, and the shop still said "not owned".
+
+             A RESOLVED purchase is authoritative on its own: the SDK only
+             resolves once the store has taken the money and RevenueCat has
+             acknowledged it. That is different from a validation failure,
+             which rejects and is still handled fail-closed below. */
+          if (prod && !prod.consumable) self.entitlements[productId] = true;
           return { ok: true };
         })
         .catch(function (e) {
