@@ -27,8 +27,8 @@ android {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         // Play rejects a duplicate versionCode outright. Bump on EVERY upload.
-        versionCode 4
-        versionName "1.1.1"
+        versionCode 5
+        versionName "1.1.2"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.

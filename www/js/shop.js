@@ -171,7 +171,13 @@
 
       Billing.purchase(productId).then(function (res) {
         self._busy = false;
-        if (res.cancelled) return;                 // never an error
+        /* Cancelling is not an error, but it must not be SILENT either.
+           "The purchase went through and nothing happened, with no
+           message" was a real report, and this branch is the only path
+           that shows nothing at all — so a mis-classified error here is
+           indistinguishable from the app ignoring a completed purchase.
+           Say something, always. */
+        if (res.cancelled) { self._toast('Purchase cancelled — nothing was charged.'); return; }
         if (!res.ok) { self._toast(res.error || 'Purchase failed.'); return; }
 
         /* Not authoritative: a resolved purchase proves the player owns

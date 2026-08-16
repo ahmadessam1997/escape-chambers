@@ -105,6 +105,8 @@
   .lv.lock{background:#141a28;color:#3a4a70;pointer-events:none;}
 
   #menuHints{font-size:12px;color:#e8a84c;margin-bottom:10px;letter-spacing:.05em;}
+  #buildLine{margin-top:12px;font-size:10px;color:#5d6b8f;letter-spacing:.06em;
+    font-family:ui-monospace,Menlo,Consolas,monospace;}
 
   /* ---- shop ---- */
   .srow{display:flex;align-items:center;gap:12px;text-align:left;
@@ -314,6 +316,11 @@
     <div id="grid"></div>
     <button class="btn ghostb" id="resumeBtn" style="display:none">Resume chamber</button>
     <button class="btn ghostb" id="shopBtn">🕯️ Hints &amp; extras</button>
+    <!-- Version + billing state, on screen deliberately. Without it there
+         is no way to tell whether a tester is running the build you just
+         shipped, and "purchases don't work" is unanswerable: the symptom of
+         an old build and of a broken store look identical from outside. -->
+    <div id="buildLine"></div>
   </div>
 </div>
 

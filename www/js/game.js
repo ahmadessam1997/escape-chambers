@@ -253,6 +253,17 @@
   var ORD = ['', 'first', 'second', 'third', 'fourth'];
   function numeral(n) { return ORD[n] || ('#' + n); }
 
+  /* A found number, told in the room's own language. The ordinal is NOT
+     decoration: every rule refers to "the first two numbers", so without it
+     the player has facts they cannot order and the puzzle is unfair. */
+  function factLine(f, again) {
+    var lore = L.puzzle && L.puzzle.lore;
+    var what = lore ? lore.unit : 'marks';
+    return (again ? 'Again — ' : '') +
+           f.value + ' ' + what +
+           '  ·  the ' + numeral(f.order) + ' of ' + L.puzzle.facts.length;
+  }
+
   /* ---------------- hint wallet ---------------- */
   function hintLabel() {
     if (Save.data.unlimitedHints) return '💡 ♾';
@@ -411,8 +422,7 @@
       var f = L.factAt && L.factAt[id];
       if (f) {
         S.factsFound[id] = true;
-        toast('A number, scratched deep: ' + f.value +
-              '   (' + numeral(f.order) + ' of ' + L.puzzle.facts.length + ')');
+        toast(factLine(f));
         return;
       }
       toast(L.taunts[id]);
@@ -427,11 +437,7 @@
       return;
     }
     var rf = L.factAt && L.factAt[id];
-    if (rf) {
-      toast('The number again: ' + rf.value +
-            '   (' + numeral(rf.order) + ' of ' + L.puzzle.facts.length + ')');
-      return;
-    }
+    if (rf) { toast(factLine(rf, true)); return; }
     if (id === 'rug' && L.tier >= 5) {
       toast(S.uvOn ? '✨ Sigils woven in glowing thread: ' + L.seq.join('  ')
                    : 'The weave hides a pattern you can’t quite see…');
@@ -503,6 +509,12 @@
     if (inChamber()) clearInterval(timerInt);
     $('resumeBtn').style.display = inChamber() ? '' : 'none';
     refreshHintUI();
+    /* Build + store state, always visible. `store=ready` means the SDK
+       reached RevenueCat; `unavailable` means it never did, and the two
+       produce completely different purchase bugs. */
+    $('buildLine').textContent =
+      'build ' + Cfg.build + ' · store ' + Billing.state +
+      (Billing.lastError ? ' · ' + Billing.lastError : '');
     var g = $('grid');
     g.innerHTML = '';
     for (var i = 0; i < 20; i++) {

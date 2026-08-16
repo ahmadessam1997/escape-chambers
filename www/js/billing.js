@@ -356,6 +356,14 @@
           return { ok: true };
         })
         .catch(function (e) {
+          /* Log EVERY rejection before classifying it. A purchase that is
+             wrongly filed as "cancelled" disappears without a trace, and
+             that is precisely the shape of the bug that took a whole round
+             to find. `adb logcat | grep billing` should always show why. */
+          console.warn('[billing] purchase rejected:', productId,
+                       'code=', e && (e.code || e.errorCode),
+                       'userCancelled=', e && e.userCancelled,
+                       'msg=', e && e.message);
           if (e && (e.userCancelled === true || e.code === '1' || e.code === 1 ||
                     /cancel/i.test(e.message || ''))) {
             return { cancelled: true };

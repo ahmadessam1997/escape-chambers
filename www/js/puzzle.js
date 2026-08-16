@@ -58,7 +58,44 @@
     return a;
   }
 
+  /* ---------------- theme lore ----------------
+     Escape-room design guidance is consistent on this: a clue buried in the
+     narrative beats a disconnected instruction, and the theme should say
+     WHY a number is there. "A number, scratched deep: 7" is the same puzzle
+     in all twenty rooms. "Seven dead stars marked on the chart" is the
+     Observatory.
+
+     One entry per chamber, in the same order as THEMES in game.js.
+       unit   what the numbers are counted in
+       vessel where a written rule is found
+       verb   how the number is recorded
+     Nothing here changes a single answer — it is pure phrasing — so a bad
+     entry can never make a chamber unsolvable. */
+  var LORE = [
+    { unit: 'ink-stained page numbers', vessel: 'a bookplate',        verb: 'inked' },
+    { unit: 'chalk marks on the casks',  vessel: 'a cellar ledger',    verb: 'chalked' },
+    { unit: 'seed trays',                vessel: 'a planting card',    verb: 'pencilled' },
+    { unit: 'dead stars on the chart',   vessel: 'a star-chart margin', verb: 'plotted' },
+    { unit: 'nails in the rafter',       vessel: 'a luggage tag',      verb: 'scratched' },
+    { unit: 'apothecary measures',       vessel: 'a prescription slip', verb: 'written' },
+    { unit: 'leagues on the map scale',  vessel: 'a map cartouche',    verb: 'ruled' },
+    { unit: 'panes of cracked glass',    vessel: 'a glazier’s docket', verb: 'cut' },
+    { unit: 'catalogue volumes',         vessel: 'an index card',      verb: 'typed' },
+    { unit: 'cogs on the gear train',    vessel: 'a maintenance plate', verb: 'stamped' },
+    { unit: 'copper pans',               vessel: 'a kitchen slate',    verb: 'scrawled' },
+    { unit: 'empty perches',             vessel: 'a keeper’s notebook', verb: 'noted' },
+    { unit: 'hanging negatives',         vessel: 'a developing log',   verb: 'grease-pencilled' },
+    { unit: 'orange trees in the row',   vessel: 'a gardener’s tally', verb: 'notched' },
+    { unit: 'sealed deeds',              vessel: 'a wax seal',         verb: 'embossed' },
+    { unit: 'pressure dials',            vessel: 'a boiler plate',     verb: 'riveted' },
+    { unit: 'portraits in the run',      vessel: 'a gallery label',    verb: 'lettered' },
+    { unit: 'ice blocks in the stack',   vessel: 'a delivery chit',    verb: 'frozen into' },
+    { unit: 'bell ropes',                vessel: 'a ringer’s board',   verb: 'painted' },
+    { unit: 'strongbox tumblers',        vessel: 'a bank docket',      verb: 'engraved' }
+  ];
+
   var Puzzle = {
+    LORE: LORE,
     FAMILIES: ['arith', 'logic', 'order'],
 
     /* len is 3 for tiers 1-3, 4 for tiers 4-5, matching the keypad.
@@ -69,6 +106,7 @@
        exactly how chamber X shipped broken for one test run. */
     generate: function (seed, len, family, avoid) {
       var R = mulberry(seed * 6151 + 907);
+      var lore = LORE[seed % LORE.length];
       family = family || this.FAMILIES[Math.floor(R() * this.FAMILIES.length)];
       var p = (family === 'arith') ? this._arith(R, len)
             : (family === 'logic') ? this._logic(R, len)
@@ -90,6 +128,12 @@
         f.spot = spots[k];
         f.spotName = SPOTNAME[spots[k]];
       });
+
+      /* Wrap the mechanical rule in the room's own language. The rule is
+         unchanged -- only how it is told -- so themeing can never break a
+         puzzle. */
+      p.lore = lore;
+      p.ruleText = 'On ' + lore.vessel + ', ' + lore.verb + ' plainly: ' + p.ruleText;
       return p;
     },
 
@@ -194,8 +238,7 @@
             return {
               family: 'logic',
               code: target,
-              ruleText: 'Scratched in a careful hand: ' +
-                        chosen.map(function (c) { return c.t; }).join(' '),
+              ruleText: chosen.map(function (c) { return c.t; }).join(' '),
               shortRule: chosen.map(function (c) { return c.t; }).join(' '),
               hintText: 'The marks on the note describe one number and only one. ' +
                         'Work through the digits that fit all of them.',
@@ -226,8 +269,8 @@
       return {
         family: 'order',
         code: sorted.join(''),
-        ruleText: 'Written along the edge: "the numbers, ' +
-                  (asc ? 'smallest first' : 'largest first') + '".',
+        ruleText: 'the numbers you find, ' +
+                  (asc ? 'smallest first' : 'largest first') + '.',
         shortRule: asc ? 'smallest first' : 'largest first',
         hintText: 'Find every number in the room, then enter them ' +
                   (asc ? 'smallest to largest' : 'largest to smallest') + '.',
