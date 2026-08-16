@@ -124,19 +124,52 @@
     };
   }
 
-  /* Geometry variation, kept to transforms of the existing scene rather
-     than twenty hand-drawn SVGs. Mirroring is safe because no hint or clue
-     ever says "left" or "right" — they name objects — but if that ever
-     changes, this is the thing that breaks it. */
+  /* Geometry variation. Mirroring alone was NOT enough — the furniture
+     stayed in identical places in all twenty rooms, so they still read as
+     one chamber recoloured. This actually MOVES things.
+
+     Slot centres come from the real SVG geometry:
+       floor  plant≈78  safe≈175  rug≈330  chest≈540
+       wall   map≈234   portrait≈414  clock≈500  shelf≈434
+
+     Only objects of comparable width are permuted with each other. The map
+     is 212 wide and would collide with the cabinet and door if it were
+     dropped into the clock's slot, so it only ever jitters. The desk stays
+     put: it anchors the room, and the drawer is a lock whose position the
+     hints describe by name, not place. */
+  var FLOOR_SLOTS = { plant: 78, safe: 175, chest: 540 };
+  var WALL_SLOTS  = { pB: 414, clock: 500 };
+
   function layoutFor(i) {
     var R = mulberry(i * 40503 + 7);
-    return {
-      mirror: R() > 0.5,
-      /* A small skew of the whole room reads as a different perspective
-         without moving any hit target off its shape. */
-      tilt: (R() * 2 - 1) * 1.4,
-      scale: 0.965 + R() * 0.07
-    };
+    var lay = { mirror: R() > 0.5, tilt: (R() * 2 - 1) * 1.4,
+                scale: 0.965 + R() * 0.07, move: {} };
+
+    /* Floor: a genuine permutation, so the safe really is somewhere else. */
+    var fIds = Object.keys(FLOOR_SLOTS);
+    var fTargets = shuffle(fIds, R);
+    fIds.forEach(function (id, k) {
+      lay.move[id] = { dx: FLOOR_SLOTS[fTargets[k]] - FLOOR_SLOTS[id], dy: 0 };
+    });
+
+    /* Wall: portrait and clock are close enough in size to swap cleanly. */
+    if (R() > 0.5) {
+      lay.move.pB    = { dx: WALL_SLOTS.clock - WALL_SLOTS.pB, dy: 0 };
+      lay.move.clock = { dx: WALL_SLOTS.pB - WALL_SLOTS.clock, dy: 0 };
+    } else {
+      lay.move.pB = { dx: 0, dy: 0 };
+      lay.move.clock = { dx: 0, dy: 0 };
+    }
+
+    /* Hanging height and small shuffles — cheap, and it stops the two
+       permutations from being the only thing that differs. */
+    lay.move.pA    = { dx: (R() * 2 - 1) * 26, dy: (R() * 2 - 1) * 16 };
+    lay.move.shelf = { dx: (R() * 2 - 1) * 30, dy: (R() * 2 - 1) * 12 };
+    lay.move.rug   = { dx: (R() * 2 - 1) * 22, dy: 0 };
+    ['pB', 'clock'].forEach(function (id) {
+      lay.move[id].dy = (R() * 2 - 1) * 14;
+    });
+    return lay;
   }
 
   function applyRoomStyle(i) {
@@ -154,6 +187,17 @@
     sc.style.transform =
       (lay.mirror ? 'scaleX(-1) ' : '') +
       'rotate(' + lay.tilt.toFixed(2) + 'deg) scale(' + lay.scale.toFixed(3) + ')';
+
+    /* Set every movable group EXPLICITLY each time, including back to zero.
+       Leaving a stale transform behind would carry one chamber's layout
+       into the next, which is worse than no variation at all. */
+    Object.keys(lay.move).forEach(function (id) {
+      var el = $(id);
+      if (!el) return;
+      var m = lay.move[id];
+      el.setAttribute('transform',
+        'translate(' + m.dx.toFixed(1) + ',' + (m.dy || 0).toFixed(1) + ')');
+    });
     return lay;
   }
 
