@@ -4,7 +4,7 @@ apply plugin: 'com.android.application'
 
    keystore.properties is gitignored and holds the passwords, so a fresh
    clone has neither it nor the .jks. When it is absent the release build
-   stays UNSIGNED rather than failing outright — otherwise anyone cloning
+   stays UNSIGNED rather than failing outright â€” otherwise anyone cloning
    the public repo could not compile the project at all.
 
    The properties file must be written WITHOUT a UTF-8 BOM. PowerShell
@@ -27,8 +27,8 @@ android {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         // Play rejects a duplicate versionCode outright. Bump on EVERY upload.
-        versionCode 3
-        versionName "1.1.0"
+        versionCode 4
+        versionName "1.1.1"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
