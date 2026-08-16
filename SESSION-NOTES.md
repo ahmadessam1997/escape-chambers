@@ -29,9 +29,9 @@
 >    `android/app/build/outputs/bundle/release/app-release.aab` (10.6 MB, so
 >    yours). It carries the new UMP consent flow; both AdMob consent
 >    messages are already Published and reach nobody until it lands.
-> 5. **Wire `ECAds.showPrivacyOptions()` to a shop/settings button**, shown
->    only when `ECAds.privacyOptionsRequired`. The one loose end of the
->    consent work. See `GO-LIVE.md` step 7b.
+> 5. ~~Wire `ECAds.showPrivacyOptions()` to a button~~ — **done
+>    2026-08-16**, folded into the same versionCode 2 build. `npm test` is
+>    now **70 passed, 0 failed**.
 >
 > **AdMob test device is NOT outstanding** — it was already covered by the
 > Frost Tower registration, because test devices are account-level. See

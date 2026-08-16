@@ -414,11 +414,19 @@ and the commonest cause of failure is a withdrawn console message.
 > `RETURN_NONE` — plain `@PluginMethod` in `AdMob.java`, so they return real
 > promises and chaining is safe.
 
-**`ECAds.showPrivacyOptions()` exists but is not wired to any button yet.**
-Regulators want a persistent way to *change* a choice. Surface it from the
-shop/settings only when `ECAds.privacyOptionsRequired` is true — Google
-hides the entry point otherwise and a dead button is worse than none.
-**This is the one loose end of the consent work.**
+**`ECAds.showPrivacyOptions()` is wired** — a **Privacy choices** button in
+the shop, between *Restore purchases* and *Back*, shown only when
+`ECAds.privacyOptionsRequired` is true. Google serves that form only in the
+EEA/UK and the opt-out US states; everywhere else the button would be dead,
+which is worse than absent.
+
+> **Not gated on `removeAds`.** Buying Remove ads silences the interstitial,
+> but rewarded videos stay — so the ad SDK and its consent remain, and the
+> choice must stay reachable for a paying customer too.
+
+Three e2e assertions cover it (hidden / shown / survives `remove_ads`), and
+the hidden case was **verified to have teeth** by removing the gate and
+watching it fail.
 
 **⬜ YOUR STEP — upload versionCode 2.** Built and verified already:
 

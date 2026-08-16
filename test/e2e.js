@@ -348,6 +348,39 @@ async function solveChamber(page, i) {
        await page.evaluate(() => window.ECSave.data.hints), before);
     eq('hint button shows the infinity marker', (await text(page, 'hintBtn')).trim(), '💡 ♾');
 
+    /* ================= 7b. ad-consent privacy button ================= */
+    console.log('\n-- consent --');
+    /* The failure this guards is a DEAD BUTTON: outside the EEA/UK and the
+       opt-out US states Google has no privacy form to serve, so a visible
+       "Privacy choices" that does nothing is worse than none at all. The
+       browser build never runs UMP, so this is also the default state. */
+    ok('privacy choices button is hidden when Google requires no form',
+       await page.evaluate(() => {
+         window.ECAds.privacyOptionsRequired = false;
+         window.ECShop.render();
+         return document.getElementById('shopPrivacy').style.display === 'none';
+       }));
+    ok('privacy choices button appears when Google requires the form',
+       await page.evaluate(() => {
+         window.ECAds.privacyOptionsRequired = true;
+         window.ECShop.render();
+         return document.getElementById('shopPrivacy').style.display !== 'none';
+       }));
+    /* Remove ads silences the interstitial but rewarded videos — and so the
+       ad SDK and its consent — remain, so the choice must stay reachable
+       for a paying customer too. */
+    ok('privacy choices survives owning remove_ads',
+       await page.evaluate(() => {
+         window.ECAds.privacyOptionsRequired = true;
+         window.ECSave.data.removeAds = true;
+         window.ECShop.render();
+         return document.getElementById('shopPrivacy').style.display !== 'none';
+       }));
+    await page.evaluate(() => {
+      window.ECAds.privacyOptionsRequired = false;
+      window.ECShop.render();
+    });
+
     /* ================= 8. ad cadence (pure logic) ================= */
     console.log('\n-- ad pacing --');
     const cadence = await page.evaluate(() => {

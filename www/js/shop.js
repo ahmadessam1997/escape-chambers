@@ -44,6 +44,31 @@
       });
       $('hintOvWatch').addEventListener('click', function () { self.watchForHints(); });
       $('shopWatch').addEventListener('click', function () { self.watchForHints(); });
+      $('shopPrivacy').addEventListener('click', function () { self.openPrivacyOptions(); });
+    },
+
+    /* ---------------- ad-consent choices ----------------
+       Regulators require a persistent way to CHANGE a consent decision,
+       not just make it once. Google only serves that form where it is
+       required (EEA/UK, and US states with an opt-out), and reports that
+       via privacyOptionsRequirementStatus — so the button is hidden
+       elsewhere rather than shown and broken.
+
+       Deliberately does NOT re-render the shop afterwards: the form
+       changes ad personalisation, not anything the shop displays, and a
+       flicker after dismissing it would look like a purchase state
+       changed. */
+    openPrivacyOptions: function () {
+      var self = this;
+      if (self._busy) return;
+      self._busy = true;
+      Ads.showPrivacyOptions().then(function (res) {
+        self._busy = false;
+        if (!res.ok) self._toast('Couldn’t open privacy choices just now.');
+      }).catch(function () {
+        self._busy = false;
+        self._toast('Couldn’t open privacy choices just now.');
+      });
     },
 
     /* ---------------- out-of-hints prompt ---------------- */
@@ -102,6 +127,12 @@
 
       $('shopWatch').style.display = Ads.rewardedAvailable() ? '' : 'none';
       $('shopWatchLbl').textContent = '+' + Cfg.hints.rewardedAdHints + ' hints · free';
+
+      /* Only where Google actually has a form to show. Not gated on
+         removeAds: buying Remove ads silences the interstitial but the
+         rewarded videos — and therefore the ad SDK and its consent —
+         remain, so the choice must stay reachable. */
+      $('shopPrivacy').style.display = Ads.privacyOptionsRequired ? '' : 'none';
 
       var rows = [
         { id: 'hints_25',        el: 'buyHints',     owned: unlimited,
