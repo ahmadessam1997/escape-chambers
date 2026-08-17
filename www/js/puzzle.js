@@ -158,7 +158,38 @@
     vessel:    'is a vessel',
     mechanism: 'has moving parts',
     picture:   'is a picture on the wall',
-    furniture: 'is a piece of furniture'
+    furniture: 'is a piece of furniture',
+
+    /* Added for themes.js. Ten settings share one vocabulary, so a word is
+       only worth adding when several rooms can use it — and every one of
+       these must be something a player can read off the drawing, because
+       that is the only place they can learn it from.
+
+       Missing entries are not a correctness bug: says() falls through to
+       "is <value>", which is still unambiguous, just clumsy. These exist
+       purely so the prose sounds written rather than generated. */
+    straw:     'is woven straw',
+    reed:      'is woven reed',
+    rope:      'is coiled rope',
+    brass:     'is brass',
+    gold:      'is gilded',
+    enamel:    'is smooth white enamel',
+    rock:      'is bare rock',
+    coal:      'is coal, black with dust',
+
+    bedding:   'is something slept on',
+    window:    'is a window',
+    marking:   'is written or scratched on',
+    opening:   'is a gap you could reach into',
+    carving:   'is carved stone',
+    weight:    'hangs as a dead weight',
+    wheel:     'is a great wheel',
+    tools:     'is a set of tools',
+    growth:    'is a growing thing',
+    books:     'is a row of books',
+    map:       'is a chart of somewhere',
+    seam:      'is a vein in the rock',
+    heap:      'is a loose heap'
   };
 
   /* Boolean traits need both polarities spelled out; "is not hollow" is
@@ -190,11 +221,24 @@
      clue MEANS — so a bad entry can no more break a chamber than a bad
      LORE entry can. */
   var SIGNS = [
-    'dust', 'cellar damp', 'spilled soil', 'chalk dust', 'cobweb',
-    'powdered herbs', 'pencil shavings', 'pollen', 'paper dust', 'machine oil',
-    'spilled flour', 'loose down', 'fixer stains', 'leaf litter',
-    'crumbled sealing wax', 'coal soot', 'gallery dust', 'frost',
-    'rope fibre', 'iron grit'
+    /* REORDERED, not rewritten — same length, same SIGNS[seed % 20]
+       indexing, nothing else touched. The old order was written against
+       game.js's twenty THEME NAMES (study, cellar, greenhouse…). Chambers
+       now take their setting from themes.js as `list[i % 10]`, so index 10
+       stopped being the scullery and became the cell block — and the
+       generated clue read "a hand has wiped the SPILLED FLOUR from the
+       room" inside a prison. The row below is aligned to themes.js's
+       setting order (cell, ship, tomb, lab, clockworks, glasshouse,
+       library, mine, observatory, boiler) twice over. If either list is
+       reordered, this one has to follow.
+
+       All singular mass nouns on purpose: the clue templates say
+       "the <sign> proves it", so a plural like "brass filings" comes out
+       as "the brass filings proves it". */
+    'stone dust',  'salt crust',  'tomb dust',     'spilled reagent', 'machine oil',
+    'potting soil','gallery dust','rock dust',     'frost',           'coal soot',
+    'cell damp',   'salt spray',  'drifted sand',  'chalk dust',      'brass dust',
+    'pollen',      'paper dust',  'iron grit',     'graphite dust',   'cinder ash'
   ];
 
   /* Normalise whatever the caller passed into full descriptors.

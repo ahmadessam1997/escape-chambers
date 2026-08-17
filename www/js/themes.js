@@ -1802,11 +1802,54 @@
      not against the hex.
      ===================================================================== */
 
-  function obj(role, part, name, opt, extra) {
+  /* ---------------- traits ----------------
+     puzzle.js:generateKeyHunt() deduces WHERE THE BRASS KEY IS from clues
+     about the physical properties of the seven searchable objects — "not
+     behind anything wooden", "the dust lies undisturbed on everything made
+     of iron". Without a trait table it sets degraded:true and falls back
+     to a clue that simply names the spot, which is the "search all seven
+     at random" game this whole file exists to kill.
+
+     THE ONE RULE: every trait must be true of the ART. Brute force proves
+     a clue set is self-consistent; nothing can prove the table matches the
+     picture. Tag the tin cup 'wood' when the drawing is plainly metal and
+     every clue about it becomes a lie that no test can catch. So the
+     traits live HERE, next to the parts they describe, and not in the
+     puzzle module — whoever changes a drawing is looking straight at them.
+
+     Only properties a player can SEE from the drawing. "The bunk is iron"
+     is on screen; "the mattress is hollow" is an argument.
+
+     MORE VARIETY IS NOT BETTER, and this is the counter-intuitive part.
+     Giving all seven objects a different `kind` makes every one of them
+     identifiable by a single clue, so a three-clue set would have a
+     redundant clue in it, so the generator drops to one clue and reports
+     relaxed:true — a tier-5 room with a tier-1 deduction. Values want to
+     come in GROUPS: the cell's cup and bucket are both metal vessels and
+     only `place` separates them, which is what forces two clues instead of
+     one. Aim for three to five values per axis with real pairs in them,
+     not seven singletons.
+
+     Written as [made, kind, hollow, living] because a seven-row table of
+     objects reads as a table, and a seven-row table of nested objects
+     reads as punctuation. `place` is NOT in the list: it is a fact about
+     the role, so deriving it removes the one trait that could silently
+     contradict where the object is actually drawn. */
+  var FLOOR_ROLES = ['floorSoft', 'floorProp', 'container'];
+
+  function obj(role, part, name, opt, traits) {
     var id = ROLES[role];
     var o = { id: id, role: role, part: part, name: name, opt: opt || {} };
     o.x = ANCHORS[id].x; o.y = ANCHORS[id].y;
-    if (extra) { var k; for (k in extra) if (extra.hasOwnProperty(k)) o[k] = extra[k]; }
+    if (traits) {
+      o.traits = {
+        place:  FLOOR_ROLES.indexOf(role) >= 0 ? 'floor' : 'wall',
+        made:   traits[0],
+        kind:   traits[1],
+        hollow: !!traits[2],
+        living: !!traits[3]
+      };
+    }
     return o;
   }
   /* The drawer is the one object whose id is not its role's id, because
@@ -1835,13 +1878,17 @@
         '--accent': '#b9cfbe', '--soft': '#8c9c95', '--glow': '#d6e8dc'
       },
       objects: [
-        obj('floorSoft',  'mattress',     'straw mattress',  {}),
-        obj('floorProp',  'slopBucket',   'slop bucket',     {}),
-        obj('wallSmall',  'tinCup',       'tin cup',         {}),
-        obj('wallMid',    'tallyMarks',   'scratched tally', {}),
-        obj('wallLarge',  'barredWindow', 'barred window',   {}),
-        obj('storage',    'bunk',         'iron bunk',       {}),
-        obj('container',  'looseBricks',  'loose brick',     {}),
+        /* The cup and the bucket are the same object twice over — both
+           dented metal vessels you could reach into — and that is
+           deliberate: `place` is the only thing telling them apart, so the
+           room can ask a question that needs two clues to answer. */
+        obj('floorSoft',  'mattress',     'straw mattress',  {}, ['straw', 'bedding',   0, 0]),
+        obj('floorProp',  'slopBucket',   'slop bucket',     {}, ['metal', 'vessel',    1, 0]),
+        obj('wallSmall',  'tinCup',       'tin cup',         {}, ['metal', 'vessel',    1, 0]),
+        obj('wallMid',    'tallyMarks',   'scratched tally', {}, ['stone', 'marking',   0, 0]),
+        obj('wallLarge',  'barredWindow', 'barred window',   {}, ['iron',  'window',    0, 0]),
+        obj('storage',    'bunk',         'iron bunk',       {}, ['iron',  'bedding',   0, 0]),
+        obj('container',  'looseBricks',  'loose brick',     {}, ['stone', 'opening',   1, 0]),
         obj('exit',       'barDoor',      'cell gate',       {}),
         obj('anchor',     'steelTable',   'bolted table',    {}),
         drawerObj('drawerSteel', 'steel drawer', {}),
@@ -1867,13 +1914,14 @@
         '--accent': '#e0b464', '--soft': '#8fb2bd', '--glow': '#ffe0a0'
       },
       objects: [
-        obj('floorSoft',  'ropeCoil',     'coil of rope',    {}),
-        obj('floorProp',  'barrel',       'water cask',      {}),
-        obj('wallSmall',  'porthole',     'porthole',        {}),
-        obj('wallMid',    'knotBoard',    'knot board',      {}),
-        obj('wallLarge',  'seaChart',     'sea chart',       {}),
-        obj('storage',    'hammock',      'hammock',         {}),
-        obj('container',  'woodChest',    'sea chest',       { band: '#6a5a3a' }),
+        obj('floorSoft',  'ropeCoil',     'coil of rope',    {}, ['rope',  'covering',  0, 0]),
+        obj('floorProp',  'barrel',       'water cask',      {}, ['wood',  'vessel',    1, 0]),
+        obj('wallSmall',  'porthole',     'porthole',        {}, ['brass', 'window',    0, 0]),
+        obj('wallMid',    'knotBoard',    'knot board',      {}, ['rope',  'picture',   0, 0]),
+        obj('wallLarge',  'seaChart',     'sea chart',       {}, ['paper', 'picture',   0, 0]),
+        obj('storage',    'hammock',      'hammock',         {}, ['cloth', 'bedding',   0, 0]),
+        obj('container',  'woodChest',    'sea chest',       { band: '#6a5a3a' },
+                                                                 ['wood',  'furniture', 1, 0]),
         obj('exit',       'hatchDoor',    'cabin hatch',     {}),
         obj('anchor',     'chartTable',   'chart table',     {}),
         drawerObj('drawerWood', 'chart drawer', { body: '#4a3520' }),
@@ -1899,13 +1947,19 @@
         '--accent': '#e8c46a', '--soft': '#c4ab7e', '--glow': '#ffe9a8'
       },
       objects: [
-        obj('floorSoft',  'flatMat',       'reed mat',        { fill: '#8a7442', weave: '#6a5730' }),
-        obj('floorProp',  'canopicJar',    'canopic jar',     {}),
-        obj('wallSmall',  'sunDisc',       'sun disc',        {}),
-        obj('wallMid',    'stela',         'carved stela',    {}),
-        obj('wallLarge',  'glyphPanel',    'glyph wall',      {}),
-        obj('storage',    'offeringShelf', 'offering shelf',  {}),
-        obj('container',  'sarcophagus',   'sarcophagus',     {}),
+        /* Almost everything in a tomb is the same rock, so `kind` carries
+           this room: a carving, a picture and a piece of furniture can all
+           be sandstone and still be told apart by eye. The gilded sun disc
+           is the one object with its own material, and it is drawn as the
+           brightest thing on the wall so the claim is visible. */
+        obj('floorSoft',  'flatMat',       'reed mat',        { fill: '#8a7442', weave: '#6a5730' },
+                                                                  ['reed',  'covering',  0, 0]),
+        obj('floorProp',  'canopicJar',    'canopic jar',     {}, ['clay',  'vessel',    1, 0]),
+        obj('wallSmall',  'sunDisc',       'sun disc',        {}, ['gold',  'carving',   0, 0]),
+        obj('wallMid',    'stela',         'carved stela',    {}, ['stone', 'picture',   0, 0]),
+        obj('wallLarge',  'glyphPanel',    'glyph wall',      {}, ['stone', 'carving',   0, 0]),
+        obj('storage',    'offeringShelf', 'offering shelf',  {}, ['stone', 'furniture', 0, 0]),
+        obj('container',  'sarcophagus',   'sarcophagus',     {}, ['stone', 'furniture', 1, 0]),
         obj('exit',       'slabDoor',      'sealed slab',     {}),
         obj('anchor',     'offeringTable', 'offering table',  {}),
         drawerObj('drawerStone', 'stone drawer', {}),
@@ -1931,13 +1985,16 @@
         '--accent': '#5fe3c8', '--soft': '#8fb6b8', '--glow': '#b5fff0'
       },
       objects: [
-        obj('floorSoft',  'spillTray',    'spill tray',       {}),
-        obj('floorProp',  'gasCylinder',  'gas cylinder',     {}),
-        obj('wallSmall',  'gauge',        'vacuum gauge',     { bezel: '#7d888c' }),
-        obj('wallMid',    'lightbox',     'lightbox',         {}),
-        obj('wallLarge',  'whiteboard',   'whiteboard',       {}),
-        obj('storage',    'jarRack',      'specimen rack',    {}),
-        obj('container',  'steelCase',    'specimen case',    {}),
+        obj('floorSoft',  'spillTray',    'spill tray',       {}, ['metal',  'covering',  0, 0]),
+        obj('floorProp',  'gasCylinder',  'gas cylinder',     {}, ['metal',  'vessel',    1, 0]),
+        obj('wallSmall',  'gauge',        'vacuum gauge',     { bezel: '#7d888c' },
+                                                                  ['glass',  'mechanism', 0, 0]),
+        obj('wallMid',    'lightbox',     'lightbox',         {}, ['glass',  'picture',   0, 0]),
+        /* enamel, not metal: the board is the one big glossy white thing
+           in the room, and that is what a player would call it. */
+        obj('wallLarge',  'whiteboard',   'whiteboard',       {}, ['enamel', 'picture',   0, 0]),
+        obj('storage',    'jarRack',      'specimen rack',    {}, ['glass',  'vessel',    1, 0]),
+        obj('container',  'steelCase',    'specimen case',    {}, ['metal',  'furniture', 1, 0]),
         obj('exit',       'airlockDoor',  'airlock',          {}),
         obj('anchor',     'labBench',     'lab bench',        {}),
         drawerObj('drawerSteel', 'bench drawer', {}),
@@ -1963,13 +2020,16 @@
         '--accent': '#f0b64a', '--soft': '#c9a674', '--glow': '#ffd98a'
       },
       objects: [
-        obj('floorSoft',  'flatMat',      'oiled cloth',      { fill: '#4f4636', weave: '#3a3326' }),
-        obj('floorProp',  'weightDrum',   'clock weight',     {}),
-        obj('wallSmall',  'clockFace',    'clock face',       {}),
-        obj('wallMid',    'escapement',   'escapement',       {}),
-        obj('wallLarge',  'giantGear',    'great wheel',      {}),
-        obj('storage',    'toolRack',     'tool rack',        { board: '#4a3a24', metal: '#c9973f' }),
-        obj('container',  'crate',        'parts crate',      { stencil: 'PARTS' }),
+        obj('floorSoft',  'flatMat',      'oiled cloth',      { fill: '#4f4636', weave: '#3a3326' },
+                                                                  ['cloth', 'covering',  0, 0]),
+        obj('floorProp',  'weightDrum',   'clock weight',     {}, ['iron',  'weight',    0, 0]),
+        obj('wallSmall',  'clockFace',    'clock face',       {}, ['wood',  'mechanism', 0, 0]),
+        obj('wallMid',    'escapement',   'escapement',       {}, ['brass', 'mechanism', 0, 0]),
+        obj('wallLarge',  'giantGear',    'great wheel',      {}, ['brass', 'wheel',     0, 0]),
+        obj('storage',    'toolRack',     'tool rack',        { board: '#4a3a24', metal: '#c9973f' },
+                                                                  ['iron',  'tools',     0, 0]),
+        obj('container',  'crate',        'parts crate',      { stencil: 'PARTS' },
+                                                                  ['wood',  'furniture', 1, 0]),
         obj('exit',       'ironDoor',     'iron door',        { metal: '#4a3520', rivet: '#c9973f' }),
         obj('anchor',     'workBench',    'workbench',        {}),
         drawerObj('drawerWood', 'bench drawer', { body: '#4a3520' }),
@@ -1995,13 +2055,18 @@
         '--accent': '#8fe06a', '--soft': '#93bfa2', '--glow': '#d6ffbe'
       },
       objects: [
-        obj('floorSoft',  'flatMat',      'coir mat',         { fill: '#6a5a36', weave: '#4d4128' }),
-        obj('floorProp',  'pottedFern',   'potted fern',      {}),
-        obj('wallSmall',  'thermoDial',   'hygrometer',       {}),
-        obj('wallMid',    'seedBoard',    'seed board',       {}),
-        obj('wallLarge',  'trellis',      'trellis',          {}),
-        obj('storage',    'pottingShelf', 'seed trays',       {}),
-        obj('container',  'crate',        'seed bin',         { wood: '#6a5a36', lid: '#7d6b42', stencil: 'SEED' }),
+        /* The only room where `living` does real work: three of the seven
+           are visibly growing, so "the key is not behind anything alive"
+           cuts the field almost in half on its own. */
+        obj('floorSoft',  'flatMat',      'coir mat',         { fill: '#6a5a36', weave: '#4d4128' },
+                                                                  ['straw', 'covering',  0, 0]),
+        obj('floorProp',  'pottedFern',   'potted fern',      {}, ['clay',  'vessel',    1, 1]),
+        obj('wallSmall',  'thermoDial',   'hygrometer',       {}, ['metal', 'mechanism', 0, 0]),
+        obj('wallMid',    'seedBoard',    'seed board',       {}, ['paper', 'picture',   0, 0]),
+        obj('wallLarge',  'trellis',      'trellis',          {}, ['wood',  'growth',    0, 1]),
+        obj('storage',    'pottingShelf', 'seed trays',       {}, ['wood',  'furniture', 0, 1]),
+        obj('container',  'crate',        'seed bin',         { wood: '#6a5a36', lid: '#7d6b42', stencil: 'SEED' },
+                                                                  ['wood',  'furniture', 1, 0]),
         obj('exit',       'glazedDoor',   'glass door',       {}),
         obj('anchor',     'pottingBench', 'potting bench',    {}),
         drawerObj('drawerWood', 'seed drawer', { body: '#5c4c2e' }),
@@ -2027,13 +2092,13 @@
         '--accent': '#d9a441', '--soft': '#bb9a86', '--glow': '#ffdca6'
       },
       objects: [
-        obj('floorSoft',  'persianRug',   'Persian rug',      {}),
-        obj('floorProp',  'globeStand',   'globe',            {}),
-        obj('wallSmall',  'clockFace',    'wall clock',       {}),
-        obj('wallMid',    'portrait',     'portrait',         {}),
-        obj('wallLarge',  'glazedCase',   'glazed bookcase',  {}),
-        obj('storage',    'bookShelf',    'bookshelf',        {}),
-        obj('container',  'cardCatalogue', 'card catalogue',  {}),
+        obj('floorSoft',  'persianRug',   'Persian rug',      {}, ['cloth', 'covering',  0, 0]),
+        obj('floorProp',  'globeStand',   'globe',            {}, ['paper', 'map',       0, 0]),
+        obj('wallSmall',  'clockFace',    'wall clock',       {}, ['wood',  'mechanism', 0, 0]),
+        obj('wallMid',    'portrait',     'portrait',         {}, ['paper', 'picture',   0, 0]),
+        obj('wallLarge',  'glazedCase',   'glazed bookcase',  {}, ['glass', 'furniture', 1, 0]),
+        obj('storage',    'bookShelf',    'bookshelf',        {}, ['paper', 'books',     0, 0]),
+        obj('container',  'cardCatalogue', 'card catalogue',  {}, ['wood',  'furniture', 1, 0]),
         obj('exit',       'panelDoor',    'panelled door',    {}),
         obj('anchor',     'writingDesk',  'writing desk',     {}),
         drawerObj('drawerWood', 'desk drawer', {}),
@@ -2062,13 +2127,17 @@
         '--accent': '#ffb84d', '--soft': '#a8917a', '--glow': '#ffd9a0'
       },
       objects: [
-        obj('floorSoft',  'flatMat',      'tarpaulin',        { fill: '#4a4436', weave: '#332f24' }),
-        obj('floorProp',  'oreBucket',    'ore bucket',       {}),
-        obj('wallSmall',  'gauge',        'blast gauge',      { bezel: '#6e5f4e' }),
-        obj('wallMid',    'noticeBoard',  'claim notice',     {}),
-        obj('wallLarge',  'oreSeam',      'ore seam',         {}),
-        obj('storage',    'toolRack',     'tool rack',        { board: '#3d2f1e', metal: '#9aa2a6' }),
-        obj('container',  'crate',        'powder crate',     { wood: '#6a5230', stencil: 'DANGER', stencilFill: '#e8b45c' }),
+        obj('floorSoft',  'flatMat',      'tarpaulin',        { fill: '#4a4436', weave: '#332f24' },
+                                                                  ['cloth', 'covering',  0, 0]),
+        obj('floorProp',  'oreBucket',    'ore bucket',       {}, ['iron',  'vessel',    1, 0]),
+        obj('wallSmall',  'gauge',        'blast gauge',      { bezel: '#6e5f4e' },
+                                                                  ['iron',  'mechanism', 0, 0]),
+        obj('wallMid',    'noticeBoard',  'claim notice',     {}, ['paper', 'picture',   0, 0]),
+        obj('wallLarge',  'oreSeam',      'ore seam',         {}, ['rock',  'seam',      0, 0]),
+        obj('storage',    'toolRack',     'tool rack',        { board: '#3d2f1e', metal: '#9aa2a6' },
+                                                                  ['iron',  'tools',     0, 0]),
+        obj('container',  'crate',        'powder crate',     { wood: '#6a5230', stencil: 'DANGER', stencilFill: '#e8b45c' },
+                                                                  ['wood',  'furniture', 1, 0]),
         obj('exit',       'ironDoor',     'shaft gate',       { metal: '#3a2e20' }),
         obj('anchor',     'workBench',    'powder bench',     { wood: '#4a3a26' }),
         drawerObj('drawerWood', 'bench drawer', { body: '#4a3a26' }),
@@ -2094,13 +2163,18 @@
         '--accent': '#7fb8ff', '--soft': '#96a4cc', '--glow': '#cfe4ff'
       },
       objects: [
-        obj('floorSoft',  'zodiacInlay',    'zodiac inlay',   {}),
-        obj('floorProp',  'orrery',         'orrery',         {}),
-        obj('wallSmall',  'siderealDial',   'sidereal dial',  {}),
-        obj('wallMid',    'astrolabe',      'astrolabe',      {}),
-        obj('wallLarge',  'starChart',      'star chart',     {}),
-        obj('storage',    'instrumentRack', 'instrument rack', {}),
-        obj('container',  'lensCase',       'lens case',      {}),
+        /* Nearly everything here is brass, so `kind` is the axis that
+           separates them. The astrolabe is filed as a map rather than as a
+           mechanism on purpose — its rete IS a turning star chart, and it
+           is what stops it and the sidereal dial being the same object. */
+        obj('floorSoft',  'zodiacInlay',    'zodiac inlay',   {}, ['brass', 'covering',  0, 0]),
+        obj('floorProp',  'orrery',         'orrery',         {}, ['brass', 'mechanism', 0, 0]),
+        obj('wallSmall',  'siderealDial',   'sidereal dial',  {}, ['brass', 'mechanism', 0, 0]),
+        obj('wallMid',    'astrolabe',      'astrolabe',      {}, ['brass', 'map',       0, 0]),
+        obj('wallLarge',  'starChart',      'star chart',     {}, ['paper', 'map',       0, 0]),
+        obj('storage',    'instrumentRack', 'instrument rack', {}, ['brass', 'tools',    0, 0]),
+        obj('container',  'lensCase',       'lens case',      { wood: '#4a3524' },
+                                                                  ['wood',  'furniture', 1, 0]),
         obj('exit',       'ironDoor',       'iron door',      { metal: '#2a3048', rivet: '#7f8bb8' }),
         obj('anchor',     'telescope',      'great refractor', {}),
         drawerObj('drawerWood', 'eyepiece drawer', { body: '#2f3550' }),
@@ -2126,13 +2200,17 @@
         '--accent': '#ff8a3c', '--soft': '#b59283', '--glow': '#ffb877'
       },
       objects: [
-        obj('floorSoft',  'treadPlate',   'deck plate',       {}),
-        obj('floorProp',  'coalHeap',     'coal heap',        {}),
-        obj('wallSmall',  'gauge',        'pressure gauge',   {}),
-        obj('wallMid',    'valveWheel',   'valve wheel',      {}),
-        obj('wallLarge',  'boilerFront',  'boiler front',     {}),
-        obj('storage',    'toolRack',     'spanner rack',     { board: '#3a2f28', metal: '#9aa2a6' }),
-        obj('container',  'coalHatch',    'bunker hatch',     {}),
+        /* Six of the seven are iron, which is the point of the room — so
+           the boiler front is separated from the valve wheel by the one
+           thing you can see about it: its firebox door OPENS. */
+        obj('floorSoft',  'treadPlate',   'deck plate',       {}, ['iron',  'covering',  0, 0]),
+        obj('floorProp',  'coalHeap',     'coal heap',        {}, ['coal',  'heap',      0, 0]),
+        obj('wallSmall',  'gauge',        'pressure gauge',   {}, ['glass', 'mechanism', 0, 0]),
+        obj('wallMid',    'valveWheel',   'valve wheel',      {}, ['iron',  'mechanism', 0, 0]),
+        obj('wallLarge',  'boilerFront',  'boiler front',     {}, ['iron',  'mechanism', 1, 0]),
+        obj('storage',    'toolRack',     'spanner rack',     { board: '#3a2f28', metal: '#9aa2a6' },
+                                                                  ['iron',  'tools',     0, 0]),
+        obj('container',  'coalHatch',    'bunker hatch',     {}, ['iron',  'opening',   1, 0]),
         obj('exit',       'airlockDoor',  'bulkhead door',    { metal: '#3e332e', stripe: '#c9772e' }),
         obj('anchor',     'workBench',    'fitter’s bench',   { wood: '#4a3a32' }),
         drawerObj('drawerSteel', 'tool drawer', { body: '#3e352f' }),
@@ -2270,8 +2348,58 @@
       if (s.search.length !== 7) problems.push(s.id + ': ' + s.search.length + ' searchable objects, expected 7');
       if (!s.palette['--wall']) problems.push(s.id + ': palette has no --wall');
       if (s.intro.length < 3) problems.push(s.id + ': needs 3 intro lines (game.js indexes i % 3)');
+      problems = problems.concat(traitProblems(s));
     }
     return problems;
+  }
+
+  /* The three ways a trait table degrades the key hunt without erroring.
+     All of them fail SILENTLY at runtime — puzzle.js just sets
+     degraded:true and hands out a clue that names the spot — so they are
+     only ever caught here. What this CANNOT check is whether a trait is
+     true of the drawing; that stays a human obligation. */
+  var TRAIT_AXES = ['place', 'made', 'kind', 'hollow', 'living'];
+
+  function traitProblems(s) {
+    var out = [], i, j, a, spots = [];
+    for (i = 0; i < s.search.length; i++) {
+      var o = s.byId[s.search[i]];
+      if (!o.traits) { out.push(s.id + ': ' + o.id + ' (' + o.name + ') has no traits'); continue; }
+      for (j = 0; j < TRAIT_AXES.length; j++) {
+        if (o.traits[TRAIT_AXES[j]] === undefined) {
+          out.push(s.id + ': ' + o.id + ' is missing trait "' + TRAIT_AXES[j] + '"');
+        }
+      }
+      spots.push(o);
+    }
+    if (spots.length !== 7) return out;
+
+    /* Two axes must each carry three or more values. One rich axis is not
+       enough: the tier 4-5 clue kinds draw from two independent axes, and
+       with only one they quietly relax to tier-3 difficulty. */
+    var rich = 0;
+    for (j = 0; j < TRAIT_AXES.length; j++) {
+      a = TRAIT_AXES[j];
+      var vals = [];
+      for (i = 0; i < spots.length; i++) {
+        if (vals.indexOf(spots[i].traits[a]) < 0) vals.push(spots[i].traits[a]);
+      }
+      if (vals.length >= 3) rich++;
+    }
+    if (rich < 2) out.push(s.id + ': only ' + rich + ' trait axis with 3+ distinct values, need 2');
+
+    /* Two objects identical on every axis can never be told apart. */
+    for (i = 0; i < spots.length; i++) {
+      for (j = i + 1; j < spots.length; j++) {
+        var same = true, k;
+        for (k = 0; k < TRAIT_AXES.length; k++) {
+          if (spots[i].traits[TRAIT_AXES[k]] !== spots[j].traits[TRAIT_AXES[k]]) { same = false; break; }
+        }
+        if (same) out.push(s.id + ': ' + spots[i].id + ' and ' + spots[j].id +
+                           ' share every trait — no clue can separate them');
+      }
+    }
+    return out;
   }
 
   global.ECThemes = {
