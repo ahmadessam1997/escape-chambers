@@ -150,9 +150,10 @@ async function solveChamber(page, i) {
      both claimed it was already doing this.
 
      solveKeyHunt sees only `evidence`: the same clue texts and spot traits
-     the player has. It never touches L.brassSpot or hunt.answer. So a pass
-     here means a chamber is genuinely solvable BY REASONING, not merely
-     completable by exhaustion. */
+     the player has. It reads no secret field — enforced below by an
+     assertion that greps this function, so the promise cannot rot into
+     another false comment. A pass here means a chamber is genuinely
+     solvable BY REASONING, not merely completable by exhaustion. */
   const hunt = await page.evaluate(() => {
     const s = window.ECGame.state();
     if (!s.hunt) return null;
@@ -338,8 +339,18 @@ async function solveChamber(page, i) {
     console.log('\n-- hints --');
     await page.evaluate(() => window.ECGame.startLevel(0));
     await sleep(60);
+    /* RUNG 1 IS FREE. It restates a clue already printed on screen in
+       plainer words, so charging for it is charging the player to
+       understand the rules rather than to be rescued from them. At tier 1
+       there is a second reason: the profile is a single clue that must
+       isolate the answer, so the restatement always gives it away —
+       selling it would be selling the solution as the opening move. */
     await clickId(page, 'hintBtn');
-    eq('using a hint costs one', await page.evaluate(() => window.ECSave.data.hints), 4);
+    eq('the first rung costs nothing',
+       await page.evaluate(() => window.ECSave.data.hints), 5);
+
+    await clickId(page, 'hintBtn');
+    eq('the second rung costs one', await page.evaluate(() => window.ECSave.data.hints), 4);
 
     /* A bought hint is KEPT, not rented. Each press of the hint button now
        buys the next rung of the key-hunt ladder, so "re-read the same step
@@ -354,7 +365,7 @@ async function solveChamber(page, i) {
        }));
 
     await clickId(page, 'hintBtn');
-    eq('the NEXT rung of the ladder charges again',
+    eq('each further rung charges again',
        await page.evaluate(() => window.ECSave.data.hints), 3);
 
     /* The ladder must terminate: buying every rung ends at the spot named
@@ -368,8 +379,8 @@ async function solveChamber(page, i) {
     ok('the last rung names the hiding place',
        await page.evaluate(() => {
          const s = window.ECGame.state();
-         const last = s.L.hunt.hints[s.L.hunt.hints.length - 1];
-         return last.kind === 'answer' && last.spot === s.L.hunt.answer &&
+         const last = s.__answers.hunt.hints[s.__answers.hunt.hints.length - 1];
+         return last.kind === 'answer' && last.spot === s.__answers.hunt.answer &&
                 document.getElementById('obs').textContent.indexOf(last.text) >= 0;
        }));
 
@@ -377,6 +388,11 @@ async function solveChamber(page, i) {
     await page.evaluate(() => { window.ECSave.data.hints = 0; window.ECSave.save(); });
     await page.evaluate(() => window.ECGame.startLevel(1));   // fresh paidHints
     await sleep(60);
+    /* A broke player still gets the free rung — being out of hints must not
+       lock you out of understanding the clue you can already see. The
+       prompt appears on the FIRST rung that actually costs something. */
+    await clickId(page, 'hintBtn');
+    ok('a broke player still gets the free first rung', !await shown(page, 'hintOv'));
     await clickId(page, 'hintBtn');
     ok('empty wallet opens the out-of-hints prompt', await shown(page, 'hintOv'));
     eq('hints never go negative', await page.evaluate(() => window.ECSave.data.hints), 0);
@@ -503,16 +519,16 @@ async function solveChamber(page, i) {
       for (let i = 0; i < 20; i++) {
         window.ECGame.startLevel(i);
         const s = window.ECGame.state();
-        if (!s.L.puzzle) { out.push({ i, tier: s.tier, none: true }); continue; }
+        if (!s.__answers.puzzle) { out.push({ i, tier: s.tier, none: true }); continue; }
         out.push({
           i, tier: s.tier,
-          family: s.L.puzzle.family,
-          code: s.L.puzzle.code,
-          rule: s.L.puzzle.ruleText,
-          short: s.L.puzzle.shortRule,
-          factSpots: s.L.puzzle.facts.map(f => f.spot),
-          brass: s.L.brassSpot,
-          codeLen: s.L.code.length
+          family: s.__answers.puzzle.family,
+          code: s.__answers.puzzle.code,
+          rule: s.__answers.puzzle.ruleText,
+          short: s.__answers.puzzle.shortRule,
+          factSpots: s.__answers.puzzle.facts.map(f => f.spot),
+          brass: s.__answers.brassSpot,
+          codeLen: s.__answers.code.length
         });
       }
       return out;
@@ -549,11 +565,11 @@ async function solveChamber(page, i) {
       for (let i = 0; i < 20; i++) {
         window.ECGame.startLevel(i);
         const s = window.ECGame.state();
-        if (!s.L.puzzle) continue;
+        if (!s.__answers.puzzle) continue;
         /* `logic` carries a single placeholder fact with value:null -- its
            rule is self-contained and needs no scattered numbers -- so the
            trail assertions below only apply to families that HAVE numbers. */
-        const all = s.L.puzzle.facts;
+        const all = s.__answers.puzzle.facts;
         const f = all.filter(x => typeof x.value === 'number');
         if (!f.length) continue;
         out.push({
@@ -561,8 +577,8 @@ async function solveChamber(page, i) {
           chain: f.map(x => x.pointsTo),
           spots: f.map(x => x.spot),
           start: all[0].spot,
-          lore: s.L.puzzle.lore.unit,
-          rule: s.L.puzzle.ruleText
+          lore: s.__answers.puzzle.lore.unit,
+          rule: s.__answers.puzzle.ruleText
         });
       }
       return out;
@@ -615,6 +631,31 @@ async function solveChamber(page, i) {
       }
       return out;
     });
+    /* SPATIAL CLUES MUST AGREE WITH THE PICTURE.
+       The generator reasons over coordinates; the player reasons over a
+       drawing that layoutFor() has permuted and, in half the chambers,
+       MIRRORED. If those disagree, a clue saying 'furthest to the left'
+       points at something drawn on the right. Comparing left-to-right
+       ORDER catches that: it is exactly the property the clues depend on,
+       and it fails loudly if the coordinates ever stop being post-layout. */
+    const spatial = await page.evaluate(() => {
+      const bad = [];
+      for (let i = 0; i < 20; i++) {
+        window.ECGame.startLevel(i);
+        const st = window.ECGame.state();
+        const spots = st.hunt.evidence.spots;
+        const byGen = spots.slice().sort((a, b) => a.x - b.x).map(s => s.id);
+        const byEye = spots.slice().sort((a, b) => {
+          const ra = document.getElementById(a.id).getBoundingClientRect();
+          const rb = document.getElementById(b.id).getBoundingClientRect();
+          return (ra.left + ra.width / 2) - (rb.left + rb.width / 2);
+        }).map(s => s.id);
+        if (byGen.join() !== byEye.join()) bad.push(i);
+      }
+      return bad;
+    });
+    eq('clue coordinates match what is drawn, mirror and all',
+       spatial.length, 0);
     eq('every setting validates', integrity.validate.length, 0);
     eq('one sign per setting — the icehouse must not advertise pollen',
        integrity.signs, integrity.settings);
@@ -626,6 +667,27 @@ async function solveChamber(page, i) {
        integrity.degraded.length, 0);
     eq('no chamber prints the same observation twice',
        integrity.dupText.length, 0);
+    /* THE GUARANTEE, ENFORCED RATHER THAN TRUSTED.
+       solveChamber() must never read an answer field. If it ever does,
+       "all 20 completable" becomes a restatement of the generator and the
+       suite proves nothing. A comment asking nicely was not enough: two
+       comments in the shipping code already claimed this was true while
+       the solver was in fact tapping all seven spots. */
+    {
+      /* Comments are stripped first: the guard is about what the code
+         READS, and the explanatory comment above names the very fields it
+         promises not to touch. */
+      const src = solveChamber.toString()
+        .split('\n')
+        .filter(l => !/^\s*(\/\/|\*|\/\*)/.test(l))   // drop comment lines
+        .join('\n');
+      const secrets = ['__answers', 'brassSpot', 'hunt.answer', 'hunt.hints'];
+      const leaked = secrets.filter(k => src.indexOf(k) >= 0);
+      ok('the auto-solver never reads an answer field',
+         leaked.length === 0, 'solveChamber reads ' + leaked.join(', '));
+      ok('the auto-solver does deduce the key',
+         /solveKeyHunt/.test(src), 'solveChamber never calls solveKeyHunt');
+    }
     eq('no clue names the answer outright',
        integrity.namesAnswer.length, 0);
 

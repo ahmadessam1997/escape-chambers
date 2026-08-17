@@ -338,17 +338,28 @@
     if (!second) return first.id;
     return Math.abs(first.x - second.x) >= X_MARGIN ? first.id : null;
   }
+  /* TRUE 2-D DISTANCE, not x alone.
+     "Next to" is judged by the player's eye against a drawing, and an
+     object 15px sideways but 108px below is not next to anything. Chamber 1
+     shipped with exactly that: the clue pointed at a bunk 110px away in
+     real distance while a tin cup sat 87px away, and the generator chose
+     the bunk because it compared x only. The first chamber is where the
+     player learns the room can be trusted, so it is the worst place to be
+     wrong. The margin check uses the same metric, or it would pass clues
+     the comparison rejects. */
+  function dist2(a, b) {
+    var dx = a.x - b.x, dy = (a.y || 0) - (b.y || 0);
+    return Math.sqrt(dx * dx + dy * dy);
+  }
   function nearestId(all, refId) {
     if (!haveX(all)) return null;
     var ref = null, i;
     for (i = 0; i < all.length; i++) if (all[i].id === refId) ref = all[i];
     if (!ref) return null;
     var rest = all.filter(function (s) { return s.id !== refId; })
-                  .sort(function (a, b) {
-                    return Math.abs(a.x - ref.x) - Math.abs(b.x - ref.x);
-                  });
+                  .sort(function (a, b) { return dist2(a, ref) - dist2(b, ref); });
     if (!rest.length) return null;
-    if (rest[1] && Math.abs(Math.abs(rest[1].x - ref.x) - Math.abs(rest[0].x - ref.x)) < X_MARGIN) {
+    if (rest[1] && Math.abs(dist2(rest[1], ref) - dist2(rest[0], ref)) < X_MARGIN) {
       return null;                          /* two contenders — unfair */
     }
     return rest[0].id;

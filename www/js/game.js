@@ -286,7 +286,28 @@
        gives a room whose numbers hide at "rug" and "plant" while the art
        draws a slop bucket and a barred window. */
     var setting = Themes.themeFor(i);
-    var spotDescs = setting.search.map(function (id) { return setting.byId[id]; });
+
+    /* SPATIAL CLUES MUST USE THE COORDINATES THE PLAYER SEES.
+       themes.js gives every object its static anchor, but layoutFor() then
+       permutes the floor slots, swaps two wall slots, and MIRRORS the whole
+       room in half the chambers. A clue reasoning over anchors therefore
+       says "furthest to the left" about an object drawn on the right.
+       Measured before this fix: of rooms containing a spatial clue, 56.8%
+       pointed at the wrong object once the layout was applied. It happened
+       not to fire on the shipped twenty, which is luck, not correctness.
+
+       So the descriptors handed to the generator carry POST-LAYOUT screen
+       coordinates: slot offset applied, then mirrored about the 800-wide
+       viewBox if this chamber is mirrored. */
+    var lay = layoutFor(i);
+    var spotDescs = setting.search.map(function (id) {
+      var o = setting.byId[id];
+      var mv = lay.move[id] || { dx: 0, dy: 0 };
+      var x = (o.x || 0) + (mv.dx || 0);
+      var d = { x: lay.mirror ? (800 - x) : x, y: (o.y || 0) + (mv.dy || 0) };
+      for (var k in o) { if (!(k in d)) d[k] = o[k]; }
+      return d;
+    });
 
     /* THE KEY IS NOW DEDUCED, NOT STUMBLED ON. It used to be spots[0] of a
        shuffle with nothing in the room referring to it, so the only strategy
@@ -299,7 +320,13 @@
     var L = { tier: tier, setting: setting, spotDescs: spotDescs,
               hunt: hunt, brassSpot: hunt.answer, clueSpot: pick(CLUES),
               hides: {}, taunts: {}, code: '', seq: [] };
-    var T = ['Dust. Endless dust.', 'A spider glares back at you.',
+    /* The SETTING's own taunts. themes.js writes eight per setting and they
+       were being discarded for a hardcoded list, so a player searching a
+       sarcophagus in the sealed tomb read "You find lint. Congratulations."
+       — study text, in a tomb, which is the exact complaint this redesign
+       exists to answer. */
+    var T = (setting.taunts && setting.taunts.length) ? setting.taunts
+          : ['Dust. Endless dust.', 'A spider glares back at you.',
              'Nothing but cobwebs.', 'Something skitters away. Nope.',
              'Empty. Suspiciously empty.', 'Just old memories.',
              'You find lint. Congratulations.', 'A faded receipt from long ago.'];
@@ -472,7 +499,12 @@
       return { key: 'sigil', text: 'With the UV lamp on, the rug reveals the sigil order. Then tap the door.' };
     if (has('ironKey'))
       return { key: 'door', text: 'Select the iron key and tap the door. Freedom awaits.' };
-    return { key: 'searchMore', text: 'Search the room — something is still hidden.' };
+    /* Reachable in states the ladder above does not match (e.g. tier 5
+       after the safe is open, before the crank is used). It used to say
+       "Search the room — something is still hidden", which is the blind
+       tapping this redesign removes; point at the evidence instead. */
+    return { key: 'searchMore',
+             text: 'Read what you notice again (🔍) — the room has already told you where to look.' };
   }
 
   function useHint() {
@@ -482,14 +514,26 @@
     // Already paid for this step in this chamber -> free re-read.
     if (S.paidHints[h.key]) { toast('💡 ' + h.text); return; }
 
-    if (!Save.spendHint()) { Shop.promptOutOfHints(); return; }
+    /* THE FIRST RUNG IS FREE.
+       It only restates a clue already printed on screen in plainer words —
+       charging for it is charging the player to understand the rules, not
+       to be rescued from them, and reads as "pay to play" in reviews.
+       At tier 1 there is a second reason: the profile is exactly one clue,
+       and that clue must isolate the answer, so the restatement always
+       gives the answer away. Selling it would be selling the solution as
+       the opening move.
+       The narrowing and naming rungs below still cost, which is where a
+       hint pack earns its money. */
+    var free = (h.keyRung === 0);
+    if (!free && !Save.spendHint()) { Shop.promptOutOfHints(); return; }
 
     S.paidHints[h.key] = true;
-    S.hintsUsed++;
-    /* Advance the key-hunt ladder only when a rung is actually PAID for, so
-       a free re-read never skips a rung. Once the last rung is reached the
-       clamp in nextHint() re-serves it, and paidHints makes that free —
-       there is nothing further to sell. */
+    if (!free) S.hintsUsed++;
+    /* Advance the key-hunt ladder when a rung is SERVED, whether or not it
+       cost anything — a free re-read is caught by paidHints above and
+       returns before reaching here, so this cannot skip a rung. Once the
+       last rung is reached the clamp in nextHint() re-serves it, and
+       paidHints makes that free: there is nothing further to sell. */
     if (typeof h.keyRung === 'number') {
       S.keyRung = h.keyRung + 1;
       renderObs();                 // the rung the player just bought, kept
@@ -559,7 +603,11 @@
     $('timer').textContent = '0:00';
     closeAllOverlays();
 
-    toast(['The door slams shut behind you.',
+    /* The setting's own opening line. "The slab grinds shut. Four thousand
+       years of patience, and no hurry now." establishes a tomb in one
+       sentence; the generic line established nothing. */
+    toast((L.setting.intro && L.setting.intro[i % L.setting.intro.length]) ||
+          ['The door slams shut behind you.',
            'The lock clicks by itself. Wonderful.',
            'Chamber ' + ROMAN[i] + '. The air smells of secrets.'][i % 3]);
   }
@@ -976,7 +1024,19 @@
                puzzle: pz, codeLen: L ? L.code.length : 0,
                hunt: huntPub,
                setting: L ? L.setting.id : null,
-               L: L, S: S,
+               /* THE ANSWER LIVES HERE, AND ONLY HERE.
+                  `L` used to be returned under its own name, which handed
+                  out hunt.answer, hunt.hints, brassSpot and the safe code
+                  to anything that asked — making the sanitised `hunt` above
+                  decorative, and leaving "solvable by reasoning" resting on
+                  nobody happening to read the wrong field.
+
+                  The integrity assertions genuinely need these (they check
+                  the answer is NOT leaked into clue text), so the data
+                  cannot simply go away. Renaming it is the guard: the
+                  auto-solver is forbidden to touch __answers, and a grep
+                  for that name shows every place the rule could be broken. */
+               __answers: L, S: S,
                hints: Save.data.hints,
                unlimited: Save.data.unlimitedHints,
                removeAds: Save.data.removeAds };
