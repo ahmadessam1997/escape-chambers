@@ -291,11 +291,20 @@ async function solveChamber(page, i) {
         const el = document.elementFromPoint(p.x, p.y);
         return el ? (el.closest('.hot') || {}).id || '(none)' : '(none)';
       };
-      return { drawerRight: at(320, 370), shelfRight: at(450, 252), candle: at(352, 300) };
+      /* The light source sits somewhere different in every setting, so its
+         centre is measured rather than hardcoded. The old fixed (352,300)
+         was the study's candle and means nothing in a prison cell. What
+         the assertion is really protecting is unchanged: the glow must not
+         swallow taps on its neighbours, and must still accept its own. */
+      const lamp = document.getElementById('candleG').getBoundingClientRect();
+      const lampEl = document.elementFromPoint(lamp.left + lamp.width / 2,
+                                               lamp.top + lamp.height / 2);
+      return { drawerRight: at(320, 370), shelfRight: at(450, 252),
+               candle: lampEl ? (lampEl.closest('.hot') || {}).id || '(none)' : '(none)' };
     });
     eq('right half of the drawer is tappable', hits.drawerRight, 'drawer');
     eq('right half of the shelf is tappable', hits.shelfRight, 'shelf');
-    eq('the candle itself is still tappable', hits.candle, 'candleG');
+    eq('the light source itself is still tappable', hits.candle, 'candleG');
 
     /* ================= 3. hint wallet arithmetic ================= */
     console.log('\n-- hints --');
@@ -304,17 +313,37 @@ async function solveChamber(page, i) {
     await clickId(page, 'hintBtn');
     eq('using a hint costs one', await page.evaluate(() => window.ECSave.data.hints), 4);
 
-    await clickId(page, 'hintBtn');
-    eq('re-reading the SAME step is free',
-       await page.evaluate(() => window.ECSave.data.hints), 4);
+    /* A bought hint is KEPT, not rented. Each press of the hint button now
+       buys the next rung of the key-hunt ladder, so "re-read the same step
+       for free" is served by the observations panel holding every rung the
+       player has paid for — not by the button repeating itself. Charging
+       again to re-see a hint already bought would turn a rescue into a
+       pump. */
+    ok('a bought hint stays readable, free, in the observations panel',
+       await page.evaluate(() => {
+         const t = document.getElementById('obs').textContent;
+         return t.indexOf('Hints you bought') >= 0 && t.indexOf('💡') >= 0;
+       }));
 
-    /* Advance the puzzle so the hint step changes, then confirm the new
-       step does charge. */
-    for (const spot of ['rug','plant','clock','pA','pB','shelf','chest']) await clickId(page, spot);
-    await selectItem(page, 'ironKey');
     await clickId(page, 'hintBtn');
-    eq('a NEW hint step charges again',
+    eq('the NEXT rung of the ladder charges again',
        await page.evaluate(() => window.ECSave.data.hints), 3);
+
+    /* The ladder must terminate: buying every rung ends at the spot named
+       outright, and pressing on past the end costs nothing, because there
+       is nothing left to sell. */
+    for (let k = 0; k < 6; k++) await clickId(page, 'hintBtn');
+    const spent = await page.evaluate(() => window.ECSave.data.hints);
+    await clickId(page, 'hintBtn');
+    eq('pressing past the last rung is free',
+       await page.evaluate(() => window.ECSave.data.hints), spent);
+    ok('the last rung names the hiding place',
+       await page.evaluate(() => {
+         const s = window.ECGame.state();
+         const last = s.L.hunt.hints[s.L.hunt.hints.length - 1];
+         return last.kind === 'answer' && last.spot === s.L.hunt.answer &&
+                document.getElementById('obs').textContent.indexOf(last.text) >= 0;
+       }));
 
     /* ================= 5. out of hints ================= */
     await page.evaluate(() => { window.ECSave.data.hints = 0; window.ECSave.save(); });

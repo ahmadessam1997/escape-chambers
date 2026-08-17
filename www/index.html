@@ -108,6 +108,21 @@
   #buildLine{margin-top:12px;font-size:10px;color:#5d6b8f;letter-spacing:.06em;
     font-family:ui-monospace,Menlo,Consolas,monospace;}
 
+  /* ---- observations ----
+     The clue list is ALWAYS on screen and always free. A toast that expires
+     turns a deduction into a memory test, and charging to re-read the thing
+     you are supposed to be reasoning from is what made hints feel like a
+     substitute for thinking rather than a rescue. */
+  #obs{position:absolute;left:8px;right:8px;top:44px;z-index:6;
+    background:rgba(10,14,24,.86);border:1px solid #2c3d5e;border-radius:12px;
+    padding:8px 11px;font-size:12px;line-height:1.45;color:#cbd7ee;
+    max-height:34%;overflow-y:auto;display:none;}
+  #obs.show{display:block;}
+  #obs b{display:block;font-size:10px;letter-spacing:.12em;color:#8fa3c8;
+    margin-bottom:4px;text-transform:uppercase;font-weight:600;}
+  #obs li{margin:0 0 3px 14px;}
+  #obsToggle{position:absolute;right:8px;top:8px;z-index:7;}
+
   /* ---- shop ---- */
   .srow{display:flex;align-items:center;gap:12px;text-align:left;
     background:#1a2338;border:1px solid #3a4a70;border-radius:14px;
@@ -148,6 +163,8 @@
 
   <div id="sceneWrap">
     <div id="toast"></div>
+    <button class="pill" id="obsToggle">🔍</button>
+    <div id="obs"></div>
     <svg id="scene" viewBox="0 0 800 560" preserveAspectRatio="xMidYMid meet">
       <defs>
         <radialGradient id="candleGlow" cx="50%" cy="50%" r="50%">
@@ -304,7 +321,10 @@
   <div id="inv">
     <div class="slot" id="s0"></div><div class="slot" id="s1"></div>
     <div class="slot" id="s2"></div><div class="slot" id="s3"></div>
-    <div id="invHint">Tap everything.<br>Select an item, then tap where to use it.</div>
+    <!-- Was "Tap everything." That was accurate for the old build and is now
+         the opposite of the design: the room tells you where to look, and
+         the 🔍 panel holds what you have noticed. -->
+    <div id="invHint">Read what you notice — 🔍<br>Select an item, then tap where to use it.</div>
   </div>
 </div>
 
@@ -395,6 +415,9 @@
 <script src="js/ads.js"></script>
 <script src="js/shop.js"></script>
 <!-- Must load before game.js: genLevel() calls ECPuzzle.generate(). -->
+<!-- themes before puzzle before game: genLevel() asks ECThemes for the
+     setting's objects, then hands them to ECPuzzle as the candidate spots. -->
+<script src="js/themes.js"></script>
 <script src="js/puzzle.js"></script>
 <script src="js/game.js"></script>
 </body>

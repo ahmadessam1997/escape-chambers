@@ -23,6 +23,7 @@
   var Billing = global.ECBilling;
   var Ads = global.ECAds;
   var Shop = global.ECShop;
+  var Themes = global.ECThemes;
 
   var $ = function (id) { return document.getElementById(id); };
 
@@ -172,8 +173,81 @@
     return lay;
   }
 
+  /* Every listener on a node that paintRoom() replaces. MUST be re-run
+     after each repaint: innerHTML throws the old nodes away and their
+     handlers with them, leaving a room that draws correctly and responds
+     to nothing. */
+  function bindRoomTaps() {
+    SEARCH.forEach(function (id) {
+      $(id).addEventListener('click', function () { searchSpot(id); });
+    });
+
+    $('drawer').addEventListener('click', function (e) {
+      e.stopPropagation();
+      if (!inChamber()) return;
+      if (L.tier === 1) { toast('Unlocked, and utterly empty. Rude.'); return; }
+      if (S.drawer) { toast('The drawer hangs open, empty.'); return; }
+      if (S.sel === 'brassKey') {
+        S.drawer = true; take('brassKey');
+        $('drawerOpenG').style.display = '';
+        $('drawerItem').textContent = ICON[L.drawerHas];
+        give(L.drawerHas); buzz([20, 40, 20]);
+        toast('Click! Inside the drawer: a ' + LBL[L.drawerHas] + '.');
+      } else toast('Locked. A small brass keyhole winks at you.');
+    });
+
+    $('safe').addEventListener('click', function () {
+      if (!inChamber()) return;
+      if (L.tier < 3) { toast('An old safe, welded shut for good. Decorative, apparently.'); return; }
+      if (S.safe) { toast('The safe gapes open, empty.'); return; }
+      openPad();
+    });
+
+    $('cab').addEventListener('click', function () {
+      if (!inChamber()) return;
+      if (L.tier < 5) { toast('The cabinet is painted shut. Decades ago, by the look of it.'); return; }
+      if (S.cab) { toast('Nothing left inside.'); return; }
+      if (S.sel === 'crank') {
+        S.cab = true; take('crank');
+        $('cabOpenG').style.display = '';
+        give(L.cabHas); buzz([20, 40, 20]);
+        toast('You crank the mechanism — the cabinet groans open. The iron key!');
+      } else toast('A hexagonal socket. It wants a crank.');
+    });
+
+    $('door').addEventListener('click', function () {
+      if (!inChamber()) return;
+      if (L.tier >= 5 && !S.seqDone) { openSym(); return; }
+      if (S.sel === 'ironKey') escape();
+      else if (S.items.ironKey) toast('Select the iron key first, then tap the door.');
+      else toast(L.tier >= 5 && S.seqDone
+        ? 'The sigils hum, satisfied. Now it wants the iron key.'
+        : 'Locked tight. This needs a heavy iron key.');
+    });
+
+    $('candleG').addEventListener('click', function () {
+      toast('The flame gutters, as if breathing.');
+    });
+  }
+
+  /* Replace the scene's contents with this chamber's setting. The <svg>
+     element and its viewBox stay; everything inside is swapped.
+
+     Listeners are (re)bound after every paint because innerHTML discards the
+     old nodes along with their handlers — a paint without a rebind leaves a
+     room that renders perfectly and ignores every tap. */
+  function paintRoom(i) {
+    var sc = $('scene');
+    sc.innerHTML = Themes.defs() + Themes.roomSVG(L.setting);
+    bindRoomTaps();
+  }
+
   function applyRoomStyle(i) {
-    var pal = paletteFor(i);
+    /* The SETTING's hand-picked palette wins. paletteFor() is the seeded
+       fallback from before themes existed, and letting it run here painted
+       a stone cell in navy — the art and the colour disagreeing about what
+       room you are in. */
+    var pal = (L && L.setting && L.setting.palette) || paletteFor(i);
     Object.keys(pal).forEach(function (k) {
       document.body.style.setProperty(k, pal[k]);
     });
@@ -205,8 +279,25 @@
     var R = mulberry(i * 7919 + 31);
     var pick = function (a) { return a[Math.floor(R() * a.length)]; };
     var tier = i < 4 ? 1 : i < 8 ? 2 : i < 12 ? 3 : i < 16 ? 4 : 5;
-    var spots = shuffle(SEARCH, R);
-    var L = { tier: tier, brassSpot: spots[0], clueSpot: pick(CLUES),
+
+    /* The setting supplies both the artwork AND the candidate spots, with
+       the physical traits the key hunt reasons over. The same descriptor
+       array MUST go to generateKeyHunt and generate: passing it to only one
+       gives a room whose numbers hide at "rug" and "plant" while the art
+       draws a slop bucket and a barred window. */
+    var setting = Themes.themeFor(i);
+    var spotDescs = setting.search.map(function (id) { return setting.byId[id]; });
+
+    /* THE KEY IS NOW DEDUCED, NOT STUMBLED ON. It used to be spots[0] of a
+       shuffle with nothing in the room referring to it, so the only strategy
+       was to tap all seven. generateKeyHunt picks a spot AND the evidence
+       that proves it, verifying by brute force that exactly one spot
+       survives. `degraded` means it fell back to naming the spot outright —
+       the old blind-search behaviour — so the suite asserts it never fires. */
+    var hunt = global.ECPuzzle.generateKeyHunt(i, tier, spotDescs);
+
+    var L = { tier: tier, setting: setting, spotDescs: spotDescs,
+              hunt: hunt, brassSpot: hunt.answer, clueSpot: pick(CLUES),
               hides: {}, taunts: {}, code: '', seq: [] };
     var T = ['Dust. Endless dust.', 'A spider glares back at you.',
              'Nothing but cobwebs.', 'Something skitters away. Nope.',
@@ -222,7 +313,7 @@
       /* brassSpot is passed in so the generator never places a fact on the
          key's spot. Filtering here instead would silently delete a needed
          number and leave the chamber unwinnable. */
-      L.puzzle = global.ECPuzzle.generate(i, codeLen, null, L.brassSpot);
+      L.puzzle = global.ECPuzzle.generate(i, codeLen, null, L.brassSpot, L.spotDescs);
       L.code = L.puzzle.code;
       L.factAt = {};
       L.puzzle.facts.forEach(function (f) {
@@ -252,6 +343,51 @@
 
   var ORD = ['', 'first', 'second', 'third', 'fourth'];
   function numeral(n) { return ORD[n] || ('#' + n); }
+
+  /* ---------------- observations ----------------
+     What the player can see from the doorway. This is the fix for "just
+     search randomly": the evidence that identifies the key's hiding place
+     is on screen from the moment the chamber opens, and stays there.
+
+     Deliberately shows `text` (the flavoured observation) and never
+     `plain` — `plain` is the first rung of the hint ladder, so printing it
+     here would delete the puzzle it is meant to rescue. */
+  function renderObs() {
+    var box = $('obs');
+    if (!L || !L.hunt || !L.hunt.evidence.clues.length) {
+      box.classList.remove('show');
+      $('obsToggle').style.display = 'none';
+      return;
+    }
+    $('obsToggle').style.display = '';
+    var html = '<b>What you notice</b><ul>';
+    L.hunt.evidence.clues.forEach(function (c) {
+      html += '<li>' + c.text + '</li>';
+    });
+    html += '</ul>';
+
+    /* Hints the player has ALREADY PAID FOR stay here permanently and free.
+       A hint that lives only in a 2.8s toast is bought and then lost, and
+       the player has to buy the next rung just to see anything again —
+       which turns a rescue into a pump. Keeping them visible is also what
+       makes "re-reading is free" still true now that each press of the
+       hint button buys the NEXT rung rather than repeating the last. */
+    if (S && S.keyRung > 0 && L.hunt.hints.length) {
+      html += '<b>Hints you bought</b><ul>';
+      for (var k = 0; k < S.keyRung && k < L.hunt.hints.length; k++) {
+        html += '<li>💡 ' + L.hunt.hints[k].text + '</li>';
+      }
+      html += '</ul>';
+    }
+    box.innerHTML = html;
+  }
+
+  /* The object's name IN THIS SETTING. SPOTNAME survives only as the
+     fallback for a room built before themes existed. */
+  function spotName(id) {
+    var o = L && L.setting && L.setting.byId[id];
+    return (o && o.name) || SPOTNAME[id] || id;
+  }
 
   /* A paid hint should advance the player one step, not hand over the
      answer. Names the first number still missing — which is exactly what a
@@ -301,10 +437,23 @@
      charged twice for the same sentence. */
   function nextHint() {
     var has = function (n) { return !!S.items[n]; };
-    if (L.tier === 1 && !has('ironKey'))
-      return { key: 'search1', text: 'Something is hidden in this room. Search the rug, plant, clock, paintings, shelf and chest.' };
-    if (L.tier > 1 && !has('brassKey') && !S.drawer)
-      return { key: 'findBrass', text: 'A brass key hides somewhere. Search every corner.' };
+    /* The key hunt's own graduated ladder REPLACES the two hints that used
+       to live here ("Search the rug, plant, clock…" and "Search every
+       corner"). Both told the player to do the exact thing this redesign
+       removes, and the first also hardcoded the study's furniture, so it
+       named objects that no longer exist in a prison cell.
+
+       Rungs: restate a clue in plainer words -> narrow to 2-3 candidates ->
+       only then name the spot. A player who understood the clue never
+       reaches the last rung, which is the point: hints rescue, they do not
+       substitute. */
+    var needKey = (L.tier === 1 && !has('ironKey')) ||
+                  (L.tier > 1 && !has('brassKey') && !S.drawer);
+    if (needKey && L.hunt && L.hunt.hints.length) {
+      var idx = Math.min(S.keyRung || 0, L.hunt.hints.length - 1);
+      var rung = L.hunt.hints[idx];
+      return { key: 'keyhunt:' + rung.level, text: rung.text, keyRung: idx };
+    }
     if (L.tier > 1 && !S.drawer && has('brassKey'))
       return { key: 'useBrass', text: 'Select the brass key, then tap the desk drawer.' };
     if (L.tier === 3 && S.drawer && !S.safe)
@@ -337,6 +486,14 @@
 
     S.paidHints[h.key] = true;
     S.hintsUsed++;
+    /* Advance the key-hunt ladder only when a rung is actually PAID for, so
+       a free re-read never skips a rung. Once the last rung is reached the
+       clamp in nextHint() re-serves it, and paidHints makes that free —
+       there is nothing further to sell. */
+    if (typeof h.keyRung === 'number') {
+      S.keyRung = h.keyRung + 1;
+      renderObs();                 // the rung the player just bought, kept
+    }
     refreshHintUI();
     toast('💡 ' + h.text);
   }
@@ -355,14 +512,24 @@
     entry = ''; symEntry = [];
     S = { found: {}, items: {}, sel: null, drawer: false, safe: false, cab: false,
           uvOn: false, seqDone: L.tier < 5, escaped: false,
-          paidHints: {}, hintsUsed: 0, factsFound: {} };
+          paidHints: {}, hintsUsed: 0, factsFound: {}, keyRung: 0 };
 
     /* className is still reset (not left stale) because body.uv is toggled
        on it during UV mode; the palette now comes from inline custom
        properties instead of a t0..t4 class. */
     document.body.className = '';
+    /* Rebuild the room's ARTWORK before applyRoomStyle, because that function
+       addresses elements by id and they only exist once the setting has been
+       painted. This is the line that stops all twenty chambers being one room
+       recoloured: each setting draws its own furniture, not a tinted study. */
+    paintRoom(i);
     applyRoomStyle(i);
-    $('roomTitle').textContent = THEMES[i] + ' · CHAMBER ' + ROMAN[i];
+    $('roomTitle').textContent = L.setting.name + ' · CHAMBER ' + ROMAN[i];
+    /* Open on entry. The clues are the room's opening move — hiding them
+       behind a button would leave the player exactly where they were,
+       staring at seven objects with no reason to prefer any of them. */
+    renderObs();
+    $('obs').classList.add('show');
 
     /* reset scene visuals */
     SEARCH.forEach(function (id) { $(id).classList.remove('searched'); });
@@ -432,7 +599,9 @@
       if (id === 'chest') { $('chestLid').style.display = 'none'; $('chestOpenG').style.display = ''; }
       if (hid) {
         give(hid);
-        toast((id === 'rug' ? 'Under the rug' : 'Behind the ' + SPOTNAME[id]) + ' — a ' + LBL[hid] + '!');
+        /* Themed name, not "rug": in the cell block this reads "Behind the
+           straw mattress". A hardcoded name here would undo the settings. */
+        toast('Behind the ' + spotName(id) + ' — a ' + LBL[hid] + '!');
         return;
       }
       /* A numbered fact reads as a find, not a taunt. It is worthless on
@@ -591,56 +760,8 @@
       });
     }
 
-    SEARCH.forEach(function (id) {
-      $(id).addEventListener('click', function () { searchSpot(id); });
-    });
-
-    $('drawer').addEventListener('click', function (e) {
-      e.stopPropagation();
-      if (!inChamber()) return;
-      if (L.tier === 1) { toast('Unlocked, and utterly empty. Rude.'); return; }
-      if (S.drawer) { toast('The drawer hangs open, empty.'); return; }
-      if (S.sel === 'brassKey') {
-        S.drawer = true; take('brassKey');
-        $('drawerOpenG').style.display = '';
-        $('drawerItem').textContent = ICON[L.drawerHas];
-        give(L.drawerHas); buzz([20, 40, 20]);
-        toast('Click! Inside the drawer: a ' + LBL[L.drawerHas] + '.');
-      } else toast('Locked. A small brass keyhole winks at you.');
-    });
-
-    $('safe').addEventListener('click', function () {
-      if (!inChamber()) return;
-      if (L.tier < 3) { toast('An old safe, welded shut for good. Decorative, apparently.'); return; }
-      if (S.safe) { toast('The safe gapes open, empty.'); return; }
-      openPad();
-    });
-
-    $('cab').addEventListener('click', function () {
-      if (!inChamber()) return;
-      if (L.tier < 5) { toast('The cabinet is painted shut. Decades ago, by the look of it.'); return; }
-      if (S.cab) { toast('Nothing left inside.'); return; }
-      if (S.sel === 'crank') {
-        S.cab = true; take('crank');
-        $('cabOpenG').style.display = '';
-        give(L.cabHas); buzz([20, 40, 20]);
-        toast('You crank the mechanism — the cabinet groans open. The iron key!');
-      } else toast('A hexagonal socket. It wants a crank.');
-    });
-
-    $('door').addEventListener('click', function () {
-      if (!inChamber()) return;
-      if (L.tier >= 5 && !S.seqDone) { openSym(); return; }
-      if (S.sel === 'ironKey') escape();
-      else if (S.items.ironKey) toast('Select the iron key first, then tap the door.');
-      else toast(L.tier >= 5 && S.seqDone
-        ? 'The sigils hum, satisfied. Now it wants the iron key.'
-        : 'Locked tight. This needs a heavy iron key.');
-    });
-
-    $('candleG').addEventListener('click', function () {
-      toast('The flame gutters, as if breathing.');
-    });
+    /* Scene taps are bound by bindRoomTaps(), called from paintRoom() on
+       every level start, because the room's nodes are replaced each time. */
 
     /* keypad */
     ['1','2','3','4','5','6','7','8','9','⌫','0','✕'].forEach(function (k) {
@@ -710,6 +831,9 @@
     });
 
     /* topbar + menu */
+    $('obsToggle').addEventListener('click', function () {
+      $('obs').classList.toggle('show');
+    });
     $('hintBtn').addEventListener('click', useHint);
     $('menuBtn').addEventListener('click', showMenu);
     $('shopBtn').addEventListener('click', function () { Shop.openShop(); });
@@ -837,8 +961,21 @@
           })
         };
       }
+      /* PUBLIC key-hunt view: exactly what a player standing in the doorway
+         can see, and nothing else. `answer` and `hints` are withheld — the
+         last hint rung names the spot, so exposing either would let the e2e
+         solver read the answer instead of deducing it, and "all 20
+         completable" would become a restatement of the generator. */
+      var huntPub = null;
+      if (L && L.hunt) {
+        huntPub = { evidence: L.hunt.evidence, tier: L.hunt.tier,
+                    clueCount: L.hunt.clueCount, degraded: L.hunt.degraded,
+                    relaxed: L.hunt.relaxed };
+      }
       return { cur: cur, tier: L && L.tier, t: t,
                puzzle: pz, codeLen: L ? L.code.length : 0,
+               hunt: huntPub,
+               setting: L ? L.setting.id : null,
                L: L, S: S,
                hints: Save.data.hints,
                unlimited: Save.data.unlimitedHints,
