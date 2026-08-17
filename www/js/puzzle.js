@@ -177,6 +177,24 @@
     rock:      'is bare rock',
     coal:      'is coal, black with dust',
 
+    /* Added 2026-08-17. Without these, says() falls through to "is <value>"
+       and six shipped chambers printed broken English on screen —
+       "Nothing that is records has been shifted", "everything that is toy".
+       themes.js validate() now fails a setting that introduces a value with
+       no entry here, so this cannot silently recur. */
+    treasure:  'is treasure',
+    signal:    'carries a signal',
+    bronze:    'is bronze',
+    fur:       'is fur or hide',
+    mount:     'is a mounted specimen',
+    leather:   'is leather',
+    ice:       'is ice',
+    block:     'is a solid block',
+    toy:       'is a toy',
+    bone:      'is bone',
+    rubber:    'is rubber',
+    records:   'is a record or recording',
+
     bedding:   'is something slept on',
     window:    'is a window',
     marking:   'is written or scratched on',
@@ -221,24 +239,44 @@
      clue MEANS — so a bad entry can no more break a chamber than a bad
      LORE entry can. */
   var SIGNS = [
-    /* REORDERED, not rewritten — same length, same SIGNS[seed % 20]
-       indexing, nothing else touched. The old order was written against
-       game.js's twenty THEME NAMES (study, cellar, greenhouse…). Chambers
-       now take their setting from themes.js as `list[i % 10]`, so index 10
-       stopped being the scullery and became the cell block — and the
-       generated clue read "a hand has wiped the SPILLED FLOUR from the
-       room" inside a prison. The row below is aligned to themes.js's
-       setting order (cell, ship, tomb, lab, clockworks, glasshouse,
-       library, mine, observatory, boiler) twice over. If either list is
-       reordered, this one has to follow.
+    /* ONE ENTRY PER SETTING, in themes.js SETTINGS order. The substance a
+       clue talks about has to be something that is actually in the room.
 
-       All singular mass nouns on purpose: the clue templates say
-       "the <sign> proves it", so a plural like "brass filings" comes out
-       as "the brass filings proves it". */
-    'stone dust',  'salt crust',  'tomb dust',     'spilled reagent', 'machine oil',
-    'potting soil','gallery dust','rock dust',     'frost',           'coal soot',
-    'cell damp',   'salt spray',  'drifted sand',  'chalk dust',      'brass dust',
-    'pollen',      'paper dust',  'iron grit',     'graphite dust',   'cinder ash'
+       This has now been wrong twice. First it was aligned to game.js's old
+       twenty THEME NAMES, so a prison generated "a hand has wiped the
+       SPILLED FLOUR from the room". Then themes.js grew from ten settings
+       to twenty, and this list -- ten entries written twice over -- stopped
+       lining up again: the icehouse advertised POLLEN, the lamp room CELL
+       DAMP, the operating theatre IRON GRIT. Ten of twenty chambers named
+       a substance that was not there.
+
+       ECPuzzle.SIGNS.length MUST equal ECThemes.list.length. The e2e suite
+       asserts it, because nothing about the failure is visible in code —
+       it only shows up as strange prose in a room nobody re-read.
+
+       All singular mass nouns on purpose: the templates say "the <sign>
+       proves it", so a plural like "brass filings" reads "the brass
+       filings proves it". */
+    'stone dust',    /*  1 cell block          */
+    'salt crust',    /*  2 captain's cabin     */
+    'tomb dust',     /*  3 sealed tomb         */
+    'spilled reagent', /* 4 laboratory         */
+    'machine oil',   /*  5 clockworks          */
+    'potting soil',  /*  6 glasshouse          */
+    'paper dust',    /*  7 locked library      */
+    'rock dust',     /*  8 deep working        */
+    'lens dust',     /*  9 observatory         */
+    'coal soot',     /* 10 boiler room         */
+    'lamp oil',      /* 11 lamp room           */
+    'vault dust',    /* 12 vault               */
+    'vellum dust',   /* 13 scriptorium         */
+    'plaster dust',  /* 14 taxidermist's       */
+    'engine grit',   /* 15 guard's van         */
+    'frost',         /* 16 icehouse            */
+    'sawdust',       /* 17 toy workshop        */
+    'carbolic',      /* 18 operating theatre   */
+    'valve dust',    /* 19 radio station       */
+    'belfry grime'   /* 20 bell tower          */
   ];
 
   /* Normalise whatever the caller passed into full descriptors.
@@ -376,29 +414,45 @@
              text: t[Math.floor(R() * t.length)],
              plain: 'The key is not behind anything that ' + w + '.' };
   }
+  /* THE AXIS MUST BE IN THE TEXT.
+     These clues used to read "a single word: 'unmatched.'" and nothing
+     more. Unmatched by WHAT — material, nature, position? Each answer
+     gives a different candidate set, so the clue was unreadable and the
+     chamber could not be closed from the screen. The predicate knew the
+     axis; the prose dropped it. Naming the axis costs nothing: the player
+     still has to work out which object is the odd one. */
   function clueUnique(trait, sign, R) {
     var n = traitNoun(trait);
     var t = [
-      'Scratched into the plaster: "alone of its kind."',
-      'A single word, cut deep and underlined twice: "unmatched."',
-      'Written in the ' + sign + ' with one finger: "the odd one."'
+      'Scratched into the plaster: "alone in its ' + n + '."',
+      'A single word, cut deep and underlined twice: "unmatched" — and beneath it, "' + n + '".',
+      'Written in the ' + sign + ' with one finger: "the odd one for its ' + n + '."'
     ];
     return { pred: { k: 'unique', trait: trait },
              text: t[Math.floor(R() * t.length)],
-             plain: 'The key is behind the one object whose ' + n +
+             /* Says "an object", not "the one object". The predicate is a
+                fact about the KEY's spot -- its group on this axis has size
+                one -- not a claim that only one such object exists in the
+                room. Several can, and saying otherwise made the paid hint
+                a lie that narrowed the player to the wrong thing. */
+             plain: 'The key is behind an object whose ' + n +
                     ' nothing else in this room shares.' };
   }
+  /* Same fix as clueUnique: the tally meant nothing without the axis. */
   function clueGroup(trait, n, sign, R) {
     var noun = traitNoun(trait);
     var t = [
-      'A tally of ' + n + ' notches, cut beside a sketch of the room.',
-      n + ' marks in the ' + sign + ', side by side, and a rough drawing of the room beneath.',
-      'Someone counted something here ' + n + ' times, and drew a ring round the count.'
+      'A tally of ' + n + ' notches, cut beside a sketch of the room, and the word "' + noun + '".',
+      n + ' marks in the ' + sign + ', side by side, under a single word: "' + noun + '".',
+      'Someone counted ' + n + ' things of a ' + noun + ' here, and drew a ring round the count.'
     ];
     return { pred: { k: 'group', trait: trait, n: n },
              text: t[Math.floor(R() * t.length)],
-             plain: 'Exactly ' + n + ' things here share the same ' + noun +
-                    '. The key is behind one of those ' + n + '.' };
+             /* "a set of n", not "exactly n things here" -- two separate
+                groups of the same size can exist on one axis, and the old
+                wording sent the player confidently to the wrong pair. */
+             plain: 'The key is behind one of a set of ' + n +
+                    ' things that share the same ' + noun + '.' };
   }
   function clueExtreme(dir, sign, R) {
     var side = (dir === 'min') ? 'left' : 'right';
@@ -519,6 +573,28 @@
   function validSet(all, answer, set, prof) {
     var surv = survivorsOf(all, set);
     if (surv.length !== 1 || surv[0].id !== answer.id) return false;
+
+    /* DISTINCT ON SCREEN. Minimality below compares PREDICATES, so
+       group/made/3 and group/kind/3 are two different clues to the
+       generator -- and rendered identically to the player, who sees the
+       same sentence printed twice and concludes the room is buggy.
+       Chamber 5 shipped like that. What the player reads is what has to
+       be distinct, not what the generator reasons about. */
+    var seen = {};
+    for (var d = 0; d < set.length; d++) {
+      if (seen[set[d].text]) return false;
+      seen[set[d].text] = true;
+    }
+
+    /* The dust cannot be both undisturbed and wiped away. clueNot's
+       templates disagree about the room's physical state, and two of them
+       landing together produced clues that contradict each other. */
+    var wiped = 0, thick = 0;
+    for (var w = 0; w < set.length; w++) {
+      if (/has wiped|scuffed away|trail through/.test(set[w].text)) wiped++;
+      if (/thick and unbroken|has been shifted in months/.test(set[w].text)) thick++;
+    }
+    if (wiped && thick) return false;
 
     /* MINIMALITY. Without this the generator happily emits "it is behind
        something wooden" plus "it is behind the chest" and calls it two

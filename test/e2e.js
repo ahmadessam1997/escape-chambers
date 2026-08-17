@@ -143,9 +143,37 @@ async function solveChamber(page, i) {
 
   const tier = (await state(page)).tier;
 
-  // 1. Search everything.
+  /* 1. DEDUCE where the key is, then tap ONLY that.
+     This used to tap all seven spots, which meant the suite proved the
+     lock chain worked and proved nothing whatever about the deduction --
+     the entire redesign. Worse, the comments in puzzle.js and game.js
+     both claimed it was already doing this.
+
+     solveKeyHunt sees only `evidence`: the same clue texts and spot traits
+     the player has. It never touches L.brassSpot or hunt.answer. So a pass
+     here means a chamber is genuinely solvable BY REASONING, not merely
+     completable by exhaustion. */
+  const hunt = await page.evaluate(() => {
+    const s = window.ECGame.state();
+    if (!s.hunt) return null;
+    return { evidence: s.hunt.evidence, degraded: s.hunt.degraded };
+  });
+  if (!hunt) return { ok: false, why: 'no key hunt on the chamber state' };
+  if (hunt.degraded) return { ok: false, why: 'key hunt DEGRADED to naming the spot' };
+
+  const deduced = await page.evaluate(
+    ev => window.ECPuzzle.solveKeyHunt(ev), hunt.evidence);
+  if (!deduced) return { ok: false, why: 'evidence did not isolate a single spot' };
+
+  await clickId(page, deduced);
+  let keyed = await state(page);
+  if (!keyed.items.includes('brassKey') && !keyed.items.includes('ironKey')) {
+    return { ok: false, why: 'deduced ' + deduced + ' but no key was there' };
+  }
+
+  /* Now search the rest, for the numbered facts the safe code needs. */
   for (const spot of ['rug','plant','clock','pA','pB','shelf','chest']) {
-    await clickId(page, spot);
+    if (spot !== deduced) await clickId(page, spot);
   }
 
   let st = await state(page);
@@ -558,6 +586,48 @@ async function solveChamber(page, i) {
     ok('the rule is told in the room’s own voice',
        trail.every(t => /^On (a|an) /.test(t.rule)),
        JSON.stringify(trail.filter(t => !/^On (a|an) /.test(t.rule))[0]));
+
+    /* ================= 7f. room-data integrity =================
+       Every one of these guards a failure that is INVISIBLE in code and
+       only shows up as strange prose in a room nobody re-read. All four
+       shipped broken at least once. */
+    console.log('\n-- room data --');
+    const integrity = await page.evaluate(() => {
+      const T = window.ECThemes, P = window.ECPuzzle;
+      const vals = new Set();
+      T.list.forEach(s => s.search.forEach(id => {
+        const tr = s.byId[id].traits || {};
+        ['made', 'kind'].forEach(k => { if (typeof tr[k] === 'string') vals.add(tr[k]); });
+      }));
+      const out = { validate: T.validate(), settings: T.list.length,
+                    signs: P.SIGNS.length,
+                    missingWords: [...vals].filter(v => !P.VALUE_WORDS[v]),
+                    degraded: [], dupText: [], namesAnswer: [], wrongSign: [] };
+      for (let i = 0; i < 20; i++) {
+        const st = T.themeFor(i);
+        const h = P.generateKeyHunt(i, 1 + (i % 5), st.search.map(id => st.byId[id]));
+        if (h.degraded) out.degraded.push(i);
+        const txt = h.evidence.clues.map(c => c.text);
+        if (new Set(txt).size !== txt.length) out.dupText.push(i);
+        if (txt.some(t => t.toLowerCase().indexOf(h.answerName.toLowerCase()) >= 0))
+          out.namesAnswer.push(i);
+        if (h.evidence.sign !== P.SIGNS[i]) out.wrongSign.push(i);
+      }
+      return out;
+    });
+    eq('every setting validates', integrity.validate.length, 0);
+    eq('one sign per setting — the icehouse must not advertise pollen',
+       integrity.signs, integrity.settings);
+    eq('no chamber uses a sign written for another room',
+       integrity.wrongSign.length, 0);
+    eq('every trait value has readable phrasing',
+       integrity.missingWords.length, 0);
+    eq('no chamber degrades to naming the spot',
+       integrity.degraded.length, 0);
+    eq('no chamber prints the same observation twice',
+       integrity.dupText.length, 0);
+    eq('no clue names the answer outright',
+       integrity.namesAnswer.length, 0);
 
     /* ================= 7b. ad-consent privacy button ================= */
     console.log('\n-- consent --');
