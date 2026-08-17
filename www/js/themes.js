@@ -1539,6 +1539,1056 @@
   };
 
   /* =====================================================================
+     THE SECOND TEN — parts for settings XI-XX
+     ---------------------------------------------------------------------
+     Same rules as everything above: local coordinates around the anchor,
+     black outlines at low opacity so any palette survives, and options for
+     anything a second room wants to recolour. Role bounding boxes are
+     unchanged, so a lamp-room stair head and a Persian rug occupy the same
+     footprint and game.js:layoutFor() cannot tell them apart.
+
+     Written role by role inside each room rather than grouped by role
+     across rooms, because the thing a reader wants to check is "does this
+     room read as a lighthouse", and that question is answered by seven
+     parts sitting together.
+     ===================================================================== */
+
+  /* ---- THE LAMP ROOM ---- */
+
+  /* The head of the iron spiral stair coming up through the floor. The
+     thing you look under is a hole you look DOWN — same affordance,
+     completely different silhouette from a rug. */
+  PARTS.stairHead = function (o) {
+    var m = o.metal || '#5c6670';
+    var out = ell(0, -36, 112, 36, 'fill="' + m + '" ' + K3);
+    out += ell(0, -34, 94, 29, 'fill="#070b0f"');
+    var i;
+    for (i = 0; i < 10; i++) {
+      if (i === 5 || i === 6) continue;      /* the two treads you cannot see: the way down */
+      var a0 = (i * 36 - 4) * Math.PI / 180, a1 = (i * 36 + 30) * Math.PI / 180;
+      out += pth('M0 -34 L' + (92 * Math.cos(a0)).toFixed(1) + ' ' + (-34 + 28 * Math.sin(a0)).toFixed(1) +
+        ' L' + (92 * Math.cos(a1)).toFixed(1) + ' ' + (-34 + 28 * Math.sin(a1)).toFixed(1) + ' z',
+        'fill="' + (i % 2 ? '#6f7b85' : '#49535b') + '" stroke="black" stroke-opacity=".45" stroke-width="2"');
+    }
+    out += circ(0, -34, 12, 'fill="#8d9498" ' + K2);
+    out += pth('M-100 -50 q10 -34 48 -42', 'fill="none" stroke="' + m + '" stroke-width="7" stroke-linecap="round"');
+    return out;
+  };
+
+  /* Long-spouted oil can with a funnel beside it. */
+  PARTS.oilCan = function (o) {
+    var m = o.metal || '#7d868c';
+    return pth('M-20 0 l4 -36 h32 l4 36 z', 'fill="' + m + '" ' + K3) +
+      ell(0, -36, 20, 6, 'fill="#9aa3a8" ' + K2) +
+      pth('M12 -38 q28 -8 30 -44', 'fill="none" stroke="' + m + '" stroke-width="5"') +
+      circ(42, -82, 3.4, 'fill="' + m + '"') +
+      pth('M-16 -38 q-16 -12 -2 -22', 'fill="none" stroke="#4c5459" stroke-width="4"') +
+      pth('M-34 0 l-4 -22 h26 l-4 22 z', 'fill="#9aa3a8" fill-opacity=".75" ' + K2) +
+      pth('M-8 -6 l6 -6', 'stroke="black" stroke-opacity=".3" stroke-width="3"');
+  };
+
+  /* Brass barometer: a set hand and a pressure hand, so it reads as an
+     instrument that has been WATCHED rather than as another clock. */
+  PARTS.barometer = function (o) {
+    var b = o.brass || '#c99a3f';
+    var out = circ(0, 0, 36, 'fill="' + b + '" ' + K5) + circ(0, 0, 27, 'fill="#efe6cc"');
+    var i;
+    for (i = 0; i < 16; i++) {
+      var a = i * Math.PI / 8;
+      out += ln((21 * Math.cos(a)).toFixed(1), (21 * Math.sin(a)).toFixed(1),
+                (26 * Math.cos(a)).toFixed(1), (26 * Math.sin(a)).toFixed(1),
+                'stroke="#3a2f1a" stroke-width="' + (i % 4 ? 1.6 : 3) + '"');
+    }
+    return out + pth('M-16 -14 a22 22 0 0 1 12 -6', 'fill="none" stroke="#8a3a2a" stroke-width="3"') +
+      ln(0, 0, -15, -12, 'stroke="#8a3a2a" stroke-width="3" stroke-linecap="round"') +
+      ln(0, 0, 16, -9, 'stroke="#1c1c1c" stroke-width="3" stroke-linecap="round"') +
+      circ(0, 0, 3.4, 'fill="#1c1c1c"');
+  };
+
+  /* Four signal flags pinned to a board. Blocks of flat colour: at phone
+     size that is more legible than any amount of drawn detail. */
+  PARTS.flagBoard = function (o) {
+    var out = rect(-52, -40, 104, 80, 'rx="3" fill="' + (o.wood || '#3f3226') + '" ' + K4);
+    var i, x, y;
+    for (i = 0; i < 4; i++) {
+      x = -44 + (i % 2) * 46; y = -32 + Math.floor(i / 2) * 38;
+      out += rect(x, y, 42, 30, 'fill="#e8e2d2" ' + K2);
+      if (i === 0) out += pth('M' + x + ' ' + y + ' l42 30 l0 -30 z', 'fill="#b4342e"');
+      if (i === 1) { out += rect(x, y, 21, 15, 'fill="#2a5fa0"'); out += rect(x + 21, y + 15, 21, 15, 'fill="#2a5fa0"'); }
+      if (i === 2) { out += rect(x + 15, y, 12, 30, 'fill="#d8b032"'); out += rect(x, y + 9, 42, 12, 'fill="#d8b032"'); }
+      if (i === 3) { out += rect(x, y, 42, 10, 'fill="#2f7a4a"'); out += rect(x, y + 20, 42, 10, 'fill="#2f7a4a"'); }
+    }
+    return out + ln(-46, -36, 46, -36, 'stroke="#8a7a54" stroke-width="2"');
+  };
+
+  /* The great lens. Concentric prism rings around a burner-bright core,
+     with the panel's brass framing bars over the top. */
+  PARTS.fresnelPanel = function (o) {
+    var b = o.brass || '#c99a3f';
+    var out = rect(-106, -73, 212, 146, 'rx="4" fill="#0e1a24" stroke="' + b + '" stroke-width="5"');
+    var i;
+    for (i = 7; i >= 1; i--) {
+      out += ell(0, 0, i * 13.5, i * 9.2, 'fill="none" stroke="#bfe6f2" stroke-opacity="' +
+        (0.16 + i * 0.045).toFixed(2) + '" stroke-width="5"');
+    }
+    out += ell(0, 0, 22, 15, 'fill="#ffe9a8" fill-opacity=".85"');
+    out += ell(0, 0, 40, 27, 'fill="#ffe9a8" fill-opacity=".22"');
+    for (i = -1; i <= 1; i += 2) {
+      out += rect(i * 60 - 5, -73, 10, 146, 'fill="' + b + '" fill-opacity=".9" ' + K2);
+    }
+    out += rect(-106, -12, 212, 9, 'fill="' + b + '" fill-opacity=".85"');
+    out += pth('M-96 60 l52 -120', 'stroke="#ffffff" stroke-opacity=".10" stroke-width="14"');
+    return out;
+  };
+
+  /* Lettered pigeonholes with rolled paper in them. Charts in the lamp
+     room, scrolls in the scriptorium, parcels in the guard's van. */
+  PARTS.pigeonRack = function (o) {
+    var w = o.wood || '#5a4630', c = o.roll || '#d9cba6';
+    var out = rect(-76, -24, 152, 48, 'rx="2" fill="' + w + '" ' + K3);
+    var i, x;
+    for (i = 0; i < 6; i++) {
+      x = -71 + i * 24;
+      out += rect(x, -19, 21, 18, 'fill="#150f08"');
+      out += rect(x, 2, 21, 18, 'fill="#150f08"');
+      out += circ(x + 7, -10, 5, 'fill="' + c + '" ' + K2) + circ(x + 15, -10, 5, 'fill="' + c + '" ' + K2);
+      if (i % 2) out += circ(x + 10, 11, 6, 'fill="' + c + '" ' + K2);
+      else out += rect(x + 3, 4, 15, 14, 'fill="' + c + '" fill-opacity=".8" ' + K2);
+    }
+    return out + rect(-76, -24, 152, 48, 'rx="2" fill="none" ' + K3);
+  };
+
+  /* ---- THE VAULT ---- */
+
+  /* A canvas cash sack, tied at the neck and stencilled. */
+  PARTS.cashSack = function (o) {
+    var c = o.cloth || '#a9a08a';
+    return pth('M-26 0 q-10 -44 4 -56 q10 6 22 0 q16 12 6 56 z', 'fill="' + c + '" ' + K3) +
+      pth('M-22 -56 q10 -14 6 -22 q10 8 18 0 q0 12 6 22 z', 'fill="' + c + '" fill-opacity=".8" ' + K2) +
+      pth('M-21 -54 q22 10 42 0', 'fill="none" stroke="#5c5040" stroke-width="4"') +
+      txt(0, -22, '£', MID + ' font-family="Georgia" font-size="22" fill="#3d372c" fill-opacity=".75"') +
+      pth('M-16 -8 q16 -6 32 0', 'fill="none" stroke="black" stroke-opacity=".25" stroke-width="3"');
+  };
+
+  /* The time lock: a brass movement with two winding squares, the one
+     mechanism in banking that stops the manager opening his own vault. */
+  PARTS.timeLock = function (o) {
+    var b = o.brass || '#c9a24e';
+    var out = circ(0, 0, 36, 'fill="' + b + '" ' + K5) + circ(0, 0, 28, 'fill="#1d1c24"');
+    var i;
+    for (i = 0; i < 12; i++) {
+      var a = i * Math.PI / 6;
+      out += ln((22 * Math.cos(a)).toFixed(1), (22 * Math.sin(a)).toFixed(1),
+                (27 * Math.cos(a)).toFixed(1), (27 * Math.sin(a)).toFixed(1),
+                'stroke="' + b + '" stroke-width="2"');
+    }
+    out += pth('M0 0 L0 -22 A22 22 0 0 1 19 -11 z', 'fill="#b4342e" fill-opacity=".55"');
+    out += circ(-11, 8, 5, 'fill="' + b + '" ' + K2) + circ(11, 8, 5, 'fill="' + b + '" ' + K2);
+    out += rect(-3, -3, 6, 6, 'fill="' + b + '"');
+    out += ln(0, 0, 13, -16, 'stroke="' + b + '" stroke-width="3" stroke-linecap="round"');
+    return out;
+  };
+
+  /* A framed bearer bond: engine-turned border, ruled clauses, wax seal. */
+  PARTS.bondCert = function (o) {
+    var g = o.frame || '#8a6a2c';
+    var out = rect(-52, -40, 104, 80, 'rx="2" fill="' + g + '" ' + K4);
+    out += rect(-44, -32, 88, 64, 'fill="url(#ecParch)"');
+    out += rect(-40, -28, 80, 56, 'fill="none" stroke="#8a6b3f" stroke-width="2" stroke-dasharray="3 3"');
+    out += txt(0, -12, '£1000', MID + ' font-family="Georgia" font-size="14" fill="#5d4718"');
+    out += pth('M-34 -2 h68 M-34 6 h68 M-34 14 h44', 'stroke="#8a7a58" stroke-width="2"');
+    out += circ(26, 18, 8, 'fill="#8a2f2f" ' + K2) + pth('M22 18 h8 M26 14 v8', 'stroke="#5a1d1d" stroke-width="2"');
+    return out;
+  };
+
+  /* The wall of safe-deposit boxes. Two keyholes on every door, one door
+     standing open on a dark hole, which is what tells you it is a vault
+     and not a filing room. */
+  PARTS.depositBoxes = function (o) {
+    var b = o.brass || '#b9913f';
+    var out = rect(-106, -73, 212, 146, 'rx="3" fill="#23222c" ' + K5);
+    var r, c, x, y;
+    for (r = 0; r < 4; r++) {
+      for (c = 0; c < 6; c++) {
+        x = -98 + c * 33; y = -66 + r * 34;
+        if (r === 1 && c === 4) continue;
+        out += rect(x, y, 29, 30, 'rx="2" fill="' + b + '" fill-opacity=".9" ' + K2);
+        out += ln(x + 3, y + 21, x + 26, y + 21, 'stroke="black" stroke-opacity=".3" stroke-width="2"');
+        out += circ(x + 10, y + 12, 2.6, 'fill="#2a2118"') + circ(x + 19, y + 12, 2.6, 'fill="#2a2118"');
+      }
+    }
+    out += rect(-98 + 4 * 33, -66 + 34, 29, 30, 'rx="2" fill="#08080a"');
+    out += rect(-98 + 4 * 33 + 24, -66 + 34, 29, 30, 'rx="2" fill="' + b + '" ' + K2 +
+      ' transform="rotate(-14 ' + (-98 + 4 * 33 + 24) + ' ' + (-66 + 34) + ')"');
+    return out;
+  };
+
+  /* Stacked bullion. Trapezoids with a light top face — the only thing in
+     the file drawn as a solid gold object, so the claim is visible. */
+  PARTS.bullionShelf = function (o) {
+    var g = o.gold || '#d8ad3e';
+    var out = rect(-76, 14, 152, 10, 'rx="2" fill="#4a4756" ' + K3);
+    var rows = [[-64, 5], [-52, 4], [-40, 3]];
+    var i, j, x, y;
+    for (i = 0; i < rows.length; i++) {
+      y = 12 - i * 13;
+      for (j = 0; j < rows[i][1]; j++) {
+        x = rows[i][0] + j * 26;
+        out += pth('M' + x + ' ' + y + ' l3 -11 h20 l3 11 z', 'fill="' + g + '" ' + K2);
+        out += pth('M' + (x + 3) + ' ' + (y - 11) + ' h20', 'stroke="#f2d98a" stroke-width="2"');
+      }
+    }
+    return out;
+  };
+
+  /* The round door. Radial boltwork, a spoked handwheel and a dial — and
+     the badge slot above it stays clear of the wheel on purpose. */
+  PARTS.vaultDoor = function (o) {
+    var m = o.metal || '#4b5560';
+    var out = rect(-70, -282, 140, 282, 'rx="4" fill="#1c2026" ' + K4);
+    out += rect(-70, -282, 140, 282, 'rx="4" fill="none" stroke="' + m + '" stroke-width="12"');
+    out += circ(0, -120, 64, 'fill="' + m + '" ' + K5);
+    out += circ(0, -120, 54, 'fill="none" stroke="black" stroke-opacity=".35" stroke-width="4"');
+    var i, a;
+    for (i = 0; i < 16; i++) {
+      a = i * Math.PI / 8;
+      out += circ((0 + 58 * Math.cos(a)).toFixed(1), (-120 + 58 * Math.sin(a)).toFixed(1), 4,
+        'fill="#8d9498"');
+    }
+    out += circ(0, -120, 30, 'fill="#39424b" ' + K3);
+    for (i = 0; i < 5; i++) {
+      out += rect(-4, -28, 8, 28, 'rx="3" fill="#c8ced2" transform="translate(0,-120) rotate(' +
+        (i * 72) + ')"');
+    }
+    out += circ(0, -120, 10, 'fill="#c8ced2" ' + K2);
+    out += circ(0, -196, 17, 'fill="#20262c" class="sAccent" stroke-width="3"');
+    out += ln(0, -196, 0, -209, 'class="sAccent" stroke-width="3" stroke-linecap="round"');
+    out += rect(-64, -44, 128, 14, 'rx="3" fill="' + m + '" ' + K3);
+    return out + sigilBadge();
+  };
+
+  /* ---- THE SCRIPTORIUM ---- */
+
+  /* A reed basket of rolled scrolls. */
+  PARTS.scrollBin = function (o) {
+    var c = o.reed || '#9a8248';
+    var out = pth('M-27 0 l5 -48 h44 l5 48 z', 'fill="' + c + '" ' + K3);
+    var i;
+    for (i = -40; i <= -8; i += 10) out += ln(-25, i, 25, i, 'stroke="#6f5c2f" stroke-width="2.5"');
+    for (i = -22; i <= 22; i += 11) out += ln(i, -6, i, -46, 'stroke="#6f5c2f" stroke-width="2" stroke-opacity=".7"');
+    out += ell(0, -48, 26, 7, 'fill="#3a3020"');
+    out += pth('M-16 -50 l6 -34 l10 2 l-4 34 z', 'fill="#ddd0ac" ' + K2);
+    out += pth('M2 -50 l10 -26 l10 4 l-8 24 z', 'fill="#c9bb95" ' + K2);
+    out += circ(-11, -84, 5, 'fill="#ede2c2" ' + K2) + circ(20, -74, 5, 'fill="#ede2c2" ' + K2);
+    return out;
+  };
+
+  /* The sanctus bell on its bracket, with the cord that rings it. */
+  PARTS.sanctusBell = function (o) {
+    var b = o.bronze || '#9a7a3c';
+    return rect(-28, -32, 56, 8, 'rx="2" fill="#4a4034" ' + K2) +
+      pth('M-3 -24 v-4 h6 v4 z', 'fill="' + b + '"') +
+      pth('M-19 14 q-2 -32 19 -38 q21 6 19 38 z', 'fill="' + b + '" ' + K3) +
+      ell(0, 14, 19, 5.5, 'fill="' + b + '" ' + K2) +
+      pth('M-14 2 q14 5 28 0', 'fill="none" stroke="#6a5324" stroke-width="2.5"') +
+      circ(0, 21, 5, 'fill="#5d4718"') +
+      pth('M19 -20 q16 24 6 46', 'fill="none" stroke="#b8a878" stroke-width="3"');
+  };
+
+  /* A gilded icon: gold ground, halo, a raised hand. Two centuries of
+     visual shorthand doing the work in about ten shapes. */
+  PARTS.iconPanel = function (o) {
+    var g = o.gold || '#c9a24e';
+    return rect(-52, -44, 104, 88, 'rx="3" fill="#4a3520" ' + K4) +
+      pth('M-40 44 v-56 q40 -34 80 0 v56 z', 'fill="' + g + '"') +
+      circ(0, -6, 17, 'fill="none" stroke="#f0dc9a" stroke-width="4"') +
+      circ(0, -6, 12, 'fill="#c9a071"') +
+      pth('M-18 44 q18 -32 36 0 z', 'fill="#6a2c34"') +
+      pth('M-6 -14 q6 -6 12 0', 'fill="none" stroke="#5d4718" stroke-width="2"') +
+      pth('M10 30 v-14 M6 22 h10', 'stroke="#e8d9a8" stroke-width="3"') +
+      pth('M-40 -12 q40 -34 80 0', 'fill="none" stroke="#8a6a2c" stroke-width="3"');
+  };
+
+  /* The traceried arch: a lancet window with a quatrefoil head and lead
+     cames, night behind it. */
+  PARTS.traceryArch = function (o) {
+    var s = o.stone || '#7c7a6a';
+    var out = pth('M-80 73 v-72 q80 -104 160 0 v72 z', 'fill="' + s + '" ' + K5);
+    out += pth('M-62 66 v-64 q62 -84 124 0 v64 z', 'fill="url(#ecNight)"');
+    var i, j;
+    for (i = -44; i <= 44; i += 22) {
+      out += ln(i, 66, i, -34, 'stroke="' + s + '" stroke-opacity=".75" stroke-width="4"');
+    }
+    for (j = -14; j <= 58; j += 24) {
+      out += ln(-62, j, 62, j, 'stroke="' + s + '" stroke-opacity=".6" stroke-width="3"');
+    }
+    out += ln(0, 66, 0, -70, 'stroke="' + s + '" stroke-width="8"');
+    out += circ(0, -42, 20, 'fill="none" stroke="' + s + '" stroke-width="6"');
+    for (i = 0; i < 4; i++) {
+      out += circ(0, -55, 8, 'fill="none" stroke="' + s + '" stroke-width="4" transform="rotate(' +
+        (i * 90) + ' 0 -42)"');
+    }
+    out += circ(28, -34, 13, 'fill="#dfe6ef" fill-opacity=".55"');
+    for (i = 0; i < 6; i++) {
+      out += circ(-52 + i * 21, -8 - (i % 3) * 16, 1.8, 'fill="#dfe6ef" fill-opacity=".8"');
+    }
+    out += rect(-92, 60, 184, 13, 'rx="3" fill="' + s + '" ' + K3);
+    return out;
+  };
+
+  /* A ledged and braced plank door under a pointed arch, iron-studded.
+     The scriptorium's way out, and the bell tower's. */
+  PARTS.archDoor = function (o) {
+    var w = o.wood || '#4a3826', m = o.iron || '#2f2a24';
+    var out = pth('M-70 0 v-186 Q0 -292 70 -186 V0 z', 'fill="' + w + '" ' + K5);
+    var i;
+    for (i = -46; i <= 46; i += 23) {
+      out += pth('M' + i + ' 0 V' + (-200 + Math.abs(i) * 0.62).toFixed(0),
+        'stroke="black" stroke-opacity=".38" stroke-width="3"');
+    }
+    for (i = 0; i < 2; i++) {
+      var y = -70 - i * 90;
+      out += rect(-66, y, 132, 14, 'rx="2" fill="' + m + '" ' + K2);
+      out += pth('M-66 ' + (y + 7) + ' h-10 M66 ' + (y + 7) + ' h10', 'stroke="' + m + '" stroke-width="6"');
+    }
+    out += pth('M-70 -186 Q0 -292 70 -186', 'fill="none" stroke="' + m + '" stroke-width="9"');
+    out += circ(-40, -122, 11, 'fill="none" class="sAccent" stroke-width="5"');
+    out += rect(-46, -140, 12, 16, 'rx="2" fill="' + m + '"');
+    for (i = 0; i < 7; i++) {
+      out += circ(-58 + i * 19, -232 + Math.abs(i - 3) * 13, 3.4, 'fill="' + m + '"');
+    }
+    return out + sigilBadge();
+  };
+
+  /* A scribe's slope: flat at the light's end, sloped where the work is,
+     with an open book on it. Stands in the anchor slot, so the drawer
+     lives under it exactly as it does under the writing desk. */
+  PARTS.slopeDesk = function (o) {
+    var w = o.wood || '#4e3b26';
+    var out = rect(-150, -110, 300, 18, 'rx="3" fill="' + w + '" ' + K3);
+    out += rect(-132, -92, 22, 92, 'fill="' + w + '" fill-opacity=".85"');
+    out += rect(110, -92, 22, 92, 'fill="' + w + '" fill-opacity=".85"');
+    out += pth('M-142 -110 l16 -50 h100 l0 50 z', 'fill="' + w + '" ' + K3);
+    out += pth('M-124 -114 l12 -38 h44 l0 38 z', 'fill="#e9dcc0" ' + K2);
+    out += pth('M-68 -114 v-38 h44 l0 38 z', 'fill="#dccfb0" ' + K2);
+    out += pth('M-112 -142 h30 M-114 -134 h34 M-60 -142 h30 M-60 -134 h34',
+      'stroke="#8a7a58" stroke-width="2"');
+    out += rect(-70, -152, 5, 42, 'fill="#8a2f2f" fill-opacity=".8"');
+    out += rect(-26, -122, 12, 12, 'rx="2" fill="#2e2a22" ' + K2);
+    return out;
+  };
+
+  /* ---- THE TAXIDERMIST'S ---- */
+
+  /* A pelt pegged out on the boards. Irregular outline, tufted edge, and
+     four pegs — it must not resolve into a rectangle or it is a rug. */
+  PARTS.pelt = function (o) {
+    var f = o.fur || '#8a6a44';
+    var out = pth('M-108 -10 q-14 -30 16 -40 q30 -10 40 -22 q16 -16 28 -2 q14 12 42 22 q30 10 14 42 z',
+      'fill="' + f + '" ' + K3);
+    var i;
+    for (i = -96; i <= 96; i += 16) {
+      out += ln(i, -12, i + 4, -3, 'stroke="' + f + '" stroke-width="4" stroke-linecap="round"');
+    }
+    out += pth('M-8 -74 q10 -14 18 -2', 'fill="none" stroke="' + f + '" stroke-width="7" stroke-linecap="round"');
+    out += pth('M104 -22 q24 -6 30 6', 'fill="none" stroke="' + f + '" stroke-width="6" stroke-linecap="round"');
+    var spots = [[-58, -34], [-20, -44], [24, -36], [58, -26], [-40, -20], [8, -20]];
+    for (i = 0; i < spots.length; i++) {
+      out += ell(spots[i][0], spots[i][1], 9, 6, 'fill="' + (o.spot || '#5f462a') + '" fill-opacity=".7"');
+    }
+    for (i = 0; i < 4; i++) {
+      out += circ(-92 + i * 62, -14 - (i % 2) * 26, 3.4, 'fill="#2a2018"');
+    }
+    return out;
+  };
+
+  /* A bird under a glass dome on a turned plinth. */
+  PARTS.domeBird = function (o) {
+    var g = o.glass || '#cfe4ea';
+    var out = ell(0, -6, 30, 8, 'fill="#3d2f22" ' + K2);
+    out += rect(-26, -18, 52, 14, 'rx="3" fill="' + (o.wood || '#4a3520') + '" ' + K3);
+    out += pth('M-8 -18 q-6 -14 4 -22 q8 -6 4 -18', 'fill="none" stroke="#6a5a3a" stroke-width="4"');
+    out += ell(2, -44, 12, 17, 'fill="' + (o.bird || '#b8a476') + '" ' + K2);
+    out += circ(-6, -62, 9, 'fill="' + (o.bird || '#b8a476') + '" ' + K2);
+    out += pth('M-14 -62 l-14 4 l14 4 z', 'fill="#d8b032"');
+    out += circ(-4, -64, 2.2, 'fill="#120e08"');
+    out += pth('M4 -50 q14 8 8 22', 'fill="none" stroke="#8a7a54" stroke-width="3"');
+    out += pth('M-24 -18 v-46 a24 46 0 0 1 48 0 v46 z', 'fill="url(#ecGlass)" stroke="' + g +
+      '" stroke-opacity=".5" stroke-width="3"');
+    out += pth('M-14 -22 l10 -50', 'stroke="#ffffff" stroke-opacity=".18" stroke-width="7"');
+    return out;
+  };
+
+  /* A card of glass eyes, pinned in pairs. Small, glassy and unsettling —
+     the object that tells you whose workshop this is. */
+  PARTS.glassEyes = function (o) {
+    var out = circ(0, 0, 34, 'fill="' + (o.card || '#b8a47e') + '" ' + K4);
+    var pts = [[-16, -16], [0, -18], [16, -14], [-18, 2], [-2, 2], [16, 4], [-10, 18], [8, 18]];
+    var i;
+    for (i = 0; i < pts.length; i++) {
+      out += circ(pts[i][0], pts[i][1], 6, 'fill="#f2f0e6" ' + K2);
+      out += circ(pts[i][0], pts[i][1], 3.6, 'fill="' + (i % 3 ? '#8a5a24' : '#3a5f4a') + '"');
+      out += circ(pts[i][0], pts[i][1], 1.6, 'fill="#0d0a06"');
+      out += circ(pts[i][0] - 2, pts[i][1] - 2, 1.2, 'fill="#ffffff" fill-opacity=".9"');
+    }
+    return out + circ(0, 0, 34, 'fill="none" stroke="black" stroke-opacity=".3" stroke-width="2"');
+  };
+
+  /* A glazed case of pinned insects. */
+  PARTS.insectCase = function (o) {
+    var out = rect(-52, -40, 104, 80, 'rx="2" fill="' + (o.wood || '#3a2a1c') + '" ' + K4);
+    out += rect(-44, -32, 88, 64, 'fill="#1d1710"');
+    var cols = ['#c8894a', '#8a9ac8', '#c8b44a', '#a86a8a'];
+    var i, x, y;
+    for (i = 0; i < 4; i++) {
+      x = -26 + (i % 2) * 44; y = -16 + Math.floor(i / 2) * 30;
+      out += pth('M' + x + ' ' + y + ' q-18 -18 -14 -6 q-4 14 14 6 z', 'fill="' + cols[i] + '" fill-opacity=".9"');
+      out += pth('M' + x + ' ' + y + ' q18 -18 14 -6 q4 14 -14 6 z', 'fill="' + cols[i] + '" fill-opacity=".9"');
+      out += ln(x, y - 9, x, y + 8, 'stroke="#1a140c" stroke-width="3"');
+      out += circ(x, y - 11, 2, 'fill="#c8ced0"');
+    }
+    out += rect(-44, -32, 88, 64, 'fill="url(#ecGlass)"');
+    out += pth('M-36 30 l30 -60', 'stroke="#ffffff" stroke-opacity=".12" stroke-width="9"');
+    return out;
+  };
+
+  /* The stag on his shield. Antlers break the panel's bounding box on
+     purpose: it is the only object in the file with a silhouette that
+     spreads, and that is what makes the room read at thumbnail size. */
+  PARTS.stagMount = function (o) {
+    var f = o.fur || '#7d5c38', w = o.wood || '#42301e';
+    var out = pth('M-46 -46 h92 v34 q0 42 -46 62 q-46 -20 -46 -62 z', 'fill="' + w + '" ' + K4);
+    var i;
+    var antler = 'M-16 -30 q-16 -26 -40 -32 M-30 -46 q-16 -12 -34 -10 M-24 -56 q-8 -16 -22 -22 ' +
+                 'M-40 -58 q-6 -12 -16 -16';
+    out += pth(antler, 'fill="none" stroke="#c9b48a" stroke-width="6" stroke-linecap="round"');
+    out += pth(antler, 'fill="none" stroke="#c9b48a" stroke-width="6" stroke-linecap="round" transform="scale(-1,1)"');
+    out += ell(0, -18, 22, 20, 'fill="' + f + '" ' + K3);
+    out += pth('M-13 -18 q13 46 26 0 q-4 30 -13 34 q-9 -4 -13 -34 z', 'fill="' + f + '" ' + K3);
+    out += ell(0, 16, 11, 9, 'fill="' + (o.muzzle || '#59401f') + '" ' + K2);
+    out += circ(-4, 20, 2.2, 'fill="#120d07"') + circ(4, 20, 2.2, 'fill="#120d07"');
+    out += ell(-11, -26, 8, 5, 'fill="#0f0b07"') + ell(11, -26, 8, 5, 'fill="#0f0b07"');
+    out += pth('M-26 -30 q-12 -6 -16 4 q10 8 18 2 z', 'fill="' + f + '" ' + K2);
+    out += pth('M26 -30 q12 -6 16 4 q-10 8 -18 2 z', 'fill="' + f + '" ' + K2);
+    for (i = -1; i <= 1; i += 2) out += circ(i * 34, 30, 3.4, 'fill="#8d8478"');
+    return out;
+  };
+
+  /* ---- THE GUARD'S VAN ---- */
+
+  /* Two tied mail sacks slumped on the floor, labelled. */
+  PARTS.mailSacks = function (o) {
+    var c = o.cloth || '#8a7f66';
+    var out = pth('M-116 -6 q-12 -44 26 -54 q46 -12 76 2 q26 12 12 52 z', 'fill="' + c + '" ' + K3);
+    out += pth('M-92 -58 q22 -12 20 -20 q14 10 24 2 q0 12 8 20 z', 'fill="' + c + '" fill-opacity=".85" ' + K2);
+    out += pth('M-92 -56 q30 12 52 -2', 'fill="none" stroke="#4d4436" stroke-width="4"');
+    out += rect(-56, -40, 30, 18, 'rx="2" fill="#d9cba6" ' + K2 + ' transform="rotate(-7 -41 -31)"');
+    out += pth('M-50 -32 h18 M-50 -26 h12', 'stroke="#7a6a48" stroke-width="2" transform="rotate(-7 -41 -31)"');
+    out += pth('M18 -6 q-6 -34 22 -42 q34 -10 56 0 q22 10 12 42 z', 'fill="' + c +
+      '" fill-opacity=".9" ' + K3);
+    out += pth('M40 -46 q18 -10 16 -16 q10 8 18 2 q0 10 6 16 z', 'fill="' + c + '" ' + K2);
+    out += pth('M40 -44 q24 10 42 -2', 'fill="none" stroke="#4d4436" stroke-width="4"');
+    out += pth('M-100 -20 q40 -10 70 -2 M30 -22 q34 -8 58 0', 'fill="none" stroke="black" stroke-opacity=".22" stroke-width="3"');
+    return out;
+  };
+
+  /* Coal scuttle with a shovel and a few lumps. */
+  PARTS.coalScuttle = function (o) {
+    var m = o.metal || '#4a423e';
+    var out = pth('M-26 0 q-8 -40 12 -50 q22 -10 30 4 l-4 46 z', 'fill="' + m + '" ' + K3);
+    out += pth('M-14 -50 q18 -14 30 -4', 'fill="none" stroke="#6a625c" stroke-width="4"');
+    out += pth('M-24 -30 q-16 -8 -8 -22', 'fill="none" stroke="#2f2a26" stroke-width="4"');
+    var lumps = [[-4, -54], [8, -58], [0, -62], [14, -50]];
+    var i;
+    for (i = 0; i < lumps.length; i++) {
+      out += pth('M' + lumps[i][0] + ' ' + lumps[i][1] + ' l7 -5 l7 6 l-7 6 z', 'fill="#241f1d"');
+    }
+    out += ln(20, -8, 32, -74, 'stroke="#7a6248" stroke-width="4"');
+    out += pth('M28 -74 l14 -5 l3 12 l-14 5 z', 'fill="#8d9498" ' + K2);
+    return out;
+  };
+
+  /* A board of tied luggage labels, written on and re-written. */
+  PARTS.labelBoard = function (o) {
+    var out = rect(-52, -40, 104, 80, 'rx="3" fill="' + (o.wood || '#3d2a1e') + '" ' + K4);
+    out += ln(-46, -28, 46, -28, 'stroke="#8d8478" stroke-width="2"');
+    var cols = ['#e0d3b0', '#d8c8a0', '#e8dcc0', '#cfc0a0', '#ded0ae'];
+    var i, x, rot;
+    for (i = 0; i < 5; i++) {
+      x = -42 + i * 21; rot = (i % 2 ? 7 : -6);
+      out += pth('M' + x + ' -26 v34 h16 v-28 l-8 -6 z', 'fill="' + cols[i] + '" ' + K2 +
+        ' transform="rotate(' + rot + ' ' + (x + 8) + ' -26)"');
+      out += pth('M' + (x + 3) + ' -14 h10 M' + (x + 3) + ' -8 h8 M' + (x + 3) + ' -2 h10',
+        'stroke="#7a6a48" stroke-width="2" transform="rotate(' + rot + ' ' + (x + 8) + ' -26)"');
+      out += circ(x + 8, -27, 2, 'fill="#8d8478"');
+    }
+    out += rect(-30, 22, 60, 12, 'rx="2" fill="#2a1f16" ' + K2);
+    out += pth('M-24 28 h48', 'stroke="#8d8478" stroke-width="2"');
+    return out;
+  };
+
+  /* The line diagram: a railway route, stations as beads on a string.
+     Reads as a route in a way a coastline never does. */
+  PARTS.routeChart = function (o) {
+    var out = rect(-106, -73, 212, 146, 'rx="4" fill="' + (o.frame || '#3a2a1c') + '" ' + K5);
+    out += rect(-94, -60, 188, 120, 'fill="url(#ecParch)"');
+    out += pth('M-84 10 h60 l26 -30 h74', 'fill="none" stroke="#7a2f2f" stroke-width="5"');
+    out += pth('M-24 10 l-22 34 h-52', 'fill="none" stroke="#3a5a7a" stroke-width="4" stroke-dasharray="8 6"');
+    var stops = [[-84, 10], [-54, 10], [-24, 10], [12, -20], [48, -20], [78, -20], [-46, 44]];
+    var i;
+    for (i = 0; i < stops.length; i++) {
+      out += circ(stops[i][0], stops[i][1], 5, 'fill="url(#ecParch)" stroke="#3a2a1a" stroke-width="3"');
+      out += ln(stops[i][0], stops[i][1] - 9, stops[i][0] + 14, stops[i][1] - 22,
+        'stroke="#8a7a58" stroke-width="2"');
+      out += ln(stops[i][0] + 14, stops[i][1] - 22, stops[i][0] + 30, stops[i][1] - 22,
+        'stroke="#8a7a58" stroke-width="2"');
+    }
+    out += circ(78, -20, 8, 'fill="#7a2f2f"');
+    out += txt(-40, -44, 'THE LINE', MID + ' font-family="Georgia" font-size="15" letter-spacing="3" fill="#5d4718"');
+    return out;
+  };
+
+  /* A domed steamer trunk, plastered with hotel labels. */
+  PARTS.steamerTrunk = function (o) {
+    var l = o.leather || '#6a4a32', b = o.band || '#3d2f22';
+    var out = rect(-60, -58, 120, 58, 'rx="4" fill="' + l + '" ' + K4);
+    var i;
+    for (i = -40; i <= 40; i += 40) out += rect(i - 6, -58, 12, 58, 'fill="' + b + '"');
+    out += rect(-60, -20, 120, 8, 'fill="' + b + '" fill-opacity=".8"');
+    out += rect(-22, -34, 44, 20, 'rx="2" fill="#cfc0a0" ' + K2 + ' transform="rotate(-6 0 -24)"');
+    out += pth('M-14 -26 h28 M-14 -20 h20', 'stroke="#8a7a58" stroke-width="2" transform="rotate(-6 0 -24)"');
+    out += rect(20, -50, 26, 18, 'rx="2" fill="#b8c8c0" ' + K2 + ' transform="rotate(8 33 -41)"');
+    out += pth('M-60 -58 q60 -30 120 0 z', 'id="chestLid" fill="' + l + '" ' + K3);
+    out += pth('M-60 -58 q60 -30 120 0', 'fill="none" stroke="' + b + '" stroke-width="5"');
+    out += rect(-12, -34, 24, 18, 'rx="3" class="fAccent" stroke="black" stroke-opacity=".5" stroke-width="2.5"');
+    out += grp('id="chestOpenG" style="display:none"',
+      pth('M-60 -58 q60 -30 120 0 z', 'fill="#0b0806"') +
+      pth('M-60 -64 q60 -30 120 0 l0 8 q-60 -30 -120 0 z', 'fill="' + l + '" ' + K2 +
+        ' transform="translate(0,-24) rotate(-7 -60 -64)"'));
+    return out;
+  };
+
+  /* The sliding van door on its track. */
+  PARTS.slideDoor = function (o) {
+    var w = o.wood || '#4a3524', m = o.metal || '#39332c';
+    var out = rect(-84, -294, 168, 12, 'rx="3" fill="' + m + '" ' + K3);
+    out += rect(-70, -282, 140, 282, 'rx="2" fill="' + w + '" ' + K4);
+    var i;
+    for (i = -50; i <= 50; i += 25) out += ln(i, -278, i, -6, 'stroke="black" stroke-opacity=".34" stroke-width="3"');
+    for (i = 0; i < 2; i++) {
+      out += rect(-64, -30 - i * 108, 128, 12, 'rx="2" fill="' + m + '" fill-opacity=".9" ' + K2);
+    }
+    out += pth('M-60 -50 l120 -84', 'stroke="' + m + '" stroke-width="10" stroke-opacity=".85"');
+    out += rect(-46, -262, 92, 46, 'rx="3" fill="#0a1018" ' + K3);
+    for (i = -30; i <= 30; i += 20) out += rect(i - 4, -262, 8, 46, 'fill="' + m + '"');
+    out += rect(-24, -158, 60, 22, 'rx="4" fill="' + m + '" ' + K2);
+    out += circ(6, -147, 8, 'class="fAccent"');
+    for (i = 0; i < 2; i++) out += circ(-44 + i * 88, -288, 6, 'fill="#8d8478"');
+    return out + sigilBadge();
+  };
+
+  /* ---- THE ICEHOUSE ---- */
+
+  /* A raked bed of sawdust. `stain` darkens one patch, which is all the
+     operating theatre needs to make the same part mean something else. */
+  PARTS.sawdustBed = function (o) {
+    var c = o.fill || '#a8925e';
+    var out = pth('M-118 -4 q34 -30 118 -30 q84 0 118 30 z', 'fill="' + c + '" ' + K3);
+    var i;
+    for (i = -100; i <= 100; i += 18) {
+      out += pth('M' + i + ' -8 q4 -12 2 -20', 'fill="none" stroke="' + (o.rake || '#7d6a3e') +
+        '" stroke-width="3" stroke-opacity=".8"');
+    }
+    if (o.stain) {
+      out += ell(-24, -16, 40, 11, 'fill="' + o.stain + '" fill-opacity=".55"');
+      out += ell(34, -12, 16, 6, 'fill="' + o.stain + '" fill-opacity=".4"');
+    }
+    for (i = 0; i < 14; i++) {
+      out += circ(-108 + i * 16, -6 - (i % 4) * 7, 2.4, 'fill="#c9b078" fill-opacity=".7"');
+    }
+    return out;
+  };
+
+  /* A cut block, sweating, with the tongs still on it. */
+  PARTS.iceBlock = function (o) {
+    var c = o.ice || '#bfe0ea';
+    var out = pth('M-28 0 v-52 l8 -10 h40 l8 10 v52 z', 'fill="' + c + '" fill-opacity=".55" ' + K3);
+    out += pth('M-20 -62 h40 l8 10 h-56 z', 'fill="#e8f6fa" fill-opacity=".7" ' + K2);
+    out += pth('M-14 -6 l10 -46 M6 -6 l8 -40 M-4 -30 l16 -12', 'fill="none" stroke="#ffffff" stroke-opacity=".35" stroke-width="3"');
+    out += pth('M-24 -56 q10 -8 22 -2', 'fill="none" stroke="#ffffff" stroke-opacity=".5" stroke-width="3"');
+    out += pth('M-22 -66 q10 -30 22 -14 M22 -66 q-10 -30 -22 -14', 'fill="none" stroke="#5b6a70" stroke-width="5"');
+    out += circ(0, -80, 4, 'fill="#5b6a70"');
+    out += pth('M0 -80 v-14', 'stroke="#5b6a70" stroke-width="5"');
+    return out;
+  };
+
+  /* The delivery slate: houses down one side, pounds of ice down the
+     other, chalked and half rubbed out. */
+  PARTS.deliverySlate = function (o) {
+    var out = rect(-52, -40, 104, 80, 'rx="3" fill="' + (o.frame || '#4a3d2c') + '" ' + K4);
+    out += rect(-44, -32, 88, 64, 'fill="#252b2e"');
+    var i, y;
+    for (i = 0; i < 5; i++) {
+      y = -22 + i * 13;
+      out += ln(-38, y, -6 - (i % 3) * 6, y, 'stroke="#dcd8cc" stroke-width="2.4" stroke-opacity="' +
+        (i === 3 ? 0.35 : 0.85) + '"');
+      out += ln(10, y, 22 + (i % 2) * 8, y, 'stroke="#dcd8cc" stroke-width="2.4" stroke-opacity=".8"');
+    }
+    out += ln(2, -30, 2, 30, 'stroke="#dcd8cc" stroke-width="2" stroke-opacity=".6"');
+    out += rect(30, 22, 10, 5, 'rx="2" fill="#e8e6dc"');
+    return out;
+  };
+
+  /* The stack: blocks packed in straw, dark gaps between them, frost on
+     every top edge. */
+  PARTS.iceStack = function (o) {
+    var c = o.ice || '#a8ccd8';
+    var out = rect(-106, -73, 212, 146, 'rx="3" fill="#101c22" ' + K5);
+    var r, k, x, y;
+    for (r = 0; r < 3; r++) {
+      for (k = 0; k < 4; k++) {
+        x = -98 + k * 50 + (r % 2 ? 8 : 0); y = -64 + r * 46;
+        out += rect(x, y, 44, 40, 'rx="2" fill="' + c + '" fill-opacity="' + (0.62 - r * 0.08).toFixed(2) +
+          '" ' + K2);
+        out += ln(x + 3, y + 3, x + 40, y + 3, 'stroke="#eaf6fa" stroke-opacity=".5" stroke-width="3"');
+        out += ln(x + 9, y + 34, x + 16, y + 10, 'stroke="#ffffff" stroke-opacity=".25" stroke-width="4"');
+      }
+      for (k = 0; k < 22; k++) {
+        out += ln(-100 + k * 9, y + 41, -94 + k * 9, y + 45,
+          'stroke="#c9b078" stroke-width="2" stroke-opacity=".65"');
+      }
+    }
+    return out;
+  };
+
+  /* A ledged and braced plank door with a big cold-store latch. */
+  PARTS.braceDoor = function (o) {
+    var w = o.wood || '#5a4530', m = o.iron || '#3a3630';
+    var out = rect(-70, -282, 140, 282, 'rx="3" fill="' + w + '" ' + K4);
+    var i;
+    for (i = -46; i <= 46; i += 23) out += ln(i, -276, i, -6, 'stroke="black" stroke-opacity=".36" stroke-width="3"');
+    out += rect(-66, -256, 132, 15, 'rx="2" fill="' + m + '" ' + K2);
+    out += rect(-66, -40, 132, 15, 'rx="2" fill="' + m + '" ' + K2);
+    out += pth('M-62 -46 l124 -196', 'stroke="' + m + '" stroke-width="13" stroke-opacity=".9"');
+    out += rect(-58, -150, 116, 26, 'rx="3" fill="' + m + '" ' + K3);
+    out += circ(-30, -137, 8, 'class="fAccent"');
+    out += rect(10, -146, 40, 18, 'rx="3" fill="#8d9498" ' + K2);
+    out += pth('M14 -137 h32', 'stroke="#2f2a26" stroke-width="3"');
+    if (o.frost) {
+      out += pth('M-70 -282 h140 M-70 -6 h140', 'stroke="' + o.frost + '" stroke-width="7" stroke-opacity=".55"');
+      for (i = 0; i < 9; i++) {
+        out += pth('M' + (-62 + i * 16) + ' -276 l3 14 l3 -14 z', 'fill="' + o.frost + '" fill-opacity=".5"');
+      }
+    }
+    return out + sigilBadge();
+  };
+
+  /* ---- THE TOY WORKSHOP ---- */
+
+  /* A rocking horse. Dapples, a red saddle and a rope tail: the one
+     object in the file a three-year-old could name. */
+  PARTS.rockingHorse = function (o) {
+    var w = o.wood || '#c9b08a';
+    var out = pth('M-34 -4 q34 -18 68 0', 'fill="none" stroke="' + (o.rocker || '#8a6a44') +
+      '" stroke-width="8" stroke-linecap="round"');
+    out += ln(-20, -10, -18, -34, 'stroke="' + (o.rocker || '#8a6a44') + '" stroke-width="5"');
+    out += ln(20, -10, 18, -34, 'stroke="' + (o.rocker || '#8a6a44') + '" stroke-width="5"');
+    out += ell(0, -52, 30, 15, 'fill="' + w + '" ' + K3);
+    out += pth('M-28 -34 l4 -14 M24 -34 l-2 -14', 'stroke="' + w + '" stroke-width="7" stroke-linecap="round"');
+    out += pth('M-20 -60 q-12 -18 -14 -30 q10 4 16 0 q6 10 12 12 z', 'fill="' + w + '" ' + K3);
+    out += pth('M-32 -92 q-6 -8 2 -10 q4 6 8 6', 'fill="' + w + '" ' + K2);
+    out += circ(-30, -86, 2.4, 'fill="#1a1208"');
+    out += pth('M-22 -88 q-4 -14 6 -18 q-2 12 4 16 z', 'fill="' + (o.mane || '#8a3a3a') + '"');
+    out += pth('M28 -60 q16 6 12 24', 'fill="none" stroke="' + (o.mane || '#8a3a3a') +
+      '" stroke-width="5" stroke-linecap="round"');
+    out += pth('M-12 -62 q12 -8 24 0 l-2 12 h-20 z', 'fill="' + (o.saddle || '#b4342e') + '" ' + K2);
+    var i;
+    for (i = 0; i < 4; i++) out += circ(-14 + i * 11, -48 + (i % 2) * 8, 3, 'fill="#8a6a44" fill-opacity=".5"');
+    return out;
+  };
+
+  /* Three marionettes hanging from a rail by their strings. */
+  PARTS.puppetRack = function (o) {
+    var out = rect(-52, -40, 104, 80, 'rx="3" fill="' + (o.wood || '#4a3a2a') + '" fill-opacity=".9" ' + K4);
+    out += rect(-48, -34, 96, 7, 'rx="2" fill="' + (o.rail || '#8a6a44') + '" ' + K2);
+    var cols = ['#5a86b8', '#b4342e', '#4a8a5a'], i, x;
+    for (i = 0; i < 3; i++) {
+      x = -30 + i * 30;
+      out += ln(x - 6, -27, x, -14, 'stroke="#d8cfb0" stroke-width="1.6"');
+      out += ln(x + 6, -27, x, -14, 'stroke="#d8cfb0" stroke-width="1.6"');
+      out += circ(x, -9, 6.5, 'fill="#e0c9a8" ' + K2);
+      out += pth('M' + (x - 7) + ' -2 h14 l-2 18 h-10 z', 'fill="' + cols[i] + '" ' + K2);
+      out += pth('M' + (x - 7) + ' 2 l-9 12 M' + (x + 7) + ' 2 l9 12',
+        'stroke="' + cols[i] + '" stroke-width="4" stroke-linecap="round"');
+      out += pth('M' + (x - 4) + ' 16 l-3 14 M' + (x + 4) + ' 16 l3 14',
+        'stroke="#e0c9a8" stroke-width="4" stroke-linecap="round"');
+      out += circ(x, -12, 2, 'fill="#3a2a1a"');
+    }
+    return out;
+  };
+
+  /* The alphabet chart: big letters and one duck. Legible at any size,
+     which is the entire brief for a wall panel. */
+  PARTS.alphabetChart = function (o) {
+    var out = rect(-106, -73, 212, 146, 'rx="4" fill="' + (o.frame || '#4a3524') + '" ' + K5);
+    out += rect(-94, -61, 188, 122, 'fill="url(#ecParch)"');
+    var rows = ['A B C D E', 'F G H I J'];
+    var i;
+    for (i = 0; i < rows.length; i++) {
+      out += txt(0, -24 + i * 34, rows[i], MID + ' font-family="Georgia" font-size="27" ' +
+        'letter-spacing="4" fill="' + (o.ink || '#5d4718') + '"');
+    }
+    out += ell(-42, 36, 22, 13, 'fill="#e8c44a" ' + K2);
+    out += circ(-58, 24, 9, 'fill="#e8c44a" ' + K2);
+    out += pth('M-66 24 l-12 3 l12 4 z', 'fill="#d8853a"');
+    out += circ(-60, 22, 1.8, 'fill="#2a1f10"');
+    out += pth('M14 40 h56 M14 30 h40', 'stroke="#8a7a58" stroke-width="3"');
+    out += pth('M28 -54 q14 -12 28 0 q-14 12 -28 0 z', 'fill="#b4342e" fill-opacity=".7"');
+    return out;
+  };
+
+  /* Paint tins with the brushes standing in a jar. */
+  PARTS.paintShelf = function (o) {
+    var out = rect(-76, 14, 152, 10, 'rx="2" fill="' + (o.wood || '#6a5238') + '" ' + K3);
+    var cols = ['#b4342e', '#2a5fa0', '#d8b032', '#4a8a5a'];
+    var i, x;
+    for (i = 0; i < 4; i++) {
+      x = -68 + i * 26;
+      out += rect(x, -8, 21, 22, 'rx="2" fill="#9aa2a6" ' + K2);
+      out += rect(x - 2, -12, 25, 6, 'rx="2" fill="' + cols[i] + '" ' + K2);
+      out += pth('M' + (x + 4) + ' -6 q3 12 0 18', 'fill="none" stroke="' + cols[i] + '" stroke-width="3"');
+    }
+    out += rect(44, -12, 26, 26, 'rx="3" fill="#cfd8dc" fill-opacity=".5" ' + K2);
+    for (i = 0; i < 4; i++) {
+      out += ln(48 + i * 6, -12, 46 + i * 7, -34, 'stroke="#8a6a44" stroke-width="3"');
+      out += ln(46 + i * 7, -34, 45 + i * 7, -40, 'stroke="' + cols[i] + '" stroke-width="4"');
+    }
+    return out;
+  };
+
+  /* ---- THE OPERATING THEATRE ---- */
+
+  /* An anatomical skull on a bracket. */
+  PARTS.skullMount = function (o) {
+    var b = o.bone || '#ddd2b4';
+    var out = rect(-26, 24, 52, 8, 'rx="2" fill="#4a3d2c" ' + K2);
+    out += pth('M-24 6 q-4 -32 24 -32 q28 0 24 32 q-2 12 -10 14 l-28 0 q-8 -2 -10 -14 z',
+      'fill="' + b + '" ' + K3);
+    out += pth('M-16 20 q16 8 32 0 l-2 6 q-14 5 -28 0 z', 'fill="' + b + '" ' + K2);
+    out += ell(-11, 0, 8, 9, 'fill="#171208"') + ell(11, 0, 8, 9, 'fill="#171208"');
+    out += pth('M0 6 l-6 12 h12 z', 'fill="#171208"');
+    var i;
+    for (i = -12; i <= 12; i += 6) out += ln(i, 20, i, 26, 'stroke="#6a5b3c" stroke-width="2"');
+    out += pth('M-22 -12 q22 -14 44 0', 'fill="none" stroke="#a8987a" stroke-width="2" stroke-opacity=".7"');
+    return out;
+  };
+
+  /* A wall chart of the muscles, with leader lines to a numbered key. */
+  PARTS.anatomyChart = function (o) {
+    var out = rect(-52, -40, 104, 80, 'rx="2" fill="' + (o.frame || '#3d3226') + '" ' + K4);
+    out += rect(-46, -34, 92, 68, 'fill="url(#ecParch)"');
+    out += circ(-16, -20, 8, 'fill="#a8565a" ' + K2);
+    out += pth('M-16 -12 q-12 10 -10 26 M-16 -12 q12 10 10 26', 'fill="none" stroke="#a8565a" stroke-width="5"');
+    out += pth('M-24 -8 l-10 16 M-8 -8 l10 16', 'fill="none" stroke="#a8565a" stroke-width="4"');
+    var i;
+    for (i = 0; i < 4; i++) {
+      out += pth('M-26 ' + (-12 + i * 8) + ' q10 4 20 0', 'fill="none" stroke="#7a3a3e" stroke-width="2"');
+    }
+    for (i = 0; i < 3; i++) {
+      out += ln(-6, -18 + i * 14, 16, -22 + i * 14, 'stroke="#7a6a48" stroke-width="1.6"');
+      out += ln(16, -22 + i * 14, 40, -22 + i * 14, 'stroke="#7a6a48" stroke-width="1.6"');
+      out += circ(16, -22 + i * 14, 2, 'fill="#5d4718"');
+    }
+    return out;
+  };
+
+  /* The articulated skeleton in its case. Hung from a rod through the
+     skull, which is how they actually stood, and reads as a MOUNT rather
+     than as a picture of a skeleton. */
+  PARTS.skeletonCase = function (o) {
+    var b = o.bone || '#ded2b2';
+    var out = rect(-106, -73, 212, 146, 'rx="4" fill="' + (o.wood || '#3a3026') + '" ' + K5);
+    out += rect(-94, -61, 188, 122, 'fill="#16120c"');
+    out += ln(-40, -61, -40, -52, 'stroke="#8d9498" stroke-width="3"');
+    out += circ(-40, -44, 11, 'fill="' + b + '" ' + K2);
+    out += ell(-43, -42, 2.6, 3.4, 'fill="#16120c"') + ell(-37, -42, 2.6, 3.4, 'fill="#16120c"');
+    out += ln(-40, -33, -40, 6, 'stroke="' + b + '" stroke-width="5"');
+    var i;
+    for (i = 0; i < 5; i++) {
+      out += pth('M-40 ' + (-28 + i * 7) + ' q-16 4 -18 12 M-40 ' + (-28 + i * 7) + ' q16 4 18 12',
+        'fill="none" stroke="' + b + '" stroke-width="2.6"');
+    }
+    out += pth('M-52 6 h24 l-4 12 h-16 z', 'fill="' + b + '" ' + K2);
+    out += pth('M-56 -26 l-14 30 l6 26 M-24 -26 l14 30 l-6 26', 'fill="none" stroke="' + b + '" stroke-width="4"');
+    out += pth('M-46 18 l-6 34 l2 8 M-34 18 l6 34 l-2 8', 'fill="none" stroke="' + b + '" stroke-width="5"');
+    out += rect(-64, 56, 48, 6, 'rx="2" fill="#4a4032"');
+    out += rect(-94, -61, 188, 122, 'fill="url(#ecGlass)"');
+    out += ln(10, -61, 10, 61, 'stroke="' + (o.wood || '#3a3026') + '" stroke-width="7"');
+    out += pth('M20 56 l54 -110', 'stroke="#ffffff" stroke-opacity=".12" stroke-width="12"');
+    return out;
+  };
+
+  /* The instrument tray: a bone saw, two knives, forceps, a trepan. */
+  PARTS.instrumentTray = function (o) {
+    var m = o.metal || '#c2c8cc';
+    var out = rect(-76, 8, 152, 16, 'rx="3" fill="#3f4a4e" ' + K3);
+    out += rect(-72, 4, 144, 6, 'fill="#5d6a6e"');
+    out += pth('M-66 4 v-30 h6 v26 h40 v-26 h6 v30 z', 'fill="' + m + '" ' + K2);
+    out += rect(-62, -14, 44, 5, 'fill="' + m + '"');
+    out += pth('M-6 4 l-4 -26 l10 4 l2 22 z', 'fill="' + m + '" ' + K2);
+    out += pth('M10 4 l0 -24 l9 3 l1 21 z', 'fill="' + m + '" ' + K2);
+    out += pth('M34 4 q-6 -18 4 -26 M44 4 q6 -18 -4 -26', 'fill="none" stroke="' + m + '" stroke-width="4"');
+    out += circ(62, -12, 11, 'fill="none" stroke="' + m + '" stroke-width="4"');
+    var i;
+    for (i = 0; i < 8; i++) {
+      out += ln(62, -12, (62 + 11 * Math.cos(i * Math.PI / 4)).toFixed(1),
+        (-12 + 11 * Math.sin(i * Math.PI / 4)).toFixed(1), 'stroke="' + m + '" stroke-width="2"');
+    }
+    return out;
+  };
+
+  /* The table itself: a scrubbed board with a drainage groove, leather
+     straps and a head block. It stands where the desk stands. */
+  PARTS.operatingTable = function (o) {
+    var w = o.wood || '#6a5236';
+    var out = rect(-150, -110, 300, 20, 'rx="3" fill="' + w + '" ' + K3);
+    out += pth('M-140 -104 h280', 'stroke="black" stroke-opacity=".35" stroke-width="4"');
+    out += rect(-150, -122, 46, 14, 'rx="4" fill="' + w + '" ' + K2);
+    out += rect(-126, -90, 26, 90, 'fill="' + w + '" fill-opacity=".85"');
+    out += rect(100, -90, 26, 90, 'fill="' + w + '" fill-opacity=".85"');
+    out += rect(-126, -44, 252, 10, 'fill="' + w + '" fill-opacity=".6"');
+    var i;
+    for (i = 0; i < 2; i++) {
+      out += rect(-70 + i * 96, -114, 16, 26, 'rx="3" fill="' + (o.strap || '#4a3324') + '" ' + K2);
+      out += circ(-62 + i * 96, -100, 3.4, 'fill="#8d9498"');
+    }
+    out += pth('M120 -90 q18 26 4 90', 'fill="none" stroke="#5a5450" stroke-width="5"');
+    out += ell(126, -2, 14, 5, 'fill="#3a3a38"');
+    return out;
+  };
+
+  /* Gas bracket with a mantle and an etched globe. */
+  PARTS.gasMantle = function (o) {
+    var b = o.brass || '#b8913f';
+    return glow(0, -70, 100) +
+      ln(0, -160, 0, -122, 'stroke="' + b + '" stroke-width="4"') +
+      pth('M0 -122 q0 -14 -14 -16 l-30 0', 'fill="none" stroke="' + b + '" stroke-width="5"') +
+      circ(0, -104, 9, 'fill="none" stroke="' + b + '" stroke-width="4"') +
+      pth('M-24 -96 q24 -18 48 0 l-8 44 q-16 10 -32 0 z',
+        'fill="#fff3d0" fill-opacity=".16" stroke="' + b + '" stroke-opacity=".7" stroke-width="3"') +
+      pth('M-24 -96 q24 -10 48 0', 'fill="none" stroke="' + b + '" stroke-width="4"') +
+      pth('M0 -92 q13 12 8 26 q-8 12 -8 12 q0 0 -8 -12 q-5 -14 8 -26',
+        'id="flame" fill="#fff0c0" stroke="#ffd98a" stroke-width="2"');
+  };
+
+  /* ---- THE RADIO STATION ---- */
+
+  /* A ribbon microphone on a floor stand. The one object on this list
+     that a player will name before they finish looking at it. */
+  PARTS.micStand = function (o) {
+    var m = o.metal || '#9aa2a6';
+    var out = ell(0, -3, 26, 8, 'fill="#2a2e30" ' + K2);
+    out += rect(-22, -12, 44, 9, 'rx="4" fill="' + m + '" ' + K2);
+    out += rect(-4, -84, 8, 74, 'rx="3" fill="' + m + '" ' + K2);
+    out += rect(-9, -60, 18, 8, 'rx="3" fill="#4a5054"');
+    out += pth('M-20 -96 a20 22 0 0 1 40 0', 'fill="none" stroke="' + m + '" stroke-width="4"');
+    out += rect(-14, -112, 28, 32, 'rx="7" fill="#2f3336" ' + K3);
+    var i;
+    for (i = 0; i < 5; i++) out += ln(-10, -106 + i * 6, 10, -106 + i * 6, 'stroke="' + m + '" stroke-width="2.4"');
+    out += rect(-7, -78, 14, 5, 'rx="2" fill="' + m + '"');
+    out += ln(-20, -94, -22, -84, 'stroke="' + m + '" stroke-width="3"');
+    out += ln(20, -94, 22, -84, 'stroke="' + m + '" stroke-width="3"');
+    return out;
+  };
+
+  /* ON AIR. Lit, boxed and unambiguous. */
+  PARTS.onAirSign = function (o) {
+    var out = rect(-52, -26, 104, 52, 'rx="6" fill="#17171b" ' + K4);
+    out += rect(-45, -19, 90, 38, 'rx="3" fill="' + (o.lamp || '#8a1a12') + '"');
+    out += rect(-45, -19, 90, 38, 'rx="3" fill="url(#ecGlow)"');
+    out += txt(0, 7, 'ON AIR', MID + ' font-family="Georgia" font-size="21" letter-spacing="2" fill="' +
+      (o.ink || '#ffb49a') + '"');
+    out += rect(-20, -32, 40, 7, 'rx="2" fill="#3a3a40" ' + K2);
+    return out;
+  };
+
+  /* The transmitter bay: glowing valves over meters over a patch panel. */
+  PARTS.valveRack = function (o) {
+    var m = o.metal || '#3a4046';
+    var out = rect(-106, -73, 212, 146, 'rx="3" fill="' + m + '" ' + K5);
+    out += rect(-96, -64, 192, 44, 'rx="2" fill="#14181c"');
+    var i, x;
+    for (i = 0; i < 6; i++) {
+      x = -84 + i * 32;
+      out += rect(x, -56, 20, 30, 'rx="9" fill="#ffb04c" fill-opacity=".22" stroke="#c8ced0" stroke-width="2"');
+      out += pth('M' + (x + 6) + ' -30 q4 -16 8 0', 'fill="none" stroke="#ffb04c" stroke-width="2.6"');
+      out += rect(x + 2, -28, 16, 6, 'fill="#6a6055"');
+    }
+    out += rect(-96, -14, 192, 38, 'rx="2" fill="#1b2024"');
+    for (i = 0; i < 2; i++) {
+      out += circ(-70 + i * 40, 6, 14, 'fill="#e6e2d6" ' + K2);
+      out += ln(-70 + i * 40, 6, -60 + i * 40, -3, 'stroke="#1c1c1c" stroke-width="2.5"');
+    }
+    for (i = 0; i < 5; i++) {
+      out += circ(6 + i * 20, 6, 7, 'fill="#4a5054" ' + K2) + ln(6 + i * 20, 6, 6 + i * 20, -1,
+        'stroke="#d8d2c4" stroke-width="2.5"');
+    }
+    out += rect(-96, 30, 192, 34, 'rx="2" fill="#14181c"');
+    for (i = 0; i < 12; i++) {
+      out += circ(-86 + i * 16, 40, 4, 'fill="#0a0c0e" stroke="#6a7276" stroke-width="2"');
+      out += circ(-86 + i * 16, 56, 4, 'fill="#0a0c0e" stroke="#6a7276" stroke-width="2"');
+    }
+    out += pth('M-70 40 q26 26 42 0', 'fill="none" stroke="#c8483a" stroke-width="4"');
+    out += pth('M10 56 q22 -20 44 -16', 'fill="none" stroke="#3a6a9a" stroke-width="4"');
+    return out;
+  };
+
+  /* A shelf of transcription discs, sleeved, with one face out. */
+  PARTS.discShelf = function (o) {
+    var out = rect(-76, 14, 152, 10, 'rx="2" fill="' + (o.wood || '#4a4038') + '" ' + K3);
+    var cols = ['#8a7a5a', '#6a6a70', '#7a5a4a', '#5a6a6a'];
+    var i, x;
+    for (i = 0; i < 12; i++) {
+      x = -70 + i * 7;
+      out += rect(x, -22, 6, 36, 'fill="' + cols[i % cols.length] + '" ' + K2 +
+        (i > 8 ? ' transform="rotate(7 ' + (x + 3) + ' 14)"' : ''));
+    }
+    out += circ(34, -4, 19, 'fill="#17171a" ' + K2);
+    for (i = 1; i < 4; i++) out += circ(34, -4, i * 4.4, 'fill="none" stroke="#4a4a50" stroke-width="1.4"');
+    out += circ(34, -4, 7, 'fill="' + (o.label || '#c8a44a') + '"');
+    out += circ(34, -4, 1.6, 'fill="#17171a"');
+    return out;
+  };
+
+  /* The padded studio door: quilted leather, a port, and a lamp over it. */
+  PARTS.studioDoor = function (o) {
+    var l = o.pad || '#4a3730';
+    var out = rect(-70, -282, 140, 282, 'rx="4" fill="' + l + '" ' + K4);
+    var i, j;
+    for (i = -3; i <= 3; i++) {
+      out += ln(i * 40, -282, i * 40 + 140, -6, 'stroke="black" stroke-opacity=".22" stroke-width="2"');
+      out += ln(i * 40, -282, i * 40 - 140, -6, 'stroke="black" stroke-opacity=".22" stroke-width="2"');
+    }
+    for (j = 0; j < 6; j++) {
+      for (i = 0; i < 4; i++) {
+        out += circ(-52 + i * 35 + (j % 2 ? 17 : 0), -252 + j * 44, 3.4, 'fill="#8a6a4a" fill-opacity=".8"');
+      }
+    }
+    out += circ(0, -196, 32, 'fill="#2a2226" ' + K3);
+    out += circ(0, -196, 23, 'fill="#0d1418"');
+    out += pth('M-23 -196 a23 23 0 0 0 46 0', 'fill="#8fe4ff" fill-opacity=".10"');
+    out += circ(-8, -204, 6, 'fill="#ffffff" fill-opacity=".12"');
+    out += rect(-14, -122, 46, 20, 'rx="4" fill="#8d9498" ' + K2);
+    out += circ(-24, -112, 8, 'class="fAccent"');
+    out += rect(-70, -282, 140, 14, 'rx="3" fill="#26201e"');
+    return out + sigilBadge();
+  };
+
+  /* The console: a sloped control panel of faders and knobs, standing in
+     the anchor slot with the drawer under it. */
+  PARTS.mixDesk = function (o) {
+    var m = o.metal || '#33383c';
+    var out = rect(-150, -110, 300, 16, 'rx="2" fill="' + m + '" ' + K3);
+    out += rect(-134, -94, 20, 94, 'fill="#292d30"') + rect(114, -94, 20, 94, 'fill="#292d30"');
+    out += rect(-134, -40, 268, 9, 'fill="#292d30"');
+    out += pth('M-124 -110 l10 -46 h228 l10 46 z', 'fill="' + (o.panel || '#4a5054') + '" ' + K3);
+    var i;
+    for (i = 0; i < 8; i++) {
+      out += circ(-100 + i * 18, -142, 6, 'fill="#22262a" ' + K2);
+      out += ln(-100 + i * 18, -142, -100 + i * 18 + (i % 3) * 2 - 2, -148, 'stroke="#d8d2c4" stroke-width="2"');
+    }
+    for (i = 0; i < 5; i++) {
+      out += rect(52 + i * 15, -152, 6, 30, 'rx="2" fill="#22262a"');
+      out += rect(50 + i * 15, -142 + (i % 3) * 7, 10, 6, 'rx="2" fill="#c8ced0"');
+    }
+    out += rect(-120, -152, 34, 26, 'rx="3" fill="#e6e2d6" ' + K2);
+    out += ln(-103, -132, -95, -145, 'stroke="#1c1c1c" stroke-width="2.5"');
+    return out;
+  };
+
+  /* ---- THE BELL TOWER ---- */
+
+  /* A hand bell standing mouth-down on the boards. */
+  PARTS.handBell = function (o) {
+    var b = o.bronze || '#a8843c';
+    return pth('M-24 0 q-2 -42 24 -54 q26 12 24 54 z', 'fill="' + b + '" ' + K3) +
+      ell(0, 0, 24, 6, 'fill="#5d4718" fill-opacity=".8"') +
+      pth('M-17 -14 q17 6 34 0', 'fill="none" stroke="#6a5324" stroke-width="3"') +
+      pth('M-10 -56 q10 -8 20 0 z', 'fill="' + b + '" ' + K2) +
+      rect(-6, -84, 12, 30, 'rx="5" fill="' + (o.grip || '#5c3f22') + '" ' + K2) +
+      pth('M-6 -76 h12 M-6 -66 h12', 'stroke="black" stroke-opacity=".3" stroke-width="2"') +
+      pth('M-16 -34 q16 8 32 0', 'fill="none" stroke="#f0d78a" stroke-opacity=".5" stroke-width="2"');
+  };
+
+  /* The back of the tower clock dial: a translucent glass face seen from
+     inside, numerals reversed, with the leading-off rod. */
+  PARTS.dialBack = function (o) {
+    var f = o.frame || '#5a5044';
+    var out = circ(0, 0, 36, 'fill="' + f + '" ' + K5);
+    out += circ(0, 0, 29, 'fill="#cfd8dc" fill-opacity=".30"');
+    var i;
+    for (i = 0; i < 12; i++) {
+      var a = i * Math.PI / 6;
+      out += ln((22 * Math.cos(a)).toFixed(1), (22 * Math.sin(a)).toFixed(1),
+                (28 * Math.cos(a)).toFixed(1), (28 * Math.sin(a)).toFixed(1),
+                'stroke="#2b2620" stroke-width="' + (i % 3 ? 2 : 3.6) + '" stroke-opacity=".7"');
+    }
+    out += ln(0, 0, -12, -16, 'stroke="#2b2620" stroke-width="3.5" stroke-linecap="round"');
+    out += ln(0, 0, 15, 8, 'stroke="#2b2620" stroke-width="3.5" stroke-linecap="round"');
+    out += circ(0, 0, 6, 'fill="#8d8478" ' + K2);
+    out += ln(0, 6, 0, 40, 'stroke="#8d8478" stroke-width="5"');
+    out += rect(-9, 38, 18, 8, 'rx="2" fill="#8d8478" ' + K2);
+    return out;
+  };
+
+  /* Ivy pushing in through a broken louvre slat. */
+  PARTS.ivyBreak = function (o) {
+    var w = o.wood || '#6a6154';
+    var out = rect(-52, -40, 104, 80, 'fill="#0b0f12"');
+    var i;
+    for (i = 0; i < 5; i++) {
+      var y = -34 + i * 17;
+      if (i === 2) {
+        out += pth('M-52 ' + y + ' l34 -8 l6 12 l-40 8 z', 'fill="' + w + '" ' + K2);
+        out += pth('M22 ' + (y - 12) + ' l30 -6 l0 12 l-26 6 z', 'fill="' + w + '" ' + K2);
+      } else {
+        out += pth('M-52 ' + y + ' l104 -20 l0 12 l-104 20 z', 'fill="' + w + '" ' + K2);
+      }
+    }
+    out += pth('M-30 40 q10 -30 -2 -44 q22 8 26 -14 q4 22 22 14',
+      'fill="none" stroke="' + (o.vine || '#4a7a4a') + '" stroke-width="5" stroke-linecap="round"');
+    var leaves = [[-30, 22], [-24, -2], [-6, -22], [12, -6], [16, -28], [2, 26]];
+    for (i = 0; i < leaves.length; i++) {
+      out += pth('M0 0 q-11 -10 0 -18 q11 8 0 18 z', 'fill="' + (o.leaf || '#5f9a52') +
+        '" transform="translate(' + leaves[i][0] + ',' + leaves[i][1] + ') rotate(' + (i * 47) + ')"');
+    }
+    out += rect(-52, -40, 104, 80, 'fill="none" ' + K3);
+    return out;
+  };
+
+  /* The bell, hung dead in its headstock, with its wheel and rope. */
+  PARTS.greatBell = function (o) {
+    var b = o.bronze || '#9a7a3c';
+    var out = rect(-58, -73, 116, 18, 'rx="3" fill="' + (o.wood || '#5a5246') + '" ' + K3);
+    out += pth('M-10 -55 q10 -10 20 0 z', 'fill="' + b + '" ' + K2);
+    out += pth('M-56 52 q-6 -74 56 -100 q62 26 56 100 z', 'fill="' + b + '" ' + K4);
+    out += pth('M-56 52 q56 16 112 0 l0 12 q-56 16 -112 0 z', 'fill="' + b + '" ' + K3);
+    out += pth('M-46 6 q46 14 92 0 M-50 26 q50 16 100 0', 'fill="none" stroke="#6a5324" stroke-width="3"');
+    out += txt(0, 22, '✦ ✦ ✦', MID + ' font-size="13" fill="#6a5324" fill-opacity=".8"');
+    out += ell(0, 62, 9, 11, 'fill="#5d4718" ' + K2);
+    out += circ(66, -6, 40, 'fill="none" stroke="' + (o.wood || '#5a5246') + '" stroke-width="9"');
+    var i;
+    for (i = 0; i < 6; i++) {
+      out += ln(66, -6, (66 + 36 * Math.cos(i * Math.PI / 3)).toFixed(1),
+        (-6 + 36 * Math.sin(i * Math.PI / 3)).toFixed(1),
+        'stroke="' + (o.wood || '#5a5246') + '" stroke-width="4"');
+    }
+    out += pth('M100 -14 q14 34 -4 66', 'fill="none" stroke="' + (o.rope || '#b8a878') + '" stroke-width="5"');
+    out += pth('M-56 -55 q56 -22 112 0', 'fill="none" stroke="#f0d78a" stroke-opacity=".35" stroke-width="4"');
+    return out;
+  };
+
+  /* =====================================================================
      BACKDROPS
      ---------------------------------------------------------------------
      The single biggest contributor to "which room am I in". Furniture can
@@ -1786,6 +2836,279 @@
     return base(w, f);
   };
 
+  /* ---- backdrops for the second ten ---- */
+
+  /* Storm glazing over a black sea, an iron gallery rail, plated floor. */
+  BACKDROPS.lampRoom = function () {
+    var w = '', f = '', i;
+    w += rect(0, 0, 800, 300, 'fill="url(#ecNight)"');
+    w += rect(0, 214, 800, 86, 'fill="#0a1c26"');
+    for (i = 0; i < 7; i++) {
+      w += pth('M' + (i * 130 - 40) + ' ' + (232 + (i % 3) * 18) + ' q34 -12 68 0',
+        'fill="none" stroke="#2c4c58" stroke-width="4"');
+    }
+    for (i = 0; i <= 800; i += 100) {
+      w += pth('M' + i + ' 0 L' + (i + (i - 400) * 0.12).toFixed(0) + ' 300',
+        'stroke="#6a7a84" stroke-opacity=".85" stroke-width="9"');
+    }
+    for (i = 60; i < 300; i += 76) w += ln(0, i, 800, i, 'stroke="#6a7a84" stroke-opacity=".7" stroke-width="7"');
+    for (i = 0; i < 40; i++) {
+      w += ln((i * 97) % 790, (i * 53) % 290, (i * 97) % 790 - 8, (i * 53) % 290 + 22,
+        'stroke="#bcd8e4" stroke-opacity=".16" stroke-width="2"');
+    }
+    w += rect(0, 296, 800, 18, 'fill="#4a545c" ' + K3);
+    w += rect(0, 314, 800, 78, 'class="fWall2"');
+    for (i = 0; i < 24; i++) w += circ(i * 34 + 18, 330, 3.4, 'fill="black" fill-opacity=".35"');
+    w += rect(0, 352, 800, 9, 'rx="4" fill="#6a7a84" fill-opacity=".55"');
+    for (i = 0; i < 5; i++) f += ln(i * 160, 402, i * 160 - 40, 560, 'stroke="black" stroke-opacity=".3" stroke-width="4"');
+    f += ln(0, 462, 800, 462, 'stroke="black" stroke-opacity=".3" stroke-width="4"');
+    f += ln(0, 520, 800, 520, 'stroke="black" stroke-opacity=".3" stroke-width="4"');
+    for (i = 0; i < 30; i++) f += circ((i * 113) % 780 + 10, 412 + ((i * 67) % 140), 3, 'fill="#8d9498" fill-opacity=".3"');
+    return base(w, f);
+  };
+
+  /* Veined marble ashlar, a brass dado, a chequer floor and one grille. */
+  BACKDROPS.vaultRoom = function () {
+    var w = '', f = '', i, j;
+    for (j = 0; j < 5; j++) {
+      w += ln(0, j * 74 + 20, 800, j * 74 + 20, 'stroke="black" stroke-opacity=".3" stroke-width="4"');
+      for (i = 0; i < 5; i++) {
+        w += ln(i * 170 + (j % 2 ? 85 : 0), j * 74 + 20, i * 170 + (j % 2 ? 85 : 0), j * 74 + 94,
+          'stroke="black" stroke-opacity=".24" stroke-width="4"');
+      }
+    }
+    for (i = 0; i < 16; i++) {
+      w += pth('M' + ((i * 173) % 780) + ' ' + (30 + (i * 91) % 330) + ' q30 -14 62 -4 q26 8 54 -8',
+        'fill="none" stroke="#ffffff" stroke-opacity=".07" stroke-width="3"');
+    }
+    w += rect(0, 300, 800, 12, 'fill="#b9913f" fill-opacity=".55"');
+    w += rect(0, 312, 800, 80, 'fill="black" fill-opacity=".2"');
+    w += rect(340, 22, 120, 54, 'rx="3" fill="#0b0c10"');
+    for (i = 0; i < 7; i++) w += rect(344 + i * 17, 22, 6, 54, 'fill="#8d8a9a"');
+    w += rect(336, 18, 128, 62, 'rx="3" fill="none" stroke="#b9913f" stroke-opacity=".6" stroke-width="5"');
+    for (j = 0; j < 4; j++) {
+      for (i = 0; i < 9; i++) {
+        f += pth('M' + (i * 100 + (j % 2 ? 50 : 0)) + ' ' + (404 + j * 40) + ' l50 0 l-14 40 l-50 0 z',
+          'fill="black" fill-opacity=".22"');
+      }
+    }
+    return base(w, f);
+  };
+
+  /* A vaulted bay: two blind arches, ribs to a boss, flagstones. */
+  BACKDROPS.cloister = function () {
+    var w = '', f = '', i, j;
+    for (j = 0; j < 6; j++) {
+      w += ln(0, j * 64 + 30, 800, j * 64 + 30, 'stroke="black" stroke-opacity=".26" stroke-width="3"');
+      for (i = 0; i < 7; i++) {
+        w += ln(i * 124 + (j % 2 ? 62 : 0), j * 64 + 30, i * 124 + (j % 2 ? 62 : 0), j * 64 + 94,
+          'stroke="black" stroke-opacity=".2" stroke-width="3"');
+      }
+    }
+    w += pth('M0 392 L0 150 Q400 -120 800 150 L800 392', 'fill="black" fill-opacity=".26"');
+    for (i = 0; i < 5; i++) {
+      w += pth('M' + (i * 200) + ' 392 Q400 ' + (30 + i * 10) + ' 400 -40',
+        'fill="none" stroke="black" stroke-opacity=".3" stroke-width="7"');
+    }
+    w += circ(400, 46, 26, 'fill="black" fill-opacity=".3"');
+    w += circ(400, 46, 14, 'fill="black" fill-opacity=".25"');
+    for (i = 0; i < 2; i++) {
+      var x = 130 + i * 420;
+      w += pth('M' + x + ' 392 v-150 q60 -84 120 0 v150 z', 'fill="black" fill-opacity=".24"');
+      w += pth('M' + x + ' 392 v-150 q60 -84 120 0 v150', 'fill="none" stroke="black" stroke-opacity=".3" stroke-width="6"');
+    }
+    for (j = 0; j < 4; j++) {
+      for (i = 0; i < 7; i++) {
+        f += rect(i * 118 + (j % 2 ? -50 : 0), 404 + j * 40, 112, 34,
+          'rx="2" fill="black" fill-opacity="' + (0.1 + (i + j) % 3 * 0.05).toFixed(2) + '" ' + K2);
+      }
+    }
+    return base(w, f);
+  };
+
+  /* Striped wallpaper over lath, a picture rail, and one torn patch. */
+  BACKDROPS.parlour = function () {
+    var w = '', f = '', i;
+    for (i = 0; i < 800; i += 40) {
+      w += rect(i, 0, 20, 392, 'fill="black" fill-opacity=".16"');
+      w += ln(i + 30, 0, i + 30, 392, 'stroke="#c8a88a" stroke-opacity=".12" stroke-width="3"');
+    }
+    for (i = 0; i < 40; i++) {
+      w += pth('M' + ((i * 79) % 790) + ' ' + (26 + (i * 97) % 330) + ' q6 -8 12 0 q-6 8 -12 0 z',
+        'fill="#c8a88a" fill-opacity=".14"');
+    }
+    w += pth('M596 0 l58 0 l-10 74 l26 66 l-40 42 l-34 -58 l14 -60 z', 'fill="black" fill-opacity=".3"');
+    for (i = 0; i < 7; i++) {
+      w += ln(596, 14 + i * 26, 662, 8 + i * 26, 'stroke="#8a7256" stroke-opacity=".5" stroke-width="5"');
+    }
+    w += pth('M596 0 l58 0 l-10 74 l26 66 l-40 42 l-34 -58 l14 -60 z',
+      'fill="none" stroke="black" stroke-opacity=".35" stroke-width="3"');
+    w += rect(0, 44, 800, 10, 'class="fWall2"');
+    w += rect(0, 356, 800, 36, 'fill="black" fill-opacity=".24"');
+    for (i = 0; i < 9; i++) f += ln(i * 96, 402, i * 96 - 26, 560, 'stroke="black" stroke-opacity=".3" stroke-width="4"');
+    f += ln(0, 474, 800, 474, 'stroke="black" stroke-opacity=".22" stroke-width="3"');
+    return base(w, f);
+  };
+
+  /* Varnished beading, a night window band, a luggage rail. */
+  BACKDROPS.carriage = function () {
+    var w = '', f = '', i;
+    for (i = 0; i < 400; i += 22) w += ln(0, i, 800, i, 'stroke="black" stroke-opacity=".28" stroke-width="3"');
+    w += rect(0, 66, 800, 116, 'rx="10" fill="#060d18"');
+    w += rect(0, 66, 800, 116, 'rx="10" fill="url(#ecNight)"');
+    for (i = 0; i < 9; i++) {
+      w += pth('M' + (i * 100 - 20) + ' 182 l40 -46 l34 24 l40 -54 l30 76 z', 'fill="#0b1524"');
+    }
+    for (i = 0; i < 26; i++) {
+      w += ln((i * 61) % 790, 70 + (i * 37) % 100, (i * 61) % 790 - 16, 82 + (i * 37) % 100,
+        'stroke="#8fb2cc" stroke-opacity=".22" stroke-width="2"');
+    }
+    for (i = 0; i < 12; i++) w += circ((i * 131) % 780, 74 + (i * 29) % 40, 1.6, 'fill="#dfe6ef" fill-opacity=".6"');
+    w += rect(0, 58, 800, 12, 'class="fWall2"');
+    w += rect(0, 178, 800, 12, 'class="fWall2"');
+    for (i = 0; i < 5; i++) w += rect(i * 200 + 90, 58, 16, 132, 'fill="#3a2a1e" ' + K2);
+    w += rect(0, 224, 800, 8, 'rx="4" fill="#8d7a4a" fill-opacity=".7"');
+    for (i = 0; i < 6; i++) w += ln(i * 140 + 40, 224, i * 140 + 40, 206, 'stroke="#8d7a4a" stroke-opacity=".7" stroke-width="4"');
+    for (i = -2; i < 12; i++) f += ln(i * 70, 402, i * 70 + 90, 560, 'stroke="black" stroke-opacity=".3" stroke-width="3"');
+    f += rect(300, 402, 200, 158, 'fill="black" fill-opacity=".18"');
+    return base(w, f);
+  };
+
+  /* A brick barrel vault, frosted, with icicles at the springing. */
+  BACKDROPS.frostVault = function () {
+    var w = '', f = '', i, j;
+    for (j = 0; j < 9; j++) {
+      w += ln(0, j * 44 + 8, 800, j * 44 + 8, 'stroke="black" stroke-opacity=".3" stroke-width="3"');
+      for (i = 0; i < 12; i++) {
+        w += ln(i * 74 + (j % 2 ? 37 : 0), j * 44 + 8, i * 74 + (j % 2 ? 37 : 0), j * 44 + 52,
+          'stroke="black" stroke-opacity=".24" stroke-width="3"');
+      }
+    }
+    w += pth('M0 392 L0 190 Q400 -60 800 190 L800 392', 'fill="black" fill-opacity=".3"');
+    w += pth('M0 190 Q400 -60 800 190', 'fill="none" stroke="#cfe4ea" stroke-opacity=".35" stroke-width="7"');
+    for (i = 0; i < 22; i++) {
+      var x = i * 38 + 10, y = 190 - Math.round(240 * Math.sin(Math.PI * x / 800) * 0.72);
+      w += pth('M' + x + ' ' + y + ' l7 0 l-3 ' + (16 + (i % 4) * 13) + ' z', 'fill="#cfe4ea" fill-opacity=".45"');
+    }
+    for (i = 0; i < 70; i++) {
+      w += circ((i * 137) % 792, 12 + (i * 71) % 376, 1.6 + (i % 3), 'fill="#dff2f8" fill-opacity=".16"');
+    }
+    for (i = 0; i < 60; i++) {
+      f += circ((i * 149) % 790 + 5, 406 + ((i * 53) % 150), 2 + (i % 4), 'fill="#c9b078" fill-opacity=".22"');
+    }
+    f += pth('M0 470 q200 -20 400 6 q200 26 400 -2', 'fill="none" stroke="black" stroke-opacity=".22" stroke-width="6"');
+    return base(w, f);
+  };
+
+  /* An attic: rafters both sides, a collar beam, and bunting. */
+  BACKDROPS.attic = function () {
+    var w = '', f = '', i;
+    for (i = 0; i < 400; i += 26) w += ln(0, i, 800, i - 6, 'stroke="black" stroke-opacity=".24" stroke-width="3"');
+    w += pth('M0 0 L250 392 L0 392 z', 'fill="black" fill-opacity=".3"');
+    w += pth('M800 0 L550 392 L800 392 z', 'fill="black" fill-opacity=".3"');
+    for (i = 0; i < 3; i++) {
+      w += pth('M' + (i * 60) + ' 0 L' + (i * 60 + 240) + ' 392', 'stroke="#6a5232" stroke-width="20" fill="none"');
+      w += pth('M' + (800 - i * 60) + ' 0 L' + (800 - i * 60 - 240) + ' 392', 'stroke="#6a5232" stroke-width="20" fill="none"');
+    }
+    w += rect(0, 150, 800, 24, 'fill="#6a5232" ' + K3);
+    for (i = 0; i < 12; i++) {
+      var bx = i * 66 + 24, by = 174 + Math.round(18 * Math.sin(i * 0.9));
+      w += pth('M' + bx + ' ' + by + ' l30 0 l-15 30 z',
+        'fill="' + ['#b4342e', '#d8b032', '#2a5fa0', '#4a8a5a'][i % 4] + '" fill-opacity=".8" ' + K2);
+    }
+    w += pth('M0 176 q200 26 400 4 q200 -22 400 4', 'fill="none" stroke="#8a7a54" stroke-width="3"');
+    for (i = -2; i < 12; i++) f += ln(i * 74, 402, i * 74 + 60, 560, 'stroke="black" stroke-opacity=".26" stroke-width="3"');
+    for (i = 0; i < 22; i++) {
+      f += ell((i * 149) % 780 + 8, 412 + ((i * 71) % 140), 7, 4,
+        'fill="' + ['#b4342e', '#d8b032', '#2a5fa0'][i % 3] + '" fill-opacity=".3"');
+    }
+    return base(w, f);
+  };
+
+  /* Three banked tiers of an anatomy theatre, receding into the dark. */
+  BACKDROPS.gallery = function () {
+    var w = '', f = '', i, j;
+    w += rect(0, 0, 800, 392, 'fill="black" fill-opacity=".28"');
+    for (j = 0; j < 3; j++) {
+      var y = 96 + j * 92, dip = 40 - j * 8;
+      w += pth('M-20 ' + y + ' Q400 ' + (y + dip) + ' 820 ' + y + ' L820 ' + (y + 26) +
+        ' Q400 ' + (y + dip + 26) + ' -20 ' + (y + 26) + ' z', 'class="fWall2" ' + K3);
+      w += pth('M-20 ' + (y - 34) + ' Q400 ' + (y + dip - 34) + ' 820 ' + (y - 34),
+        'fill="none" stroke="#6a5a44" stroke-opacity=".8" stroke-width="7"');
+      for (i = 0; i < 13; i++) {
+        var x = i * 64 + 12;
+        w += ln(x, y - 34 + Math.round(dip * Math.sin(Math.PI * x / 800) * 0.9), x,
+          y + 4 + Math.round(dip * Math.sin(Math.PI * x / 800) * 0.9),
+          'stroke="#6a5a44" stroke-opacity=".7" stroke-width="4"');
+      }
+    }
+    w += rect(0, 0, 800, 62, 'fill="black" fill-opacity=".35"');
+    for (i = 0; i < 40; i++) {
+      f += circ((i * 131) % 786 + 6, 406 + ((i * 61) % 148), 2.6 + (i % 3), 'fill="#c9b078" fill-opacity=".2"');
+    }
+    for (i = -2; i < 12; i++) f += ln(i * 76, 402, i * 76 + 64, 560, 'stroke="black" stroke-opacity=".28" stroke-width="3"');
+    return base(w, f);
+  };
+
+  /* Acoustic wedges, and the control room watching through its glass. */
+  BACKDROPS.studio = function () {
+    var w = '', f = '', i, j;
+    for (j = 0; j < 9; j++) {
+      for (i = 0; i < 21; i++) {
+        var x = i * 40, y = j * 46;
+        w += pth('M' + x + ' ' + y + ' l20 -14 l20 14 l-20 14 z', 'fill="black" fill-opacity="' +
+          ((i + j) % 2 ? '.26' : '.16') + '"');
+        w += pth('M' + x + ' ' + y + ' l20 -14 l20 14', 'fill="none" stroke="black" stroke-opacity=".2" stroke-width="2"');
+      }
+    }
+    w += rect(470, 60, 300, 150, 'rx="4" fill="#0c1014"');
+    w += rect(470, 60, 300, 150, 'rx="4" fill="url(#ecGlass)"');
+    w += rect(462, 52, 316, 166, 'rx="5" fill="none" fill-opacity="0" stroke="#4a5054" stroke-width="9"');
+    w += rect(500, 130, 240, 12, 'rx="3" fill="#2a3034" fill-opacity=".9"');
+    w += circ(560, 112, 12, 'fill="#5a6266" fill-opacity=".7"');
+    w += rect(600, 100, 90, 26, 'rx="3" fill="#3a4246" fill-opacity=".7"');
+    w += pth('M480 200 l70 -140', 'stroke="#ffffff" stroke-opacity=".08" stroke-width="16"');
+    w += rect(0, 340, 800, 52, 'fill="black" fill-opacity=".2"');
+    f += ln(0, 470, 800, 470, 'stroke="black" stroke-opacity=".2" stroke-width="4"');
+    f += ln(0, 528, 800, 528, 'stroke="black" stroke-opacity=".2" stroke-width="4"');
+    for (i = 0; i < 5; i++) f += ln(i * 200, 402, i * 200 - 50, 560, 'stroke="black" stroke-opacity=".18" stroke-width="3"');
+    return base(w, f);
+  };
+
+  /* Tower framing: posts, braces, and louvres full of night. */
+  BACKDROPS.louvre = function () {
+    var w = '', f = '', i, j;
+    w += rect(0, 0, 800, 392, 'fill="black" fill-opacity=".2"');
+    for (j = 0; j < 2; j++) {
+      var x0 = j ? 520 : 40;
+      w += rect(x0, 30, 240, 300, 'fill="#070a10"');
+      for (i = 0; i < 9; i++) {
+        w += pth('M' + x0 + ' ' + (44 + i * 34) + ' l240 -16 l0 17 l-240 16 z',
+          'fill="#5c5548" ' + K2);
+      }
+      w += rect(x0 - 10, 20, 260, 12, 'fill="#6a6154" ' + K2);
+      w += rect(x0 - 10, 328, 260, 12, 'fill="#6a6154" ' + K2);
+    }
+    var TIMBER = '#6a6154';
+    w += rect(0, 0, 800, 30, 'fill="' + TIMBER + '" ' + K3);
+    for (i = 0; i < 3; i++) {
+      w += rect(i * 380 + 10, 0, 32, 392, 'fill="' + TIMBER + '" ' + K3);
+      w += ln(i * 380 + 26, 30, i * 380 + 26, 392, 'stroke="black" stroke-opacity=".3" stroke-width="3"');
+    }
+    w += pth('M42 30 L390 392 M390 30 L42 392', 'stroke="' + TIMBER + '" stroke-width="22" fill="none"');
+    w += pth('M42 30 L390 392 M390 30 L42 392', 'stroke="black" stroke-opacity=".28" stroke-width="3" fill="none"');
+    w += pth('M422 30 L770 392 M770 30 L422 392', 'stroke="' + TIMBER + '" stroke-width="22" fill="none"');
+    w += pth('M422 30 L770 392 M770 30 L422 392', 'stroke="black" stroke-opacity=".28" stroke-width="3" fill="none"');
+    for (i = 0; i < 6; i++) w += circ(i * 152 + 60, 200, 5, 'fill="#8d8478"');
+    for (i = -2; i < 12; i++) f += ln(i * 72, 402, i * 72 + 70, 560, 'stroke="black" stroke-opacity=".3" stroke-width="3"');
+    f += circ(120, 500, 34, 'fill="black" fill-opacity=".55"');
+    f += circ(120, 500, 34, 'fill="none" stroke="#6a6154" stroke-width="7"');
+    for (i = 0; i < 26; i++) {
+      f += ell((i * 149) % 780 + 8, 410 + ((i * 83) % 140), 5, 3, 'fill="#d8d4c8" fill-opacity=".18"');
+    }
+    return base(w, f);
+  };
+
   /* =====================================================================
      THE SETTINGS
      ---------------------------------------------------------------------
@@ -1882,12 +3205,12 @@
            dented metal vessels you could reach into — and that is
            deliberate: `place` is the only thing telling them apart, so the
            room can ask a question that needs two clues to answer. */
-        obj('floorSoft',  'mattress',     'straw mattress',  {}, ['straw', 'bedding',   0, 0]),
+        obj('floorSoft',  'mattress',     'prison pallet',   {}, ['straw', 'bedding',   0, 0]),
         obj('floorProp',  'slopBucket',   'slop bucket',     {}, ['metal', 'vessel',    1, 0]),
         obj('wallSmall',  'tinCup',       'tin cup',         {}, ['metal', 'vessel',    1, 0]),
         obj('wallMid',    'tallyMarks',   'scratched tally', {}, ['stone', 'marking',   0, 0]),
-        obj('wallLarge',  'barredWindow', 'barred window',   {}, ['iron',  'window',    0, 0]),
-        obj('storage',    'bunk',         'iron bunk',       {}, ['iron',  'bedding',   0, 0]),
+        obj('wallLarge',  'barredWindow', 'barred window',   {}, ['iron',  'opening',   0, 0]),
+        obj('storage',    'bunk',         'hanging bunk',    {}, ['iron',  'bedding',   0, 0]),
         obj('container',  'looseBricks',  'loose brick',     {}, ['stone', 'opening',   1, 0]),
         obj('exit',       'barDoor',      'cell gate',       {}),
         obj('anchor',     'steelTable',   'bolted table',    {}),
@@ -1914,7 +3237,7 @@
         '--accent': '#e0b464', '--soft': '#8fb2bd', '--glow': '#ffe0a0'
       },
       objects: [
-        obj('floorSoft',  'ropeCoil',     'coil of rope',    {}, ['rope',  'covering',  0, 0]),
+        obj('floorSoft',  'ropeCoil',     'coiled hawser',   {}, ['rope',  'covering',  0, 0]),
         obj('floorProp',  'barrel',       'water cask',      {}, ['wood',  'vessel',    1, 0]),
         obj('wallSmall',  'porthole',     'porthole',        {}, ['brass', 'window',    0, 0]),
         obj('wallMid',    'knotBoard',    'knot board',      {}, ['rope',  'picture',   0, 0]),
@@ -1952,12 +3275,12 @@
            be sandstone and still be told apart by eye. The gilded sun disc
            is the one object with its own material, and it is drawn as the
            brightest thing on the wall so the claim is visible. */
-        obj('floorSoft',  'flatMat',       'reed mat',        { fill: '#8a7442', weave: '#6a5730' },
+        obj('floorSoft',  'flatMat',       'woven mat',       { fill: '#8a7442', weave: '#6a5730' },
                                                                   ['reed',  'covering',  0, 0]),
         obj('floorProp',  'canopicJar',    'canopic jar',     {}, ['clay',  'vessel',    1, 0]),
         obj('wallSmall',  'sunDisc',       'sun disc',        {}, ['gold',  'carving',   0, 0]),
         obj('wallMid',    'stela',         'carved stela',    {}, ['stone', 'picture',   0, 0]),
-        obj('wallLarge',  'glyphPanel',    'glyph wall',      {}, ['stone', 'carving',   0, 0]),
+        obj('wallLarge',  'glyphPanel',    'glyph slab',      {}, ['stone', 'carving',   0, 0]),
         obj('storage',    'offeringShelf', 'offering shelf',  {}, ['stone', 'furniture', 0, 0]),
         obj('container',  'sarcophagus',   'sarcophagus',     {}, ['stone', 'furniture', 1, 0]),
         obj('exit',       'slabDoor',      'sealed slab',     {}),
@@ -2020,12 +3343,13 @@
         '--accent': '#f0b64a', '--soft': '#c9a674', '--glow': '#ffd98a'
       },
       objects: [
-        obj('floorSoft',  'flatMat',      'oiled cloth',      { fill: '#4f4636', weave: '#3a3326' },
+        obj('floorSoft',  'flatMat',      'oiled sheet',      { fill: '#4f4636', weave: '#3a3326' },
                                                                   ['cloth', 'covering',  0, 0]),
-        obj('floorProp',  'weightDrum',   'clock weight',     {}, ['iron',  'weight',    0, 0]),
+        obj('floorProp',  'weightDrum',   'chain drum',       {}, ['iron',  'weight',    0, 0]),
         obj('wallSmall',  'clockFace',    'clock face',       {}, ['wood',  'mechanism', 0, 0]),
         obj('wallMid',    'escapement',   'escapement',       {}, ['brass', 'mechanism', 0, 0]),
-        obj('wallLarge',  'giantGear',    'great wheel',      {}, ['brass', 'wheel',     0, 0]),
+        obj('wallLarge',  'giantGear',    'great wheel',      { brass: '#6e6155', hub: '#4f463c' },
+                                                                  ['iron',  'mechanism', 0, 0]),
         obj('storage',    'toolRack',     'tool rack',        { board: '#4a3a24', metal: '#c9973f' },
                                                                   ['iron',  'tools',     0, 0]),
         obj('container',  'crate',        'parts crate',      { stencil: 'PARTS' },
@@ -2094,10 +3418,10 @@
       objects: [
         obj('floorSoft',  'persianRug',   'Persian rug',      {}, ['cloth', 'covering',  0, 0]),
         obj('floorProp',  'globeStand',   'globe',            {}, ['paper', 'map',       0, 0]),
-        obj('wallSmall',  'clockFace',    'wall clock',       {}, ['wood',  'mechanism', 0, 0]),
+        obj('wallSmall',  'clockFace',    'library clock',    {}, ['wood',  'mechanism', 0, 0]),
         obj('wallMid',    'portrait',     'portrait',         {}, ['paper', 'picture',   0, 0]),
         obj('wallLarge',  'glazedCase',   'glazed bookcase',  {}, ['glass', 'furniture', 1, 0]),
-        obj('storage',    'bookShelf',    'bookshelf',        {}, ['paper', 'books',     0, 0]),
+        obj('storage',    'bookShelf',    'bookshelf',        {}, ['paper', 'furniture', 0, 0]),
         obj('container',  'cardCatalogue', 'card catalogue',  {}, ['wood',  'furniture', 1, 0]),
         obj('exit',       'panelDoor',    'panelled door',    {}),
         obj('anchor',     'writingDesk',  'writing desk',     {}),
@@ -2129,11 +3453,11 @@
       objects: [
         obj('floorSoft',  'flatMat',      'tarpaulin',        { fill: '#4a4436', weave: '#332f24' },
                                                                   ['cloth', 'covering',  0, 0]),
-        obj('floorProp',  'oreBucket',    'ore bucket',       {}, ['iron',  'vessel',    1, 0]),
+        obj('floorProp',  'oreBucket',    'ore bucket',       {}, ['iron',  'treasure',  1, 0]),
         obj('wallSmall',  'gauge',        'blast gauge',      { bezel: '#6e5f4e' },
                                                                   ['iron',  'mechanism', 0, 0]),
         obj('wallMid',    'noticeBoard',  'claim notice',     {}, ['paper', 'picture',   0, 0]),
-        obj('wallLarge',  'oreSeam',      'ore seam',         {}, ['rock',  'seam',      0, 0]),
+        obj('wallLarge',  'oreSeam',      'ore seam',         {}, ['rock',  'treasure',  0, 0]),
         obj('storage',    'toolRack',     'tool rack',        { board: '#3d2f1e', metal: '#9aa2a6' },
                                                                   ['iron',  'tools',     0, 0]),
         obj('container',  'crate',        'powder crate',     { wood: '#6a5230', stencil: 'DANGER', stencilFill: '#e8b45c' },
@@ -2204,7 +3528,7 @@
            the boiler front is separated from the valve wheel by the one
            thing you can see about it: its firebox door OPENS. */
         obj('floorSoft',  'treadPlate',   'deck plate',       {}, ['iron',  'covering',  0, 0]),
-        obj('floorProp',  'coalHeap',     'coal heap',        {}, ['coal',  'heap',      0, 0]),
+        obj('floorProp',  'coalHeap',     'fuel pile',        {}, ['coal',  'heap',      0, 0]),
         obj('wallSmall',  'gauge',        'pressure gauge',   {}, ['glass', 'mechanism', 0, 0]),
         obj('wallMid',    'valveWheel',   'valve wheel',      {}, ['iron',  'mechanism', 0, 0]),
         obj('wallLarge',  'boilerFront',  'boiler front',     {}, ['iron',  'mechanism', 1, 0]),
@@ -2217,6 +3541,374 @@
         obj('lockCode',   'ironSafe',     'engineer’s box',   { body: '#3a302a', rivets: 1 }),
         obj('lockCrank',  'tallCabinet',  'valve cabinet',    { body: '#3a302a', panel: 1 }),
         obj('light',      'fireboxLight', 'firebox',          {})
+      ]
+    },
+
+    /* =====================================================================
+       XI-XX. The second ten. Chosen the same way as the first: not for
+       being popular themes but for being SEPARABLE — desaturate a
+       screenshot of each, shrink it to a thumbnail, and the wall geometry,
+       the floor material and the big object's outline still tell you which
+       room you are in.
+
+       Two candidates were dropped rather than shipped weak. A submarine
+       compartment is a boiler room with the palette turned green — same
+       riveted plate, same valve wheels, same pipes — and an apothecary is
+       the laboratory in wood. Neither would have survived the thumbnail
+       test, and a room that reads as one you have already seen is exactly
+       the complaint this file exists to answer.
+       ===================================================================== */
+    {
+      id: 'lighthouse',
+      name: 'THE LAMP ROOM',
+      backdrop: 'lampRoom',
+      intro: ['The gallery door bangs once in the gale and does not open again.',
+              'The lens turns. The sea, four times a minute, turns white.',
+              'The keeper is not here. His oil can is still warm.'],
+      taunts: ['Salt spray, dried to a crust.', 'A gull feather, and nothing under it.',
+               'Lamp oil, and a rag that has seen better weeks.', 'Wet rope. Very wet rope.',
+               'Empty. The keeper was tidy.', 'A spent match. Someone lit something here.',
+               'Grit blown in under the door.', 'A cracked lens prism, long replaced.'],
+      palette: {
+        '--bg': '#030910', '--wall': '#17253c', '--wall2': '#101a2b', '--floor': '#2f3338',
+        '--floor2': '#1e2226', '--panel': '#142136', '--line': '#2f4c6e',
+        '--accent': '#ffd27a', '--soft': '#93a8c2', '--glow': '#ffefc4'
+      },
+      objects: [
+        /* The two iron vessels-with-a-hole are the stair head and the oil
+           can, and only `place` separates them: the same two-clue trick the
+           cell block plays with its cup and its bucket. */
+        obj('floorSoft',  'stairHead',     'stair head',       {}, ['iron',  'opening',   1, 0]),
+        obj('floorProp',  'oilCan',        'oil can',          {}, ['iron',  'vessel',    1, 0]),
+        obj('wallSmall',  'barometer',     'barometer',        {}, ['brass', 'mechanism', 0, 0]),
+        obj('wallMid',    'flagBoard',     'flag board',       {}, ['cloth', 'signal',    0, 0]),
+        obj('wallLarge',  'fresnelPanel',  'lens panel',       {}, ['glass', 'mechanism', 0, 0]),
+        obj('storage',    'pigeonRack',    'chart pigeonholes', { wood: '#4a3f30' },
+                                                                  ['wood',  'furniture', 1, 0]),
+        obj('container',  'woodChest',     'lamp-oil chest',   { band: '#6a5a3a' },
+                                                                  ['wood',  'furniture', 1, 0]),
+        obj('exit',       'braceDoor',     'gallery door',     { wood: '#4a4438', iron: '#39424a' }),
+        obj('anchor',     'writingDesk',   'keeper’s desk',    { top: '#4a3f30', leg: '#3a3128' }),
+        drawerObj('drawerWood', 'log drawer', { body: '#4a3f30' }),
+        obj('lockCode',   'strongBox',     'instrument case',  { wood: '#3d3a44', metal: '#8a7a4a' }),
+        obj('lockCrank',  'winchHousing',  'lens drive',       { metal: '#3a444c', brass: '#c99a3f' }),
+        obj('light',      'lanternLight',  'lamp burner',      { metal: '#c99a3f' })
+      ]
+    },
+    {
+      id: 'vault',
+      name: 'THE VAULT',
+      backdrop: 'vaultRoom',
+      intro: ['The round door swings to. Eleven tons, and it makes almost no sound at all.',
+              'The time lock is wound. It will open on Monday, with or without you.',
+              'Somebody counted this room out and left one thing in it.'],
+      taunts: ['Dust, on a great deal of money.', 'A paper band, cut and empty.',
+               'Nothing. Audited nothing.', 'A dropped coin, and a shallow disappointment.',
+               'Empty, and initialled twice.', 'A rubber stamp, inkless.',
+               'Someone has been here with a ledger.', 'A torn corner of a banknote.'],
+      palette: {
+        '--bg': '#07070a', '--wall': '#2b2a34', '--wall2': '#1e1d26', '--floor': '#33313a',
+        '--floor2': '#232128', '--panel': '#232230', '--line': '#4a4760',
+        '--accent': '#e8c46a', '--soft': '#b0acc0', '--glow': '#ffe8b8'
+      },
+      objects: [
+        obj('floorSoft',  'flatMat',       'canvas runner',    { fill: '#5a5448', weave: '#413c33' },
+                                                                  ['cloth', 'covering',  0, 0]),
+        obj('floorProp',  'cashSack',      'money sack',       {}, ['cloth', 'vessel',    1, 0]),
+        obj('wallSmall',  'timeLock',      'time lock',        {}, ['brass', 'mechanism', 0, 0]),
+        obj('wallMid',    'bondCert',      'framed bond',      {}, ['paper', 'picture',   0, 0]),
+        obj('wallLarge',  'depositBoxes',  'deposit boxes',    {}, ['brass', 'furniture', 1, 0]),
+        obj('storage',    'bullionShelf',  'bullion shelf',    {}, ['gold',  'treasure',  0, 0]),
+        obj('container',  'steelCase',     'cash case',        { metal: '#57606a' },
+                                                                  ['metal', 'furniture', 1, 0]),
+        obj('exit',       'vaultDoor',     'vault door',       {}),
+        obj('anchor',     'steelTable',    'counting table',   { metal: '#4a4a54' }),
+        drawerObj('drawerSteel', 'cash drawer', { body: '#454550' }),
+        obj('lockCode',   'ironSafe',      'night safe',       { body: '#2f2e3a', rivets: 1 }),
+        obj('lockCrank',  'winchHousing',  'boltwork gearing', { metal: '#3a3946', brass: '#c9a24e' }),
+        obj('light',      'cagedBulb',     'caged lamp',       { metal: '#8a7a4a' })
+      ]
+    },
+    {
+      id: 'scriptorium',
+      name: 'THE SCRIPTORIUM',
+      backdrop: 'cloister',
+      intro: ['The door closes on its own weight, and the latch drops in the dark.',
+              'Compline was an hour ago. Nobody is coming back for the candle.',
+              'Someone here spent forty years copying, and hid one page of it.'],
+      taunts: ['Wax, and a great deal of dust.', 'A quill, split and useless.',
+               'Vellum scraps. Nothing written on them.', 'Cold stone, and colder devotion.',
+               'Empty. Poverty is the rule here.', 'A dried inkwell, black to the bottom.',
+               'Grit from the floor, and no more.', 'A pressed flower, four centuries old.'],
+      palette: {
+        '--bg': '#0d0d09', '--wall': '#303029', '--wall2': '#22221c', '--floor': '#3a352a',
+        '--floor2': '#26221b', '--panel': '#2a2a24', '--line': '#4e4c3e',
+        '--accent': '#e8c46a', '--soft': '#b6b09a', '--glow': '#ffe9b8'
+      },
+      objects: [
+        obj('floorSoft',  'flatMat',       'rush matting',     { fill: '#8a7a4a', weave: '#6a5c34' },
+                                                                  ['reed',   'covering',  0, 0]),
+        obj('floorProp',  'scrollBin',     'scroll basket',    {}, ['reed',   'vessel',    1, 0]),
+        obj('wallSmall',  'sanctusBell',   'sanctus bell',     {}, ['bronze', 'signal',    1, 0]),
+        obj('wallMid',    'iconPanel',     'gilded icon',      {}, ['gold',   'picture',   0, 0]),
+        obj('wallLarge',  'traceryArch',   'traceried arch',   {}, ['glass',  'window',    0, 0]),
+        obj('storage',    'pigeonRack',    'scroll rack',      { wood: '#4a3a28', roll: '#e0d3b0' },
+                                                                  ['wood',   'furniture', 1, 0]),
+        obj('container',  'woodChest',     'book chest',       { band: '#3a3128' },
+                                                                  ['wood',   'furniture', 1, 0]),
+        obj('exit',       'archDoor',      'cloister door',    {}),
+        obj('anchor',     'slopeDesk',     'writing slope',    {}),
+        drawerObj('drawerWood', 'ink drawer', { body: '#4e3b26' }),
+        obj('lockCode',   'strongBox',     'reliquary',        { wood: '#4a3a28', metal: '#8a7a4a' }),
+        obj('lockCrank',  'tallCabinet',   'vestment press',   { body: '#3f3226', panel: 1 }),
+        obj('light',      'candleLight',   'tallow candle',    {})
+      ]
+    },
+    {
+      id: 'taxidermy',
+      name: 'THE TAXIDERMIST’S',
+      backdrop: 'parlour',
+      intro: ['The shop bell rings once as the door shuts, and the key turns outside.',
+              'Forty glass eyes follow you across the room. None of them blink.',
+              'Something on this wall was alive last week, and something else is still counting.'],
+      taunts: ['Sawdust, and a smell of alum.', 'A moth, which is ironic.',
+               'Wood wool, and a stray feather.', 'Nothing but wire and stuffing.',
+               'Empty. Mounted, and empty.', 'A jar of arsenical soap. Do not.',
+               'Dust, on something that used to fly.', 'A label: SPECIMEN, and no specimen.'],
+      palette: {
+        '--bg': '#0f0b09', '--wall': '#37302f', '--wall2': '#262120', '--floor': '#3a3128',
+        '--floor2': '#26201a', '--panel': '#2e2726', '--line': '#55443c',
+        '--accent': '#c8825a', '--soft': '#b3a08e', '--glow': '#ffd0a8'
+      },
+      objects: [
+        /* Three glass objects and two furred ones, crossed against three
+           mounted specimens: the room's whole deduction is "which glass
+           thing" or "which mounted thing", never one clue and done. */
+        obj('floorSoft',  'pelt',          'stretched pelt',   {}, ['fur',   'covering',  0, 0]),
+        obj('floorProp',  'domeBird',      'bird under a dome', {}, ['glass', 'mount',    0, 0]),
+        obj('wallSmall',  'glassEyes',     'tray of eyes',     {}, ['glass', 'tools',     0, 0]),
+        obj('wallMid',    'insectCase',    'pinned insects',   {}, ['glass', 'mount',     0, 0]),
+        obj('wallLarge',  'stagMount',     'mounted stag',     {}, ['fur',   'mount',     0, 0]),
+        obj('storage',    'toolRack',      'skinner’s rack',   { board: '#3a2a1c', metal: '#b8bec0' },
+                                                                  ['iron',  'tools',     0, 0]),
+        obj('container',  'woodChest',     'skin trunk',       { band: '#4a3a2a' },
+                                                                  ['wood',  'furniture', 1, 0]),
+        obj('exit',       'panelDoor',     'shop door',        {}),
+        obj('anchor',     'workBench',     'mounting bench',   { wood: '#4a3a28' }),
+        drawerObj('drawerWood', 'wire drawer', { body: '#4a3a28' }),
+        obj('lockCode',   'strongBox',     'arsenic box',      { wood: '#4a3a28', metal: '#5a4a3a' }),
+        obj('lockCrank',  'tallCabinet',   'specimen press',   { body: '#3a2c22', panel: 1 }),
+        obj('light',      'lanternLight',  'work lamp',        { metal: '#8a7a54' })
+      ]
+    },
+    {
+      id: 'train',
+      name: 'THE GUARD’S VAN',
+      backdrop: 'carriage',
+      intro: ['The van door slams on its track, and the night goes past at fifty.',
+              'Nobody rides in here but the guard, and the guard got off at the last stop.',
+              'Something in this van is going somewhere. It is not you, yet.'],
+      taunts: ['Soot, and the smell of hot oil.', 'A dead moth on the sill.',
+               'String. Just string.', 'Coal dust worked into the boards.',
+               'Empty. Signed for and empty.', 'A punched ticket, dated yesterday.',
+               'Straw packing, and nothing packed in it.', 'A luggage label, torn at the eyelet.'],
+      palette: {
+        '--bg': '#0d0705', '--wall': '#33231f', '--wall2': '#241715', '--floor': '#3c2c1c',
+        '--floor2': '#281d12', '--panel': '#2a1c18', '--line': '#56382c',
+        '--accent': '#e8a24a', '--soft': '#bb9a80', '--glow': '#ffd9a0'
+      },
+      objects: [
+        obj('floorSoft',  'mailSacks',     'mail sacks',       {}, ['cloth',   'vessel',    1, 0]),
+        obj('floorProp',  'coalScuttle',   'coal scuttle',     {}, ['iron',    'vessel',    1, 0]),
+        obj('wallSmall',  'clockFace',     'station clock',    {}, ['wood',    'mechanism', 0, 0]),
+        obj('wallMid',    'labelBoard',    'label board',      {}, ['paper',   'marking',   0, 0]),
+        obj('wallLarge',  'routeChart',    'route chart',      {}, ['paper',   'map',       0, 0]),
+        obj('storage',    'pigeonRack',    'parcel shelf',     { wood: '#4a3624', roll: '#c8b48a' },
+                                                                  ['wood',    'furniture', 1, 0]),
+        obj('container',  'steamerTrunk',  'steamer trunk',    {}, ['leather', 'furniture', 1, 0]),
+        obj('exit',       'slideDoor',     'van door',         {}),
+        obj('anchor',     'writingDesk',   'guard’s desk',     { top: '#4a3524', leg: '#3a291c' }),
+        drawerObj('drawerWood', 'ticket drawer', { body: '#4a3524' }),
+        obj('lockCode',   'strongBox',     'mail strongbox',   {}),
+        obj('lockCrank',  'tallCabinet',   'brake locker',     { body: '#3d2b1e', panel: 1 }),
+        obj('light',      'lanternLight',  'guard’s lamp',     {})
+      ]
+    },
+    {
+      id: 'icehouse',
+      name: 'THE ICEHOUSE',
+      backdrop: 'frostVault',
+      intro: ['The insulated door thumps shut, and the cold starts on your hands first.',
+              'Nothing rots in here. Nothing hurries, either.',
+              'Somebody cut this ice last winter and wrote down where they put it.'],
+      taunts: ['Wet sawdust. Cold, wet sawdust.', 'A frozen spider, mid-thought.',
+               'Meltwater, running somewhere useful.', 'Straw, packed hard as board.',
+               'Empty, and colder for it.', 'A hook with nothing on it.',
+               'Frost, and the shape of somebody’s hand in it.', 'A broken pick tip.'],
+      palette: {
+        '--bg': '#04090c', '--wall': '#1e2c33', '--wall2': '#142027', '--floor': '#2a3238',
+        '--floor2': '#1b2126', '--panel': '#17252c', '--line': '#3d5f6b',
+        '--accent': '#b8ecff', '--soft': '#9fbccc', '--glow': '#dff4ff'
+      },
+      objects: [
+        obj('floorSoft',  'sawdustBed',    'sawdust bed',      {}, ['wood',  'covering',  0, 0]),
+        obj('floorProp',  'iceBlock',      'frozen slab',      {}, ['ice',   'block',     0, 0]),
+        obj('wallSmall',  'gauge',         'cold-room dial',   { bezel: '#8fa8b0' },
+                                                                  ['glass', 'mechanism', 0, 0]),
+        obj('wallMid',    'deliverySlate', 'delivery slate',   {}, ['stone', 'marking',   0, 0]),
+        obj('wallLarge',  'iceStack',      'packed stack',     {}, ['ice',   'block',     0, 0]),
+        obj('storage',    'toolRack',      'ice saws',         { board: '#4a4238', metal: '#c2ccd0' },
+                                                                  ['iron',  'tools',     0, 0]),
+        obj('container',  'crate',         'straw crate',      { wood: '#6a5a3e', lid: '#7d6b48', stencil: 'ICE' },
+                                                                  ['wood',  'furniture', 1, 0]),
+        obj('exit',       'braceDoor',     'cold-store door',  { wood: '#4a4a46', iron: '#39423e', frost: '#cfe4ea' }),
+        obj('anchor',     'workBench',     'packing bench',    { wood: '#4a4438' }),
+        drawerObj('drawerWood', 'tally drawer', { body: '#4a4438' }),
+        obj('lockCode',   'strongBox',     'tally box',        { wood: '#4a4438', metal: '#3d4448' }),
+        obj('lockCrank',  'winchHousing',  'block hoist',      { metal: '#3a4248', brass: '#a8bcc4' }),
+        obj('light',      'lanternLight',  'storm lantern',    { metal: '#8fa8b0' })
+      ]
+    },
+    {
+      id: 'toyshop',
+      name: 'THE TOY WORKSHOP',
+      backdrop: 'attic',
+      intro: ['The workshop door shuts, and every toy in the room stops at once.',
+              'Somebody was painting in here five minutes ago. The brush is still wet.',
+              'Twenty dolls, and not one of them is facing the wall.'],
+      taunts: ['Wood shavings, curled like ribbon.', 'A single glass marble. It rolls away.',
+               'Paint, mostly dried.', 'Sawdust, and a lost wheel.',
+               'Empty. Someone tidied, badly.', 'A doll’s arm. Only the arm.',
+               'Glue, gone hard in the pot.', 'A skittle, and no set to belong to.'],
+      palette: {
+        '--bg': '#0e070f', '--wall': '#33223a', '--wall2': '#241829', '--floor': '#3d3020',
+        '--floor2': '#281f14', '--panel': '#2a1c30', '--line': '#59396a',
+        '--accent': '#ffca3a', '--soft': '#c0a8c8', '--glow': '#ffe8a0'
+      },
+      objects: [
+        obj('floorSoft',  'persianRug',    'rag rug',          { fill: '#8a3a4a', edge: '#5d2530', trim: '#e8c44a' },
+                                                                  ['cloth', 'covering',  0, 0]),
+        obj('floorProp',  'rockingHorse',  'rocking horse',    {}, ['wood',  'toy',       0, 0]),
+        obj('wallSmall',  'clockFace',     'nursery clock',    {}, ['wood',  'mechanism', 0, 0]),
+        obj('wallMid',    'puppetRack',    'hanging puppets',  {}, ['wood',  'toy',       0, 0]),
+        obj('wallLarge',  'alphabetChart', 'alphabet chart',   {}, ['paper', 'picture',   0, 0]),
+        obj('storage',    'paintShelf',    'paint shelf',      {}, ['metal', 'tools',     0, 0]),
+        obj('container',  'woodChest',     'toy chest',        { band: '#b4342e' },
+                                                                  ['wood',  'furniture', 1, 0]),
+        obj('exit',       'braceDoor',     'workshop door',    { wood: '#5a4a5a', iron: '#3a2f42' }),
+        obj('anchor',     'workBench',     'toymaker’s bench', { wood: '#6a5238' }),
+        drawerObj('drawerWood', 'nail drawer', { body: '#6a5238' }),
+        obj('lockCode',   'strongBox',     'money tin',        { wood: '#4a3a5a', metal: '#3a2f48' }),
+        obj('lockCrank',  'tallCabinet',   'parts cupboard',   { body: '#43335a', panel: 1 }),
+        obj('light',      'candleLight',   'stub of candle',   {})
+      ]
+    },
+    {
+      id: 'theatre',
+      name: 'THE OPERATING THEATRE',
+      backdrop: 'gallery',
+      intro: ['The doors swing to, and the gallery above you is entirely empty. Entirely.',
+              'The lecture ended an hour ago. The sawdust has not been changed.',
+              'Somebody wrote the outcome in a book, and then hid the book.'],
+      taunts: ['Sawdust, and something the sawdust was for.', 'A fly, doing its rounds.',
+               'Carbolic. Your eyes water.', 'Lint, and a bloodied thread.',
+               'Empty. Scrubbed, and empty.', 'A tooth. Not yours, thankfully.',
+               'Chalk from the demonstration board.', 'A ligature, tied and cut.'],
+      palette: {
+        '--bg': '#0a0906', '--wall': '#2b2c24', '--wall2': '#1d1e18', '--floor': '#3a332a',
+        '--floor2': '#26211a', '--panel': '#26271f', '--line': '#4a4a38',
+        '--accent': '#d8cbb0', '--soft': '#ada08a', '--glow': '#ffe9c4'
+      },
+      objects: [
+        obj('floorSoft',  'sawdustBed',    'sawdust box',      { fill: '#9a8a5a', stain: '#5a2020' },
+                                                                  ['wood',  'covering',  0, 0]),
+        obj('floorProp',  'slopBucket',    'enamel pail',      { fill: '#8a9490', rim: '#b6bec2' },
+                                                                  ['metal', 'vessel',    1, 0]),
+        obj('wallSmall',  'skullMount',    'anatomy skull',    {}, ['bone',  'mount',     0, 0]),
+        obj('wallMid',    'anatomyChart',  'muscle chart',     {}, ['paper', 'picture',   0, 0]),
+        obj('wallLarge',  'skeletonCase',  'skeleton case',    {}, ['glass', 'mount',     1, 0]),
+        obj('storage',    'instrumentTray', 'instrument tray', {}, ['metal', 'tools',     0, 0]),
+        obj('container',  'woodChest',     'amputation case',  { band: '#8a7a4a' },
+                                                                  ['wood',  'furniture', 1, 0]),
+        obj('exit',       'panelDoor',     'theatre door',     {}),
+        obj('anchor',     'operatingTable', 'operating table', {}),
+        drawerObj('drawerWood', 'dressings drawer', { body: '#5a4530' }),
+        obj('lockCode',   'strongBox',     'poison box',       { wood: '#4a3a2a', metal: '#3a352c' }),
+        obj('lockCrank',  'tallCabinet',   'surgeon’s cabinet', { body: '#3a352c', panel: 1 }),
+        obj('light',      'gasMantle',     'gas lamp',         {})
+      ]
+    },
+    {
+      id: 'radio',
+      name: 'THE RADIO STATION',
+      backdrop: 'studio',
+      intro: ['The padded door seals, and the room goes as quiet as a room can go.',
+              'The sign says ON AIR. You are, apparently, on air.',
+              'Somebody read something out in here last night that they should not have.'],
+      taunts: ['Dust, on a dead microphone.', 'A moth in the valve heat. Warm, at least.',
+               'Cable. Yards of cable.', 'Nothing but the hum.',
+               'Empty, and unbroadcastable.', 'A grease pencil, worn to a stub.',
+               'A splice of tape, going nowhere.', 'A cue card, blank side up.'],
+      palette: {
+        '--bg': '#06080b', '--wall': '#232830', '--wall2': '#181c22', '--floor': '#2c2c30',
+        '--floor2': '#1c1c20', '--panel': '#1e232b', '--line': '#3b4452',
+        '--accent': '#ff5a3c', '--soft': '#a0a6b0', '--glow': '#ffb08a'
+      },
+      objects: [
+        obj('floorSoft',  'ropeCoil',      'coil of cable',    { fill: '#2b2b30' },
+                                                                  ['rubber', 'covering',  0, 0]),
+        obj('floorProp',  'micStand',      'microphone',       {}, ['metal',  'mechanism', 0, 0]),
+        obj('wallSmall',  'gauge',         'level meter',      { bezel: '#2f3438' },
+                                                                  ['glass',  'mechanism', 0, 0]),
+        obj('wallMid',    'onAirSign',     'studio sign',      {}, ['glass',  'signal',    0, 0]),
+        obj('wallLarge',  'valveRack',     'transmitter bay',  {}, ['metal',  'mechanism', 0, 0]),
+        obj('storage',    'discShelf',     'disc shelf',       {}, ['paper',  'records',   0, 0]),
+        obj('container',  'steelCase',     'equipment case',   { metal: '#4a5054' },
+                                                                  ['metal',  'furniture', 1, 0]),
+        obj('exit',       'studioDoor',    'padded door',      {}),
+        obj('anchor',     'mixDesk',       'control desk',     {}),
+        drawerObj('drawerSteel', 'console drawer', { body: '#3a4044' }),
+        obj('lockCode',   'ironSafe',      'log safe',         { body: '#2e3438', rivets: 1 }),
+        obj('lockCrank',  'tallCabinet',   'amplifier bay',    { body: '#2f3438', panel: 1 }),
+        obj('light',      'cagedBulb',     'work light',       { metal: '#5a6266' })
+      ]
+    },
+    {
+      id: 'belfry',
+      name: 'THE BELL TOWER',
+      backdrop: 'louvre',
+      intro: ['The tower door shuts below you, and the stair goes dark all the way down.',
+              'The tenor is up. If it comes over now, nobody will hear you at all.',
+              'A ringer left something here, and left instructions with it.'],
+      taunts: ['Jackdaw sticks and grit.', 'A pigeon, deeply unimpressed.',
+               'Rope fibre, and years of dust.', 'Bird lime. You wish you had not.',
+               'Empty. Swept, once, in 1890.', 'A sally end, frayed to nothing.',
+               'Cold bronze, and colder air.', 'A peal card, curled and faded.'],
+      palette: {
+        '--bg': '#08090b', '--wall': '#2a2b2e', '--wall2': '#1c1d20', '--floor': '#35322a',
+        '--floor2': '#232019', '--panel': '#232427', '--line': '#46474e',
+        '--accent': '#cdb078', '--soft': '#a6a6a2', '--glow': '#ecdfba'
+      },
+      objects: [
+        /* Two bronze bells, one on the floor and one on the wall, identical
+           in every trait but `place`. Same device as the cell block's cup
+           and bucket, and it is what stops one clue ending the room. */
+        obj('floorSoft',  'ropeCoil',      'bell pull',        { fill: '#b8a878' },
+                                                                  ['rope',   'covering',  0, 0]),
+        obj('floorProp',  'handBell',      'hand bell',        {}, ['bronze', 'signal',    1, 0]),
+        obj('wallSmall',  'dialBack',      'clock dial',       {}, ['glass',  'mechanism', 0, 0]),
+        obj('wallMid',    'ivyBreak',      'broken louvre',    {}, ['wood',   'growth',    0, 1]),
+        obj('wallLarge',  'greatBell',     'tenor bell',       {}, ['bronze', 'signal',    1, 0]),
+        obj('storage',    'toolRack',      'ringer’s kit',     { board: '#5a5246', metal: '#a8a49a' },
+                                                                  ['iron',   'tools',     0, 0]),
+        obj('container',  'woodChest',     'ringers’ chest',   { band: '#5a5246' },
+                                                                  ['wood',   'furniture', 1, 0]),
+        obj('exit',       'archDoor',      'tower door',       { wood: '#4a4438', iron: '#33302a' }),
+        obj('anchor',     'workBench',     'ringers’ bench',   { wood: '#5a5246' }),
+        drawerObj('drawerWood', 'peal drawer', { body: '#5a5246' }),
+        obj('lockCode',   'strongBox',     'vestry box',       { wood: '#4a4438', metal: '#3a3830' }),
+        obj('lockCrank',  'winchHousing',  'winding gear',     { metal: '#42403a', brass: '#a8843c' }),
+        obj('light',      'lanternLight',  'hurricane lamp',   { metal: '#8d8478' })
       ]
     }
   ];
