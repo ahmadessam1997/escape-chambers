@@ -188,7 +188,7 @@
       if (L.tier === 1) { toast('Unlocked, and utterly empty. Rude.'); return; }
       if (S.drawer) { toast('The drawer hangs open, empty.'); return; }
       if (S.sel === 'brassKey') {
-        S.drawer = true; take('brassKey');
+        S.drawer = true; S.moves++; take('brassKey');
         $('drawerOpenG').style.display = '';
         $('drawerItem').textContent = ICON[L.drawerHas];
         give(L.drawerHas); buzz([20, 40, 20]);
@@ -208,7 +208,7 @@
       if (L.tier < 5) { toast('The cabinet is painted shut. Decades ago, by the look of it.'); return; }
       if (S.cab) { toast('Nothing left inside.'); return; }
       if (S.sel === 'crank') {
-        S.cab = true; take('crank');
+        S.cab = true; S.moves++; take('crank');
         $('cabOpenG').style.display = '';
         give(L.cabHas); buzz([20, 40, 20]);
         toast('You crank the mechanism — the cabinet groans open. The iron key!');
@@ -416,6 +416,88 @@
     return (o && o.name) || SPOTNAME[id] || id;
   }
 
+  /* ---------------- stars ----------------
+     PAR is the fewest productive actions a chamber can be finished in, and
+     it is DERIVED from the chamber, never hand-tuned — so it is exactly
+     achievable and the e2e solver proves it by scoring five stars on all
+     twenty. Get par, get five stars.
+
+     A star is lost per extra action, which is what makes stars a measure of
+     READING the room: tapping a second spot means you had not worked out
+     where the key was, and a wrong code means you guessed. Time is
+     deliberately NOT part of the star — thinking should be free, and a
+     scoring rule that punishes thinking would push players straight back to
+     tapping everything. Time only breaks ties between equal stars. */
+  function parFor(L) {
+    var par = 1;                                  // the key's hiding place
+    if (L.tier >= 2) par += 1;                    // the drawer
+    if (L.tier >= 3) {
+      /* Each number the safe rule needs, plus one correct code entry. */
+      par += Object.keys(L.factAt || {}).length + 1;
+    }
+    if (L.tier >= 5) par += 1;                    // the cabinet
+    return par;
+  }
+
+  function starsFor(moves, par) {
+    var over = Math.max(0, moves - par);
+    return Math.max(1, 5 - over);                 // never below one for finishing
+  }
+
+  function starString(n) {
+    return new Array(n + 1).join('★') + new Array(6 - n).join('☆');
+  }
+
+  /* ---------------- rankings ----------------
+     One table, one ordering rule, and a shape a server can fill.
+
+     `ECGame.rankRows(i)` returns the ranked entries for a chamber as
+     `{ who, stars, seconds, moves, me }`. Right now the only entry is the
+     player's own best, so this is a personal record book — an honest one.
+     A WORLD ranking needs a backend to hold other people's runs; nothing
+     here fakes one, because a leaderboard of invented names is worse than
+     none. When a server exists, it returns rows in this shape and only
+     `rankRows` changes. */
+  function rankRows(i) {
+    var rows = [];
+    var mine = Save.bestFor(i);
+    if (mine) {
+      rows.push({ who: 'You', stars: mine.stars, seconds: mine.seconds,
+                  moves: mine.moves, me: true });
+    }
+    return rows.sort(Save.compareRuns);
+  }
+
+  function showRankings() {
+    var done = Object.keys(Save.data.best).length;
+    var total = Save.totalStars();
+    $('rankSummary').innerHTML = done
+      ? '<b>' + total + '</b> of 100 stars · <b>' + done + '</b> of 20 chambers ranked'
+      : 'No runs yet. Escape a chamber to take a place on the board.';
+
+    var html = '<tr><th>#</th><th>Chamber</th><th>Stars</th><th>Time</th><th>Moves</th></tr>';
+    for (var i = 0; i < 20; i++) {
+      var rows = rankRows(i);
+      if (!rows.length) continue;
+      var r = rows[0];
+      html += '<tr class="' + (r.me ? 'me' : '') + '">' +
+              '<td>' + (i + 1) + '</td>' +
+              '<td>' + Themes.themeFor(i).name + '</td>' +
+              '<td class="s">' + starString(r.stars) + '</td>' +
+              '<td>' + fmt(r.seconds) + '</td>' +
+              '<td>' + r.moves + '</td></tr>';
+    }
+    $('rankTable').innerHTML = html;
+
+    $('rankNote').innerHTML =
+      'Ranked by <b>stars first, then time</b> — a five-star run always beats ' +
+      'a faster four-star one. Stars measure how well you read the room; time ' +
+      'only separates players who read it equally well.' +
+      '<br><br><b>World rankings are not live yet.</b> They need a server to hold ' +
+      'other players’ runs, so this board is your own record for now.';
+    $('rankOv').classList.add('show');
+  }
+
   /* A paid hint should advance the player one step, not hand over the
      answer. Names the first number still missing — which is exactly what a
      good escape-room host does when a team stalls. */
@@ -544,7 +626,7 @@
 
   /* ---------------- level ---------------- */
   function closeAllOverlays() {
-    ['padOv','symOv','winOv','shopOv','hintOv','menu'].forEach(function (id) {
+    ['padOv','symOv','winOv','shopOv','hintOv','menu','rankOv'].forEach(function (id) {
       $(id).classList.remove('show');
     });
   }
@@ -556,7 +638,13 @@
     entry = ''; symEntry = [];
     S = { found: {}, items: {}, sel: null, drawer: false, safe: false, cab: false,
           uvOn: false, seqDone: L.tier < 5, escaped: false,
-          paidHints: {}, hintsUsed: 0, factsFound: {}, keyRung: 0 };
+          paidHints: {}, hintsUsed: 0, factsFound: {}, keyRung: 0,
+          /* Every PRODUCTIVE action. Re-tapping a searched spot, opening a
+             lock you already opened, and selecting an item are all free:
+             the score measures whether you READ the room, not whether you
+             avoided touching it. Fumbling a code costs, because a guessed
+             keypad is exactly what the deduction exists to replace. */
+          moves: 0 };
 
     /* className is still reset (not left stale) because body.uv is toggled
        on it during UV mode; the palette now comes from inline custom
@@ -642,6 +730,7 @@
     var hid = L.hides[id];
     if (!S.found[id]) {
       S.found[id] = true;
+      S.moves++;                    // a first look anywhere costs one
       $(id).classList.add('searched');
       if (id === 'rug') $('rugFold').style.display = '';
       if (id === 'chest') { $('chestLid').style.display = 'none'; $('chestOpenG').style.display = ''; }
@@ -724,15 +813,47 @@
     }
     refreshHintUI();
 
-    $('winTitle').textContent = cur === 19 ? 'ALL 20 CHAMBERS ESCAPED'
-                                           : 'CHAMBER ' + ROMAN[cur] + ' ESCAPED';
-    $('winText').innerHTML =
-      'The iron key turns with a deep <em>clunk</em>.<br><br>' +
-      'Time: <b>' + fmt(t) + '</b> · Hints used: <b>' + S.hintsUsed + '</b>' +
-      (earned ? '<br><br>🕯️ <b>+' + earned + ' hint</b> for a first escape.' : '');
+    var par   = parFor(L);
+    var stars = starsFor(S.moves, par);
+    var run   = { stars: stars, moves: S.moves, seconds: t };
+    var res   = Save.recordRun(cur, run);
+
+    /* The card should sound like it is pleased with you. A perfect run in
+       particular has to LAND — it is the whole reward for reasoning instead
+       of tapping, and a flat "Chamber escaped" made it feel like nothing
+       happened. */
+    var perfect = stars === 5;
+    $('winTitle').textContent = cur === 19 ? '🏆 ALL 20 CHAMBERS ESCAPED'
+                  : perfect ? '⭐ FLAWLESS — CHAMBER ' + ROMAN[cur]
+                            : 'CHAMBER ' + ROMAN[cur] + ' ESCAPED';
+
+    var praise = perfect
+      ? 'Not one wasted move. You read the room exactly.'
+      : stars === 4 ? 'Sharp work — one move from perfect.'
+      : stars === 3 ? 'Solid. The room gave up more slowly than it had to.'
+      : 'Out is out. The clues were there — try reading before touching.';
+
+    var line = '<div class="starline">' + starString(stars) + '</div>' +
+      '<p class="praise">' + praise + '</p>' +
+      'Moves: <b>' + S.moves + '</b> <span class="par">(best possible ' + par + ')</span>' +
+      ' · Time: <b>' + fmt(t) + '</b>' +
+      (S.hintsUsed ? ' · Hints: <b>' + S.hintsUsed + '</b>' : '');
+
+    if (res.improved && res.previous) {
+      line += '<p class="rec">🎉 New personal best — beat ' +
+              starString(res.previous.stars) + ' ' + fmt(res.previous.seconds) + '</p>';
+    } else if (res.improved) {
+      line += '<p class="rec">🎉 Record set.</p>';
+    } else if (res.record) {
+      line += '<p class="rec dim">Your best here: ' + starString(res.record.stars) +
+              ' ' + fmt(res.record.seconds) + '</p>';
+    }
+    if (earned) line += '<p class="rec">🕯️ <b>+' + earned + ' hint</b> for a first escape.</p>';
+
+    $('winText').innerHTML = line;
     $('nextBtn').style.display = cur === 19 ? 'none' : '';
     $('winOv').classList.add('show');
-    buzz([40, 60, 120]);
+    buzz(perfect ? [30, 40, 30, 40, 120] : [40, 60, 120]);
   }
 
   /* The interstitial goes HERE — after the player dismisses the win card,
@@ -765,6 +886,16 @@
         b.className = 'lv';
         b.textContent = i + 1;
         if (Save.isDone(i)) b.classList.add('done');
+        /* The grid is where a player decides what to replay, so it has to
+           show what is still on the table — a chamber cleared at 3 stars is
+           an invitation, not a finished job. */
+        var rec = Save.bestFor(i);
+        if (rec && i < Save.data.unlocked) {
+          var st = document.createElement('span');
+          st.className = 'st';
+          st.textContent = starString(rec.stars);
+          b.appendChild(st);
+        }
         if (i >= Save.data.unlocked) { b.classList.add('lock'); b.textContent = '🔒'; }
         b.addEventListener('click', function () { startLevel(i); });
         g.appendChild(b);
@@ -823,7 +954,7 @@
            entry into a failure. Same class of bug as the sigil pad. */
         if (entry.length >= L.code.length) return;
         entry += k; renderCode(); buzz(10);
-        if (entry.length === L.code.length) setTimeout(function () {
+        if (entry.length === L.code.length) { S.moves++; setTimeout(function () {
           if (entry === L.code) {
             $('padOv').classList.remove('show');
             S.safe = true;
@@ -836,7 +967,7 @@
             setTimeout(function () { $('padCard').classList.remove('shake'); }, 450);
             buzz(80); entry = ''; renderCode();
           }
-        }, 200);
+        }, 200); }
       });
       $('pad').appendChild(b);
     });
@@ -879,6 +1010,10 @@
     });
 
     /* topbar + menu */
+    $('rankBtn').addEventListener('click', showRankings);
+    $('rankClose').addEventListener('click', function () {
+      $('rankOv').classList.remove('show');
+    });
     $('obsToggle').addEventListener('click', function () {
       $('obs').classList.toggle('show');
     });
@@ -1003,7 +1138,28 @@
         pz = {
           family: L.puzzle.family,
           rule: revealed ? L.puzzle.ruleText : null,
-          total: L.puzzle.facts.length,
+          /* Count only the NUMBERS the player must go and find. The `logic`
+             family carries a single value:null placeholder — its rule is
+             self-contained — and counting that as a fact sent the solver
+             (and any player following the trail) to search a spot that
+             holds nothing, costing a move for no information. */
+          total: (L.puzzle.facts || []).filter(function (f) {
+            return typeof f.value === 'number';
+          }).length,
+          /* THE TRAIL, at exactly the fidelity the player has it. The rule
+             text says "Begin at the X", and each number found shows an
+             arrow to the next — so both are already on screen, and a solver
+             that follows them is playing the way the game intends rather
+             than brute-forcing all seven spots. This is also what makes par
+             reachable: par assumes the trail was followed. */
+          startSpot: revealed ? L.puzzle.startSpot : null,
+          nextSpot: (function () {
+            var last = null;
+            (L.puzzle.facts || []).forEach(function (f) {
+              if (f.spot && S.factsFound[f.spot] && f.pointsTo) last = f.pointsTo;
+            });
+            return last;
+          })(),
           facts: Object.keys(S.factsFound || {}).map(function (spot) {
             return { order: L.factAt[spot].order, value: L.factAt[spot].value };
           })
@@ -1041,6 +1197,9 @@
                unlimited: Save.data.unlimitedHints,
                removeAds: Save.data.removeAds };
     },
+    /* Exposed so the suite can prove par is REACHABLE rather than trust the
+       formula: the auto-solver plays optimally, so it must score five. */
+    parFor: parFor, starsFor: starsFor, rankRows: rankRows,
     SEARCH: SEARCH, SYMS: SYMS
   };
 

@@ -76,6 +76,7 @@ const state  = page => page.evaluate(() => {
   const s = window.ECGame.state();
   return { cur: s.cur, tier: s.tier, hints: s.hints, unlimited: s.unlimited,
            removeAds: s.removeAds, escaped: !!(s.S && s.S.escaped),
+           moves: s.S ? s.S.moves : 0,
            items: s.S ? Object.keys(s.S.items) : [], uvOn: !!(s.S && s.S.uvOn),
            safe: !!(s.S && s.S.safe), drawer: !!(s.S && s.S.drawer), cab: !!(s.S && s.S.cab) };
 });
@@ -172,10 +173,30 @@ async function solveChamber(page, i) {
     return { ok: false, why: 'deduced ' + deduced + ' but no key was there' };
   }
 
-  /* Now search the rest, for the numbered facts the safe code needs. */
-  for (const spot of ['rug','plant','clock','pA','pB','shelf','chest']) {
-    if (spot !== deduced) await clickId(page, spot);
-  }
+  /* Now FOLLOW THE TRAIL for the numbers the safe rule needs, rather than
+     searching all seven. That is what the trail is for, and it is what par
+     assumes — a player who reads the note ("begin at the X") and follows
+     each arrow finds every number without touching anything else. Brute
+     force still works and still finishes the chamber; it just costs stars.
+
+     The rule is only legible once the note is read or the UV lamp is on,
+     so this runs after those below for tiers 4+; the fallback sweep covers
+     any chamber where the trail is not yet visible. */
+  const trailWalk = async () => {
+    for (let step = 0; step < 8; step++) {
+      const st2 = await page.evaluate(() => {
+        const s = window.ECGame.state();
+        if (!s.puzzle) return null;
+        return { start: s.puzzle.startSpot, next: s.puzzle.nextSpot,
+                 have: s.puzzle.facts.length, total: s.puzzle.total };
+      });
+      if (!st2 || st2.have >= st2.total) return true;
+      const target = st2.next || st2.start;
+      if (!target) return false;
+      await clickId(page, target);
+    }
+    return false;
+  };
 
   let st = await state(page);
 
@@ -193,6 +214,7 @@ async function solveChamber(page, i) {
     // Read the RULE the way a player does: tap the note. Then WORK OUT the
     // code from the facts already dug out of the room. Never L.code.
     await selectItem(page, 'note');
+    await trailWalk();
     const code = await solvePuzzle(page);
     if (!code) return { ok: false, why: 'could not derive the code from the note rule + facts' };
     await clickId(page, 'safe');
@@ -216,6 +238,7 @@ async function solveChamber(page, i) {
       return '';
     });
     if (!glow) return { ok: false, why: 'nothing glowed under UV' };
+    await trailWalk();
     const code = await solvePuzzle(page);
     if (!code) return { ok: false, why: 'could not derive the code from the UV rule + facts' };
 
@@ -756,13 +779,52 @@ async function solveChamber(page, i) {
       window.ECSave.data.unlocked = 20;
       window.ECSave.save();
     });
+    /* PAR MUST BE ACHIEVABLE, or five stars is a promise the game cannot
+       keep. The auto-solver plays the optimal line — deduce the key, take
+       only the numbers the rule needs, enter the code once — so if par is
+       right it scores five every time. A par set one too low would show up
+       here as four stars on a flawless run, which no amount of reading the
+       formula would catch. */
+    const stars = [];
     for (let i = 0; i < 20; i++) {
       const r = await solveChamber(page, i);
       ok('chamber ' + (i + 1) + ' solved end to end', r.ok, r.why);
       if (!r.ok) break;
+      stars.push(await page.evaluate(n => {
+        const rec = window.ECSave.bestFor(n);
+        return rec ? { stars: rec.stars, moves: rec.moves } : null;
+      }, i));
       await clickId(page, 'backBtn');
       await sleep(60);
     }
+    console.log('\n-- stars --');
+    ok('a perfect run scores five stars in every chamber',
+       stars.filter(s => s && s.stars === 5).length === 20,
+       'short of par: ' + JSON.stringify(
+         stars.map((s, i) => (s && s.stars === 5) ? null
+                : { ch: i + 1, stars: s && s.stars, moves: s && s.moves })
+              .filter(Boolean)));
+    ok('every chamber recorded its move count',
+       stars.every(s => s && s.moves > 0), JSON.stringify(stars.slice(0, 3)));
+
+    /* The ordering rule, checked directly: stars dominate time. Getting
+       this backwards would make the board reward rushing over reading,
+       which is the opposite of what the stars are for. */
+    ok('more stars beats a faster time',
+       await page.evaluate(() => window.ECSave.compareRuns(
+         { stars: 5, seconds: 240, moves: 9 },
+         { stars: 4, seconds: 30,  moves: 9 }) < 0));
+    ok('within equal stars, the faster run wins',
+       await page.evaluate(() => window.ECSave.compareRuns(
+         { stars: 4, seconds: 30,  moves: 12 },
+         { stars: 4, seconds: 31,  moves: 9 }) < 0));
+    ok('a worse run never overwrites a record',
+       await page.evaluate(() => {
+         const before = window.ECSave.bestFor(0);
+         window.ECSave.recordRun(0, { stars: 1, seconds: 999, moves: 99 });
+         const after = window.ECSave.bestFor(0);
+         return after.stars === before.stars && after.seconds === before.seconds;
+       }));
 
     /* ================= 10. first-clear reward, and no farming ========= */
     console.log('\n-- rewards --');

@@ -123,6 +123,22 @@
   #obs li{margin:0 0 3px 14px;}
   #obsToggle{position:absolute;right:8px;top:8px;z-index:7;}
 
+  /* ---- stars & records ---- */
+  .starline{font-size:30px;letter-spacing:5px;color:#ffcf5a;margin:2px 0 6px;
+    text-shadow:0 0 14px rgba(255,207,90,.45);}
+  .praise{margin:0 0 12px;color:#e9dcc0;font-style:italic;}
+  .par{color:#8fa3c8;font-size:12px;}
+  .rec{margin:10px 0 0;color:#8fe3b0;font-size:13px;}
+  .rec.dim{color:#8fa3c8;}
+  .lv .st{display:block;font-size:9px;line-height:1;color:#ffcf5a;letter-spacing:1px;}
+  #rankTable{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px;}
+  #rankTable th{text-align:left;font-size:10px;letter-spacing:.1em;color:#8fa3c8;
+    text-transform:uppercase;padding:4px 6px;font-weight:600;}
+  #rankTable td{padding:5px 6px;border-top:1px solid #24304d;}
+  #rankTable .s{color:#ffcf5a;white-space:nowrap;}
+  #rankTable tr.me td{background:#1b2e46;}
+  .rankNote{font-size:11px;color:#8fa3c8;margin-top:10px;line-height:1.5;}
+
   /* ---- shop ---- */
   .srow{display:flex;align-items:center;gap:12px;text-align:left;
     background:#1a2338;border:1px solid #3a4a70;border-radius:14px;
@@ -331,10 +347,13 @@
 <div class="overlay show" id="menu">
   <div class="card">
     <h2>20 CHAMBERS</h2>
-    <p>Twenty locked rooms across five strange places.<br>Hidden keys, glowing ink, safes, and sigils.<br>Escape them all.</p>
+    <p>Twenty locked rooms — a prison cell, a sealed tomb, an operating
+       theatre.<br>Every room tells you where to look.<br><b>Read it right and
+       escape in the fewest moves for five stars.</b></p>
     <div id="menuHints">5 hints left</div>
     <div id="grid"></div>
     <button class="btn ghostb" id="resumeBtn" style="display:none">Resume chamber</button>
+    <button class="btn ghostb" id="rankBtn">🏅 Rankings</button>
     <button class="btn ghostb" id="shopBtn">🕯️ Hints &amp; extras</button>
     <!-- Version + billing state, on screen deliberately. Without it there
          is no way to tell whether a tester is running the build you just
@@ -350,6 +369,17 @@
   <button class="btn" id="hintOvWatch">🎬 Watch for +2</button>
   <button class="btn ghostb" id="hintOvShop">Get more hints</button>
   <button class="btn ghostb" id="hintOvClose">Keep trying</button>
+</div></div>
+
+<!-- Rankings. Ordered by the same rule everywhere: stars first, then time.
+     Today the only entries are the player's own runs; the table is built
+     from a generic list so a server's rows can be dropped in unchanged. -->
+<div class="overlay" id="rankOv"><div class="card">
+  <h2>🏅 RANKINGS</h2>
+  <p id="rankSummary"></p>
+  <table id="rankTable"></table>
+  <p class="rankNote" id="rankNote"></p>
+  <button class="btn ghostb" id="rankClose">Back</button>
 </div></div>
 
 <div class="overlay" id="shopOv"><div class="card">

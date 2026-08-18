@@ -48,7 +48,11 @@
     removeAds: false,     // mirror of the entitlement, for offline rendering
     unlimitedHints: false,// mirror of the entitlement
     chambersSinceAd: 0,
-    seenShop: false
+    seenShop: false,
+    /* Best run per chamber: { "<index>": { stars, moves, seconds } }.
+       Only ever improved, never overwritten by a worse run — a player who
+       replays a chamber casually must not lose the record they earned. */
+    best: {}
   };
 
   var Save = {
@@ -118,6 +122,21 @@
         self.data.unlimitedHints = !!self.data.unlimitedHints;
         self.data.seenShop = !!self.data.seenShop;
 
+        /* Repair the record book the same way every other field is
+           repaired: a hand-edited or truncated blob must cost the player
+           some records, never the ability to boot. */
+        if (!self.data.best || typeof self.data.best !== 'object') self.data.best = {};
+        Object.keys(self.data.best).forEach(function (k) {
+          var r = self.data.best[k], n = Number(k);
+          var ok = r && typeof r === 'object' &&
+                   isFinite(n) && n >= 0 && n < TOTAL &&
+                   isFinite(r.stars) && isFinite(r.moves) && isFinite(r.seconds);
+          if (!ok) { delete self.data.best[k]; return; }
+          r.stars   = Math.max(0, Math.min(5, Math.floor(r.stars)));
+          r.moves   = Math.max(0, Math.floor(r.moves));
+          r.seconds = Math.max(0, Math.floor(r.seconds));
+        });
+
         self.loaded = true;
         return self.data;
       });
@@ -167,6 +186,41 @@
       }
       this.save();
       return true;
+    },
+
+    /* ---- the record book ----
+       THE RANKING RULE, in one place so the local table and any future
+       server agree: more stars always beats fewer, and only within the
+       same star count does time decide. A 5-star run at 4:00 outranks a
+       4-star run at 0:30 — stars measure how well the room was READ, time
+       only separates players who read it equally well. Moves break a time
+       tie, because two runs at the same second are otherwise arbitrary. */
+    compareRuns: function (a, b) {
+      if (!a && !b) return 0;
+      if (!a) return 1;
+      if (!b) return -1;
+      if (a.stars !== b.stars) return b.stars - a.stars;
+      if (a.seconds !== b.seconds) return a.seconds - b.seconds;
+      return a.moves - b.moves;
+    },
+
+    bestFor: function (i) { return this.data.best[String(i)] || null; },
+
+    /* Returns {improved, previous, record}. Improvement is judged by
+       compareRuns, so a faster run that used MORE moves and dropped a star
+       does not overwrite a better one. */
+    recordRun: function (i, run) {
+      var key = String(i);
+      var prev = this.data.best[key] || null;
+      var better = this.compareRuns(run, prev) < 0;
+      if (better) { this.data.best[key] = run; this.save(); }
+      return { improved: better, previous: prev, record: better ? run : prev };
+    },
+
+    totalStars: function () {
+      var self = this, n = 0;
+      Object.keys(self.data.best).forEach(function (k) { n += self.data.best[k].stars || 0; });
+      return n;
     },
 
     /* ---- entitlement mirrors ----
