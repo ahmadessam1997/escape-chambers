@@ -1,48 +1,153 @@
 # Session notes
 
-> ## ▶ RESUME HERE (as of 2026-08-15)
+> ## ▶ RESUME HERE (as of 2026-08-17)
 >
-> **The closed test is live and the whole product catalogue is built.**
-> versionCode 1 / 1.0.0 is rolled out on `Closed testing - Alpha`
-> (*Available to selected testers*, 177 countries), all 10 App content
-> declarations and the full store listing are **published**, the three
-> one-time products are **Active** in Play with licence testing on, and
-> **RevenueCat is now wired** — three products, two entitlements, and a
-> `default` offering carrying one package each.
+> **The game was rebuilt this session, not just published.** The owner's
+> verdict on the shipped build was blunt and correct: all twenty chambers
+> were one room recoloured, and finding the key was blind tapping. Both are
+> now genuinely fixed — see the 2026-08-17 entry.
 >
-> **Nothing console-shaped is left. What remains is people, keys and
-> devices:**
+> **Current build: versionCode 7 / 1.2.0**, built, signed and verified,
+> `npm test` **104 passed, 0 failed**.
 >
-> 1. **Eleven more testers.** The list holds 1 address (yours). Production
->    access needs **12 opted in for 14 continuous days**, and the clock
->    starts at the *twelfth install*, not at a console edit.
-> 2. **Service account — built 2026-08-16, now waiting on Google.** GCP
->    project `escape-20-chambers`, service account
->    `revenuecat-play@escape-20-chambers...`, both APIs enabled, Pub/Sub
->    Admin granted, Play access Active, JSON uploaded. All three products
->    still read `Store Status: Could not check` — that is propagation (up
->    to 24h), not misconfiguration. **Re-check before changing anything.**
-> 3. **Everything the browser could not prove** — a real interstitial, a
->    rewarded video paying +2, buying `hints_25` twice, and Restore after
+> **What is left, and who owns it:**
+>
+> 1. **Upload versionCode 7.** 10,708,956 bytes — over the 10 MB agent cap,
+>    so always the owner's step. versionCode 3 is what is live on the track
+>    right now; 4, 5 and 6 were superseded before upload.
+> 2. **The purchase bug is UNDIAGNOSED.** Report: "purchase completes,
+>    nothing happens, no message". RevenueCat still reads *Credentials need
+>    attention* and all three products `Store Status: Could not check`, so
+>    validation fails server-side regardless of app code. The rooms menu now
+>    prints `build <version> · store <state>` for exactly this — **get that
+>    line off the device before touching billing code.** `store ready` means
+>    the SDK reached RevenueCat and the fault is the credentials; `store
+>    unavailable` means it never did, which is a different bug entirely.
+> 3. **Eleven more testers.** 12 opted in for 14 continuous days, and the
+>    clock starts at the *twelfth install*.
+> 4. **Everything the browser cannot prove** — a real interstitial, a
+>    rewarded video paying +2, buying `hints_25` twice, Restore after
 >    reinstall.
-> 4. **Upload versionCode 2 / 1.0.1.** Built, signed and verified at
->    `android/app/build/outputs/bundle/release/app-release.aab` (10.6 MB, so
->    yours). It carries the new UMP consent flow; both AdMob consent
->    messages are already Published and reach nobody until it lands.
-> 5. ~~Wire `ECAds.showPrivacyOptions()` to a button~~ — **done
->    2026-08-16**, folded into the same versionCode 2 build. `npm test` is
->    now **70 passed, 0 failed**.
 >
-> **AdMob test device is NOT outstanding** — it was already covered by the
-> Frost Tower registration, because test devices are account-level. See
-> step 7.
->
-> Ordered next steps and every gotcha are in **`GO-LIVE.md`**.
->
-> `npm test` → **67 passed, 0 failed**, including an auto-solver that
-> completes all 20 chambers.
+> **Not outstanding, despite looking like it:** the AdMob test device (it is
+> account-level and Frost Tower already registered it) and both consent
+> messages (Published). See `GO-LIVE.md` steps 6, 7 and 7b.
 
 ---
+
+## 2026-08-17 — the redesign, and a review that found nine real bugs in it
+
+The owner's two complaints about the shipped build were both correct:
+
+> *"still the same chamber I told you change everything"*
+> *"there should be clues that I can use to find the key not just search
+> randomly and hints used is a final thing if I fail to understand a clue"*
+
+**What the code actually was.** `THEMES[i]` was a NAME, a seeded palette and
+a position jitter. One set of SVG furniture for all twenty rooms. The brass
+key was `spots[0]` of a shuffle with nothing in the room referring to it, so
+the only strategy was tapping all seven. The research agent's diagnosis was
+sharper than mine: **the two complaints are one complaint** — the room's
+contents carried no meaning, so themes were cosmetic *and* search was blind.
+
+### Built by four agents, integrated by hand
+
+- `docs/design-research.md` — sourced research on real escape-room settings
+  and on clue design that replaces blind search.
+- `www/js/themes.js` — **20 real settings** (cell block, sealed tomb,
+  operating theatre, icehouse...), each with its own artwork, palette,
+  in-world object names, three intro lines, eight taunts, and `traits` per
+  searchable object. Themes map onto the EXISTING object ids as roles, which
+  is why integration did not disturb hit-testing.
+- `www/js/puzzle.js` — `generateKeyHunt` makes the key's location a
+  **deduction** over those traits, uniqueness proved by brute force at
+  generation time, plus a graduated hint ladder.
+- `www/js/game.js` — `paintRoom`, the always-free observations panel, and the
+  ladder replacing the two blind-search hints.
+
+**Agents must be scoped to separate files.** Three ran in parallel on
+separate files and none collided. All three then died on a session limit
+*after* writing their deliverables — the work survived because it was on
+disk, not in a transcript. Resuming by id worked once; a later resume failed
+with "no transcript found", so a fresh agent had to be spawned with full
+context. **Do not rely on being able to resume an agent.**
+
+### Gotchas from the build
+
+- **Parallel agents do not agree on an interface.** themes.js emitted no
+  `traits`, so the key hunt silently set `degraded:true` and fell back to a
+  clue that NAMES the spot — reinstating the exact bug being removed. The
+  gap was invisible: both files were correct alone, and the suite passed.
+- **The trait table is the one thing no test can check.** Brute force proves
+  a clue set is self-consistent; nothing proves the table matches the
+  drawing. A tin cup tagged `wood` makes every clue about it a lie. That is
+  why the traits were written by the agent that drew the art.
+- **A trait value must GROUP, never IDENTIFY.** `kind: 'great wheel'` in the
+  clockworks produced *"something that is a great wheel"* — the answer,
+  handed over. The rule is that a value must cover 2+ objects.
+- I then reported a second instance of that bug in the taxidermist's and
+  **was wrong** — `kind: 'mount'` groups three objects. My detection query
+  tested "value appears in the object's name" instead of "value identifies
+  one object". A fix applied on my say-so would have made the data worse.
+- **`Set-Content -Encoding utf8` put a BOM on build.gradle** and Gradle died
+  with `Unexpected character` at line 1, column 1. Same trap the notes
+  already record for keystore.properties. Use
+  `[System.IO.File]::WriteAllText($p,$s,(New-Object System.Text.UTF8Encoding $false))`.
+- **Screenshots caught two things no test could:** `applyRoomStyle` was still
+  using the seeded palette, so the stone cell was painted navy — art and
+  colour disagreeing about what room you are in; and the footer still read
+  *"Tap everything."*, the exact opposite of the new design.
+
+### The review agent, and why it was worth running
+
+A fifth agent reviewed the integrated result adversarially. It found **nine
+real defects in work already called finished.** Worst first:
+
+1. **The clues could not be read.** `unique`/`group` predicates carry a trait
+   axis; the prose dropped it. *"A single word: 'unmatched.'"* — unmatched by
+   material, nature or position? Each gives a different candidate set, and
+   minimality makes those clues load-bearing, so **8 of 20 chambers could not
+   be closed from the screen at all.**
+2. **The paid hint stated falsehoods.** *"the ONE object whose material
+   nothing else shares"* where four existed; *"exactly 2 things share a
+   material"* where two separate pairs did. The predicate is a fact about the
+   key's own spot; the prose asserted a fact about the room. The player paid
+   and was sent to the wrong thing.
+3. **Ten of twenty chambers named a substance that was not in the room.**
+   `SIGNS` was ten entries written twice over; themes.js had grown to twenty
+   settings. The icehouse advertised **pollen**.
+4. **Six chambers shipped broken English** — *"Nothing that is records has
+   been shifted"* — from twelve trait values with no phrasing entry.
+5. **The suite never tested the deduction.** The auto-solver tapped all seven
+   spots, so it proved the lock chain worked and proved nothing about the key
+   hunt — while comments in *two* files claimed it was already deducing.
+6. **`state()` returned `L` whole**, handing out `hunt.answer`, `hints`,
+   `brassSpot` and the safe code, right next to a carefully sanitised view
+   that was therefore decorative.
+7. **Spatial clues used pre-layout anchors.** `layoutFor` permutes slots and
+   MIRRORS the room in half the chambers, so *"furthest to the left"* could
+   point at something drawn on the right. **56.8% of spatial clues were wrong
+   once layout was applied** — it merely happened not to fire on the shipped
+   twenty, which is luck, not correctness.
+8. **`nearest` compared x only**, so chamber 1 — the chamber that teaches the
+   player the room can be trusted — pointed at a bunk 110px away while a tin
+   cup sat 87px away.
+9. **220 lines of written flavour were dead.** Each setting authors intros
+   and taunts; game.js used hardcoded arrays, so a player searching a
+   sarcophagus in the sealed tomb read *"You find lint. Congratulations."*
+
+All nine fixed. Two economy changes came out of it: **the first hint rung is
+now free** (it restates a clue already on screen, so charging for it charges
+the player to understand the rules rather than to be rescued from them — and
+at tier 1 the single clue must isolate the answer, so the restatement always
+gave it away), and a player with an empty wallet still gets that rung.
+
+**The lesson worth carrying:** the suite passed **92/0** while eight chambers
+were unsolvable, ten named the wrong substance, six had broken grammar, and
+the solver was not testing the feature at all. **Green is not evidence when
+the assertions were written by the same person who wrote the bug.** The suite
+now greps the auto-solver to prove it reads no answer field, because a
+comment asking nicely had already failed twice.
 
 ## 2026-08-16 — the service account, and three errors that look like one
 

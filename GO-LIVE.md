@@ -2,7 +2,8 @@
 
 Written 2026-08-13, the session that took the game from a free, offline,
 unmonetized single-file prototype to a signed, monetized, Play-registered
-build.
+build. Updated 2026-08-17, the session that rebuilt the game itself — see
+step 9 and SESSION-NOTES.md.
 
 ## Fixed values
 
@@ -12,7 +13,7 @@ build.
 | **Play app ID** | **`4974911443003501563`** |
 | Play dashboard | https://play.google.com/console/u/0/developers/7599532919585116115/app/4974911443003501563/app-dashboard |
 | Android package | `com.ahmadessam.escapechambers` |
-| Version | `1.0.0`, versionCode **1** (bump versionCode on EVERY upload) |
+| Version | built **1.2.0 / versionCode 7**; **live on the track is versionCode 3**. Bump versionCode on EVERY upload, and mirror it into `config.js` `build` so the rooms menu shows it. |
 | Store listing name | `Escape: 20 Chambers` · Game → Puzzle · Free · **en-US** |
 | AdMob app | `Escape 20 Chambers`, ref `3223395835` |
 | AdMob app ID | `ca-app-pub-7898882561225435~3223395835` |
@@ -48,7 +49,7 @@ build.
 
 ## ▶ WHAT IS DONE
 
-**Code — all verified, `npm test` → 67 passed, 0 failed.**
+**Code — all verified, `npm test` → 104 passed, 0 failed** (67 at first release; the redesign of 2026-08-17 added the rest).
 
 - Capacitor 7 → **8.5**. `@revenuecat/purchases-capacitor@13.4` pulls Play
   Billing **8.3**, which is required for anything published after
@@ -464,6 +465,48 @@ are present, so the link can be handed out immediately.
 > and reciprocal sign-ups who never played is a known rejection reason.
 
 ---
+
+### 9. The game itself was rebuilt — versionCode 7, awaiting your upload
+
+**2026-08-17.** The owner played the shipped build and rejected it: all
+twenty chambers were one room recoloured, and finding the key was blind
+tapping. Both were true. `www/js/themes.js` (20 real settings) and the
+key-hunt half of `www/js/puzzle.js` are new; `SESSION-NOTES.md` carries the
+full account and every gotcha.
+
+```
+android/app/build/outputs/bundle/release/app-release.aab
+10,708,956 bytes · versionCode 7 / 1.2.0 · npm test 104 passed, 0 failed
+```
+
+**versionCode 3 is what is live on the track.** 4, 5 and 6 were each built
+and then superseded before upload — the build directory holds one AAB, so a
+rebuild overwrites the previous one. Upload 7; it contains everything.
+
+> **The rooms menu now prints `build <version> · store <state>`.** That line
+> exists because "purchases don't work" and "you are running last week's
+> APK" are indistinguishable from outside, and one full debugging round was
+> lost to exactly that. **Read it off the device before touching billing
+> code.**
+
+**What the redesign guarantees, and how it is enforced:**
+
+| Claim | Enforced by |
+|---|---|
+| every chamber a distinct setting | 20 settings, names + palettes asserted unique |
+| the key is deducible, never guessed | `solveKeyHunt` over public evidence only; suite taps ONLY the deduced spot |
+| exactly one answer per room | brute force at generation; swept 4000 rooms clean |
+| no clue names the answer | asserted per chamber |
+| the sign matches the room | `SIGNS.length === ECThemes.list.length`, per-chamber check |
+| clue coordinates match the drawing | left-to-right order compared against rendered rects |
+| the solver cannot cheat | the suite **greps** `solveChamber` for answer fields |
+
+> **Two rules for anyone editing the room data.** A trait value must be a
+> CATEGORY covering 2+ objects, never an identifier — `kind: 'great wheel'`
+> generated "something that is a great wheel", i.e. the answer. And every
+> trait must be TRUE OF THE ART: brute force proves a clue set is
+> self-consistent, but nothing can prove the table matches the drawing.
+
 
 ## Build commands
 
