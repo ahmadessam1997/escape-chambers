@@ -357,6 +357,14 @@ from 1 of 5 to **3 of 4**; what remains needs the AAB.
 - **Six screenshots uploaded in one call arrive in completion order**, not
   filename order, and are added to the slot in that order. Drag-reorder works
   along a row and fails across rows; delete-and-re-add appends predictably.
+  **The reliable procedure (verified 2026-08-18):** click *Add assets* to open
+  the asset panel — the `input[type=file]` does not exist in the DOM until
+  then, so `find` for it beforehand only ever returns the button — then call
+  `file_upload` once per file, in order. Each upload auto-selects its asset,
+  and it is that *selection* order that binds to the slots, not the panel's
+  display order. The panel sorts "Most recent" first, so it showed 6,5,4,3,2,1
+  while the slots came out 1,2,3,4,5,6. Do not read the panel and conclude the
+  order is reversed.
 - **Play deep links still bounce to the app list when loaded cold** — even
   `/app-content` did. Load `app-dashboard` first, then click through.
   `Page.captureScreenshot` still times out every few calls; retrying once
@@ -548,3 +556,47 @@ loud SUPERSEDED banner and must not be hosted.
 - `escape-20-chambers.html` at the project root — a byte-identical stale
   copy of the pre-monetization game — was **deleted**. This is a git repo
   now, so history covers it.
+
+## 2026-08-18 (later) — store listing submitted
+
+The new copy and the regenerated screenshots are live in review.
+
+### What was submitted
+
+Three changes, sent as one batch from Publishing overview:
+
+| Item | Value |
+|---|---|
+| Short description | `The room tells you where to look. 20 escape rooms. Can you read them?` (69/80) |
+| Full description | Rewritten around deduction (2077/4000) |
+| Phone screenshots | All six replaced |
+
+The six old assets (14 Aug) were **removed from the slots first**, then the
+six new ones (18 Aug) uploaded and added. Slot order came out right on the
+first try — see the corrected upload procedure above.
+
+### Send changes, not Restart review
+
+The submit dialog offered *Restart review* (bundle everything, adds to the
+wait) or *Send changes* (queue behind the review already running since
+18 August). Chose **Send changes**: versionCode 9 was already in review and
+it is the build testers need for the purchase fix. Restarting would have
+delayed the AAB to get the listing out marginally sooner, which is backwards.
+
+Both now sit under *Changes in review* together — `9 (1.4.0) Start full
+rollout` plus the three listing rows.
+
+### Markdown does not render on Play
+
+`store-listing.md` is the source of truth and is written in markdown, but the
+Play fields are plain text. Pasting it verbatim renders the `**` literally and
+keeps the hard wraps as real line breaks mid-sentence. The text has to be
+reflowed into single-line paragraphs and stripped of emphasis before it goes
+in. Watch the emoji headers specifically: splitting header from body with a
+regex that keys on capitals cut `READ THE ROOM, DON'T RANSACK IT` after
+`RANSACK`, leaving `IT` alone on the next line.
+
+### Tablet slots are empty and that is fine
+
+7-inch, 10-inch and Chromebook screenshots have never been set, so there were
+no stale tablet assets to replace. Only phone shows a count (`6/8`).
