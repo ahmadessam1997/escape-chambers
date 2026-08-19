@@ -31,13 +31,17 @@ const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; ch
    See SESSION-NOTES for the v1.1 fix to the game itself. */
 const SCREEN_W = 770, SCREEN_H = 1180;
 
+/* Rewritten 2026-08-18. The old set sold a SEARCH game: "twenty locked
+   rooms", "five strange places" (there are twenty now), "hints when you
+   need them". The game is a DEDUCTION game, so shot 1 has to show the
+   evidence panel — that is the thing no competitor screenshot has. */
 const SHOTS = [
-  { id: 'chamber', caption: 'TWENTY\nLOCKED ROOMS' },
-  { id: 'uv',      caption: 'REVEAL SECRETS\nIN UV LIGHT' },
-  { id: 'theme',   caption: 'FIVE\nSTRANGE PLACES' },
-  { id: 'sigil',   caption: 'CRACK SAFES &\nSIGIL LOCKS' },
-  { id: 'shop',    caption: 'HINTS WHEN\nYOU NEED THEM' },
-  { id: 'menu',    caption: 'CAN YOU ESCAPE\nTHEM ALL?' }
+  { id: 'clues',   caption: 'THE ROOM TELLS YOU\nWHERE TO LOOK' },
+  { id: 'rooms',   caption: 'TWENTY ROOMS,\nTWENTY WORLDS' },
+  { id: 'uv',      caption: 'DEDUCE IT —\nDON’T HUNT IT' },
+  { id: 'sigil',   caption: 'CRACK SAFES\nBY REASONING' },
+  { id: 'stars',   caption: 'FIVE STARS FOR A\nFLAWLESS ESCAPE' },
+  { id: 'menu',    caption: 'HOW MANY\nCAN YOU READ?' }
 ];
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -106,17 +110,20 @@ async function enterChamber(page, index, spots) {
 
   console.log('Capturing raw frames…');
 
-  /* --- 1. chamber: the study, mid-search, brass key in hand --- */
-  await enterChamber(page, 4, ['pA', 'chest', 'clock', 'rug']);
+  /* --- 1. clues: the observations panel OPEN, which is the whole pitch.
+         A screenshot of a room full of objects looks like every other
+         escape game; a screenshot of the room telling you where to look
+         does not. Chamber 1 is the cell block — bars read instantly. --- */
+  await enterChamber(page, 0, []);
   await page.evaluate(() => {
-    // Show the inventory doing something: a real give(), not a fake icon.
+    document.getElementById('obs').classList.add('show');
     const S = window.ECGame.state().S;
     S.items.brassKey = true;
     document.getElementById('s0').className = 'slot item';
     document.getElementById('s0').innerHTML = '🗝️<span class="lbl">brass key</span>';
   });
-  await sleep(200);
-  await grab('chamber');
+  await sleep(300);
+  await grab('clues');
 
   /* --- 2. uv: a tier-4 chamber with the code blazing under the lamp --- */
   await enterChamber(page, 12, ['pA', 'pB', 'clock', 'shelf']);
@@ -130,9 +137,12 @@ async function enterChamber(page, index, spots) {
   await sleep(700);   // the .uv-ink fade is 500ms
   await grab('uv');
 
-  /* --- 3. theme: the observatory, a completely different palette --- */
-  await enterChamber(page, 3, ['plant', 'shelf', 'pB', 'chest']);
-  await grab('theme');
+  /* --- 2. rooms: the sealed tomb. Sandstone and glyphs against shot 1's
+         stone cell proves the twenty settings are real, not recolours. --- */
+  await enterChamber(page, 2, ['plant', 'shelf', 'pB', 'chest']);
+  await page.evaluate(() => document.getElementById('obs').classList.remove('show'));
+  await sleep(200);
+  await grab('rooms');
 
   /* --- 4. sigil: the real four-sigil lock, part-entered --- */
   await enterChamber(page, 16, ['rug']);
@@ -149,33 +159,34 @@ async function enterChamber(page, index, spots) {
   await sleep(250);
   await grab('sigil');
 
-  /* --- 5. shop: the real shop, with the offers UNBOUGHT.
-         Capturing it after a purchase would advertise "✓ Owned", which is
-         weak marketing and implies the app ships without ads. --- */
+  /* --- 5. stars: a FLAWLESS win card. The shop used to hold this slot,
+         which sold the monetisation rather than the game. Stars are the
+         reason to replay, so they earn the shelf space. --- */
   await page.evaluate(() => {
-    // The sigil lock from shot 4 is still open and sits ABOVE the shop in
-    // the stacking order — the first run of this generator produced a
-    // "shop" screenshot that was mostly sigil pad. Close every overlay.
-    ['symOv','padOv','winOv','hintOv','menu'].forEach(id =>
+    ['symOv','padOv','winOv','hintOv','menu','shopOv','rankOv'].forEach(id =>
       document.getElementById(id).classList.remove('show'));
-    window.ECSave.data.hints = 3;
-    window.ECSave.data.removeAds = false;
-    window.ECSave.data.unlimitedHints = false;
-    window.ECBilling.entitlements = {};
-    /* In a browser the store is the mock, and the mock deliberately suffixes
-       every price with " · DEV" so a developer can never mistake it for the
-       real thing. That marker must not reach the Play listing, so put the
-       module into its 'ready' state for the capture — the prices shown are
-       then exactly the config prices a real device would show. */
-    window.ECBilling.state = 'ready';
-    // The rewarded row is hidden in a browser only because there is no ad
-    // SDK here; on device it is always present, so show it.
-    window.ECAds.available = true;
-    window.ECAds._rewardedReady = true;
-    window.ECShop.openShop();
   });
-  await sleep(500);
-  await grab('shop');
+  await enterChamber(page, 0, []);
+  await page.evaluate(() => {
+    /* Play it properly rather than faking the card: deduce the spot, take
+       the key, open the door. A staged screenshot of a five-star win that
+       the game cannot actually produce would be a lie in the listing. */
+    const s0 = window.ECGame.state();
+    const spot = window.ECPuzzle.solveKeyHunt(s0.hunt.evidence);
+    document.getElementById(spot).dispatchEvent(new MouseEvent('click', { bubbles: true }));
+  });
+  await sleep(250);
+  await page.evaluate(() => {
+    for (let i = 0; i < 4; i++) {
+      const sl = document.getElementById('s' + i);
+      if (sl.dataset.item === 'ironKey') sl.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    }
+  });
+  await sleep(200);
+  await page.evaluate(() =>
+    document.getElementById('door').dispatchEvent(new MouseEvent('click', { bubbles: true })));
+  await sleep(600);
+  await grab('stars');
 
   /* --- 6. menu: the rooms grid, showing real progress --- */
   await page.evaluate(() => {

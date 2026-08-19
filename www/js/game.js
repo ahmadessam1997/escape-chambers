@@ -468,24 +468,38 @@
     return rows.sort(Save.compareRuns);
   }
 
-  function showRankings() {
-    var done = Object.keys(Save.data.best).length;
-    var total = Save.totalStars();
-    $('rankSummary').innerHTML = done
-      ? '<b>' + total + '</b> of 100 stars · <b>' + done + '</b> of 20 chambers ranked'
-      : 'No runs yet. Escape a chamber to take a place on the board.';
+  /* EVERY CHAMBER HAS ITS OWN BOARD.
+     One combined table was unfair: chamber I is a single search and chamber
+     XX is a four-digit safe plus a sigil lock, so their times are not
+     comparable and a player who only finished the easy rooms would outrank
+     one who cleared the hard ones. Ranking within a chamber compares like
+     with like. `rankLevel` is which board is on screen; null = the index. */
+  var rankLevel = null;
 
-    var html = '<tr><th>#</th><th>Chamber</th><th>Stars</th><th>Time</th><th>Moves</th></tr>';
-    for (var i = 0; i < 20; i++) {
-      var rows = rankRows(i);
-      if (!rows.length) continue;
-      var r = rows[0];
-      html += '<tr class="' + (r.me ? 'me' : '') + '">' +
-              '<td>' + (i + 1) + '</td>' +
-              '<td>' + Themes.themeFor(i).name + '</td>' +
-              '<td class="s">' + starString(r.stars) + '</td>' +
-              '<td>' + fmt(r.seconds) + '</td>' +
-              '<td>' + r.moves + '</td></tr>';
+  function showRankings(level) {
+    rankLevel = (typeof level === 'number') ? level : null;
+    if (rankLevel === null) return showRankIndex();
+
+    var i = rankLevel;
+    var rows = rankRows(i);
+    var rec = Save.bestFor(i);
+
+    $('rankSummary').innerHTML =
+      '<b>' + Themes.themeFor(i).name + '</b> · Chamber ' + ROMAN[i] +
+      (rec ? '' : '<br>Not yet escaped — no time on this board.');
+
+    var html = '<tr><th>#</th><th>Player</th><th>Stars</th><th>Time</th><th>Moves</th></tr>';
+    if (rows.length) {
+      rows.forEach(function (r, k) {
+        html += '<tr class="' + (r.me ? 'me' : '') + '">' +
+                '<td>' + (k + 1) + '</td>' +
+                '<td>' + r.who + '</td>' +
+                '<td class="s">' + starString(r.stars) + '</td>' +
+                '<td>' + fmt(r.seconds) + '</td>' +
+                '<td>' + r.moves + '</td></tr>';
+      });
+    } else {
+      html += '<tr><td colspan="5">Escape this chamber to take a place.</td></tr>';
     }
     $('rankTable').innerHTML = html;
 
@@ -493,8 +507,43 @@
       'Ranked by <b>stars first, then time</b> — a five-star run always beats ' +
       'a faster four-star one. Stars measure how well you read the room; time ' +
       'only separates players who read it equally well.' +
+      '<br><br>Each chamber is ranked <b>on its own</b>: chamber I is one search, ' +
+      'chamber XX is a safe and a sigil lock, so their times are not comparable.' +
       '<br><br><b>World rankings are not live yet.</b> They need a server to hold ' +
       'other players’ runs, so this board is your own record for now.';
+    $('rankBack').style.display = '';
+    $('rankOv').classList.add('show');
+  }
+
+  /* The index: one row per chamber, tapping through to that chamber's board. */
+  function showRankIndex() {
+    var done = Object.keys(Save.data.best).length;
+    $('rankSummary').innerHTML = done
+      ? '<b>' + Save.totalStars() + '</b> of 100 stars · <b>' + done +
+        '</b> of 20 chambers ranked<br><span class="par">Tap a chamber for its own board</span>'
+      : 'No runs yet. Escape a chamber to take a place on its board.';
+
+    var html = '<tr><th>#</th><th>Chamber</th><th>Your best</th><th>Time</th></tr>';
+    for (var i = 0; i < 20; i++) {
+      var rec = Save.bestFor(i);
+      html += '<tr class="rankRow" data-level="' + i + '">' +
+              '<td>' + (i + 1) + '</td>' +
+              '<td>' + Themes.themeFor(i).name + '</td>' +
+              '<td class="s">' + (rec ? starString(rec.stars) : '—') + '</td>' +
+              '<td>' + (rec ? fmt(rec.seconds) : '—') + '</td></tr>';
+    }
+    $('rankTable').innerHTML = html;
+
+    Array.prototype.forEach.call($('rankTable').querySelectorAll('.rankRow'), function (tr) {
+      tr.addEventListener('click', function () {
+        showRankings(Number(tr.dataset.level));
+      });
+    });
+
+    $('rankNote').innerHTML =
+      'Every chamber keeps its <b>own</b> ranking, so a fast run in an easy room ' +
+      'never outranks a hard one. Within a chamber: <b>stars first, then time</b>.';
+    $('rankBack').style.display = 'none';
     $('rankOv').classList.add('show');
   }
 
@@ -1010,7 +1059,10 @@
     });
 
     /* topbar + menu */
-    $('rankBtn').addEventListener('click', showRankings);
+    /* No argument -> the index. The click event would otherwise be passed
+       as `level` and read as chamber NaN. */
+    $('rankBtn').addEventListener('click', function () { showRankings(null); });
+    $('rankBack').addEventListener('click', function () { showRankings(null); });
     $('rankClose').addEventListener('click', function () {
       $('rankOv').classList.remove('show');
     });
@@ -1102,7 +1154,7 @@
         toast: toast,
         onChange: function () { refreshHintUI(); showMenuIfOpen(); }
       });
-      ['buyHints','buyUnlimited','buyRemoveAds'].forEach(function (id) {
+      ['buyHints','buyRemoveAds'].forEach(function (id) {
         $(id).addEventListener('click', function () {
           Shop.buy(this.dataset.product);
         });
@@ -1200,6 +1252,7 @@
     /* Exposed so the suite can prove par is REACHABLE rather than trust the
        formula: the auto-solver plays optimally, so it must score five. */
     parFor: parFor, starsFor: starsFor, rankRows: rankRows,
+    showRankings: showRankings,
     SEARCH: SEARCH, SYMS: SYMS
   };
 

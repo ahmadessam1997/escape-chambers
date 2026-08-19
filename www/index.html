@@ -137,6 +137,8 @@
   #rankTable td{padding:5px 6px;border-top:1px solid #24304d;}
   #rankTable .s{color:#ffcf5a;white-space:nowrap;}
   #rankTable tr.me td{background:#1b2e46;}
+  #rankTable tr.rankRow{cursor:pointer;}
+  #rankTable tr.rankRow:active td{background:#243350;}
   .rankNote{font-size:11px;color:#8fa3c8;margin-top:10px;line-height:1.5;}
 
   /* ---- shop ---- */
@@ -379,7 +381,8 @@
   <p id="rankSummary"></p>
   <table id="rankTable"></table>
   <p class="rankNote" id="rankNote"></p>
-  <button class="btn ghostb" id="rankClose">Back</button>
+  <button class="btn ghostb" id="rankBack" style="display:none">All chambers</button>
+  <button class="btn ghostb" id="rankClose">Close</button>
 </div></div>
 
 <div class="overlay" id="shopOv"><div class="card">
@@ -400,12 +403,11 @@
     <button class="sbuy" id="buyHints" data-product="hints_25">—</button>
   </div>
 
-  <div class="srow">
-    <div class="em">♾️</div>
-    <div class="tx"><div class="tt">Never run out</div>
-      <div class="ds">Unlimited hints, forever. One payment.</div></div>
-    <button class="sbuy" id="buyUnlimited" data-product="hints_unlimited">—</button>
-  </div>
+  <!-- "Never run out" (hints_unlimited) was WITHDRAWN 2026-08-18. Unlimited
+       hints removes the only reason to read the room, which is the whole
+       game now that clues point at the key. The entitlement is still
+       honoured everywhere in code so anyone who ever owned it keeps it —
+       it is simply no longer for sale. -->
 
   <div class="srow">
     <div class="em">🚫</div>

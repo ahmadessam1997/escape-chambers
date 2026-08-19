@@ -29,7 +29,7 @@
        rooms menu so a tester can say which build they are on — without it,
        "purchases don't work" is indistinguishable from "you are still
        running last week's APK", which cost a full debugging round. */
-    build: '1.3.0 (8)',
+    build: '1.4.0 (9)',
 
     /* ---------------- AdMob ----------------
        The app ID ALSO has to be written into
@@ -114,7 +114,13 @@
     products: {
       remove_ads:       { price: '$2.99', label: 'Remove ads',    consumable: false },
       hints_25:         { price: '$1.99', label: '25 hints',      consumable: true, hints: 25 },
-      hints_unlimited:  { price: '$4.99', label: 'Never run out', consumable: false }
+      /* WITHDRAWN FROM SALE 2026-08-18, but deliberately NOT deleted.
+         Removing the id would make billing.js stop recognising the
+         entitlement, silently revoking it from anyone who already owns it.
+         `retired: true` keeps every ownership path working while keeping it
+         out of the shop and out of price lookups. */
+      hints_unlimited:  { price: '$4.99', label: 'Never run out',
+                          consumable: false, retired: true }
     },
 
     /* ---------------- Ad pacing ----------------

@@ -134,17 +134,20 @@
          remain, so the choice must stay reachable. */
       $('shopPrivacy').style.display = Ads.privacyOptionsRequired ? '' : 'none';
 
+      /* "Never run out" is withdrawn, so its row is gone from the markup.
+         hints_25 still reports "Included in Unlimited" for the few players
+         who own the retired product — they must not be sold hints they
+         already have. */
       var rows = [
         { id: 'hints_25',        el: 'buyHints',     owned: unlimited,
           ownedText: 'Included in Unlimited' },
-        { id: 'hints_unlimited', el: 'buyUnlimited', owned: unlimited,
-          ownedText: '✓ Owned' },
         { id: 'remove_ads',      el: 'buyRemoveAds', owned: Save.data.removeAds,
           ownedText: '✓ Owned' }
       ];
 
       rows.forEach(function (r) {
         var btn = $(r.el);
+        if (!btn) return;                 // a withdrawn product has no row
         if (r.owned) {
           btn.disabled = true;
           btn.textContent = r.ownedText;

@@ -1,9 +1,9 @@
 # Escape: 20 Chambers — Google Play listing
 
 Everything the Play Console asks for, with the answer already decided.
-Rewritten 2026-08-13, when the game gained AdMob and in-app purchases — the
-v1 copy said *"No account, no ads, nothing collected"*, which is now false and
-would contradict the data-safety form.
+Rewritten 2026-08-13 for ads and IAP; rewritten again 2026-08-18, when the
+game stopped being a search game and became a deduction game — the old copy
+said "Tap everything" and "five strange places", both now false.
 
 | Field | Value |
 |---|---|
@@ -18,63 +18,77 @@ would contradict the data-safety form.
 
 ## Short description (80 max)
 
-`Cozy escape rooms: hidden keys, UV secrets, safes and sigils. 20 chambers await.` (79)
+`The room tells you where to look. 20 escape rooms. Can you read them?` (68)
+
+> Rewritten 2026-08-18. The old line — *"Cozy escape rooms: hidden keys, UV
+> secrets, safes and sigils. 20 chambers await."* — listed FEATURES. This one
+> states the HOOK, which is the thing that actually changed: you are not
+> hunting pixels, you are reading a room. It also poses a question, which
+> converts better than an inventory.
 
 ## Full description
 
-> Play truncates after roughly three lines on the listing, so the hook has to
-> earn the tap before the bullets start.
+> Play truncates after roughly three lines, so the hook has to earn the tap
+> before the bullets start.
 
-The door slams shut behind you. The lock clicks by itself. Wonderful. 🕯️
+The bolt goes over from the other side. You have one look around, and
+everything you need is already here. 🕯️
 
-ESCAPE: 20 CHAMBERS is a cozy, candlelit escape-room puzzler — no timers
-breathing down your neck, no twitch reflexes, just a quiet room and the growing
-suspicion that the rug is hiding something.
+**Most escape games make you tap everything. This one tells you where to look
+— if you can read it.**
 
-Twenty locked chambers across five strange places: a study, a cellar, a
-greenhouse, an observatory, and an attic that remembers too much. Search
-everything, work out what goes where, and turn the iron key.
+The dust is disturbed in one place. Someone scratched a tally beside a sketch
+of the room. The pollen lies thick and unbroken on everything made of iron.
+Three facts, one conclusion, one hiding place. Work it out and open the door
+in a single move.
 
-🗝️ SEARCH, DISCOVER, ESCAPE
-• Tap everything — rugs, paintings, clocks, plants, shelves, chests
-• Find brass keys, UV lamps, cranks and notes, then work out where they go
-• Crack rolling-dial safes using codes hidden around the room
-• Switch on the UV lamp and watch ghostly ink blaze across the walls ✨
-• Decode four-sigil locks woven into glowing thread
+🔍 **READ THE ROOM, DON'T RANSACK IT**
+• Every chamber gives you real evidence the moment you walk in
+• Narrow seven hiding places down to one by pure deduction
+• Crack safes by working the code out, not by finding it written down
+• Follow a trail of clues from one discovery to the next
+• Switch on the UV lamp and watch the rules blaze across the wall ✨
 
-🏮 FIVE PLACES, TWENTY CHAMBERS
-Each place has its own light, its own colours, its own mood. Each chamber adds
-a layer to the puzzle chain — from a single hidden key in the first room to
-full multi-step mysteries with safes, cranks, sigils and secrets under the rug.
+🏚️ **TWENTY ROOMS, TWENTY WORLDS**
+A prison cell. A sealed tomb. An operating theatre. A lighthouse lamp room, a
+bank vault, a taxidermist's workshop, an icehouse, a bell tower. Every chamber
+is its own place, with its own objects, its own light, and its own secrets —
+counted in cogs, or dead stars, or strongbox tumblers.
 
-💡 HINTS WHEN YOU WANT THEM
-Every chamber is solvable by logic alone, and each one has been verified
-solvable end to end. But if you'd rather not stare at a wall for twenty
-minutes, a gentle hint always knows your next step — no spoilers.
-You start with five hints, earn one for every chamber you escape for the first
-time, and can always watch a short video for more.
+⭐ **FIVE STARS FOR A FLAWLESS ESCAPE**
+Every wasted move costs you a star. Escape in the fewest moves possible and
+the room gives up all five — then chase your own best time. Every chamber
+keeps its own board, so a quick win in an easy room never outranks a hard one.
 
-📱 QUIET, COZY, YOURS
+💡 **HINTS ARE A RESCUE, NOT A SHORTCUT**
+Stuck on a clue? The first nudge is always free — it just says the same thing
+more plainly. Only if you are truly stuck will a hint narrow the field, and
+only at the very end will it name the spot. Every chamber is provably solvable
+by reasoning alone; the hints are there for the moment it will not click.
+
+📱 **QUIET, OFFLINE, YOURS**
 • Plays completely offline — on a plane, in bed, anywhere
-• No account, no sign-up, no timers
-• Progress saves on your device
-• One-time purchases available: remove ads, stock up on hints, or never run out
+• No account, no sign-up, no timers, no pressure
+• Progress and records save on your device
+• Optional one-time purchases: remove ads, or stock up on hints
 
-Twenty chambers. One rule: everything you need is already in the room.
-Can you escape them all?
+Twenty rooms. One rule: **everything you need is already in the room.**
+How many can you read?
 
 ## Screenshot captions
 
-1. TWENTY LOCKED ROOMS
-2. REVEAL SECRETS IN UV LIGHT
-3. FIVE STRANGE PLACES
-4. CRACK SAFES & SIGIL LOCKS
-5. HINTS WHEN YOU NEED THEM
-6. CAN YOU ESCAPE THEM ALL?
+1. THE ROOM TELLS YOU WHERE TO LOOK
+2. TWENTY ROOMS, TWENTY WORLDS
+3. DEDUCE IT — DON'T HUNT IT
+4. CRACK SAFES BY REASONING
+5. FIVE STARS FOR A FLAWLESS ESCAPE
+6. HOW MANY CAN YOU READ?
 
-> Caption 5 previously read *"STUCK? GENTLE HINTS, NO SPOILERS"*, which
-> advertised hints as unconditional. They are now a limited wallet, so the
-> caption was changed rather than leave a promise the app no longer keeps.
+> Captions rewritten 2026-08-18 alongside the copy. The old set advertised
+> "FIVE STRANGE PLACES" (there are now twenty) and "HINTS WHEN YOU NEED THEM"
+> (they are now a graduated ladder with a free first rung, and selling them as
+> the headline undercuts the deduction the game is actually about).
+
 
 ## App content — every answer
 

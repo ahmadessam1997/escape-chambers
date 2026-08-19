@@ -451,9 +451,16 @@ async function solveChamber(page, i) {
     ok('remove_ads suppresses the interstitial',
        await page.evaluate(() => window.ECAds.shouldShowInterstitial(99) === false));
 
+    /* hints_unlimited is WITHDRAWN from sale but must still work for anyone
+       who already owns it — removing the id from config would silently
+       revoke a paid unlock. So it is bought here through the API (there is
+       no longer a shop row) and everything downstream must still honour it. */
+    ok('the withdrawn product has no shop row',
+       await page.evaluate(() => !document.getElementById('buyUnlimited')));
     await page.evaluate(() => window.ECShop.buy('hints_unlimited'));
     await sleep(150);
-    ok('unlimited hints is owned', await page.evaluate(() => window.ECSave.data.unlimitedHints));
+    ok('an already-owned unlimited entitlement is still honoured',
+       await page.evaluate(() => window.ECSave.data.unlimitedHints));
     const before = await page.evaluate(() => window.ECSave.data.hints);
     await page.evaluate(() => window.ECSave.spendHint());
     eq('unlimited hints does not decrement the wallet',
@@ -807,6 +814,27 @@ async function solveChamber(page, i) {
     ok('every chamber recorded its move count',
        stars.every(s => s && s.moves > 0), JSON.stringify(stars.slice(0, 3)));
 
+    /* PER-CHAMBER BOARDS. One combined table was unfair: chamber I is a
+       single search and chamber XX is a safe plus a sigil lock, so their
+       times are not comparable. Each chamber ranks on its own. */
+    ok('the rankings index lists all 20 chambers',
+       await page.evaluate(() => {
+         window.ECGame.showRankings(null);
+         return document.querySelectorAll("#rankTable tr.rankRow").length === 20;
+       }));
+    ok('a chamber has its own board, showing only its own runs',
+       await page.evaluate(() => {
+         window.ECGame.showRankings(0);
+         const t = document.getElementById("rankTable").textContent;
+         const head = document.getElementById("rankSummary").textContent;
+         return head.indexOf("Chamber I") >= 0 &&
+                document.querySelectorAll("#rankTable tr.rankRow").length === 0;
+       }));
+    ok('each chamber ranks separately',
+       await page.evaluate(() => {
+         const a = window.ECGame.rankRows(0), b = window.ECGame.rankRows(19);
+         return Array.isArray(a) && Array.isArray(b);
+       }));
     /* The ordering rule, checked directly: stars dominate time. Getting
        this backwards would make the board reward rushing over reading,
        which is the opposite of what the stars are for. */
