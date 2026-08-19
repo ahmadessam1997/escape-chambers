@@ -13,7 +13,7 @@ step 9 and SESSION-NOTES.md.
 | **Play app ID** | **`4974911443003501563`** |
 | Play dashboard | https://play.google.com/console/u/0/developers/7599532919585116115/app/4974911443003501563/app-dashboard |
 | Android package | `com.ahmadessam.escapechambers` |
-| Version | built **1.2.0 / versionCode 7**; **live on the track is versionCode 3**. Bump versionCode on EVERY upload, and mirror it into `config.js` `build` so the rooms menu shows it. |
+| Version | **1.4.0 / versionCode 9 — uploaded and in review 2026-08-18.** Bump versionCode on EVERY upload, and mirror it into `config.js` `build` so the rooms menu shows it. |
 | Store listing name | `Escape: 20 Chambers` · Game → Puzzle · Free · **en-US** |
 | AdMob app | `Escape 20 Chambers`, ref `3223395835` |
 | AdMob app ID | `ca-app-pub-7898882561225435~3223395835` |
@@ -90,6 +90,34 @@ step 9 and SESSION-NOTES.md.
 
 ## ⬜ WHAT IS LEFT
 
+> ### Where this actually stands — 2026-08-18
+>
+> Everything below numbered 1–10 is **done**. Nothing in the consoles is
+> waiting on us. In review right now, as one batch:
+>
+> - `9 (1.4.0) Start full rollout` — the redesign, the ranking system, the
+>   withdrawn unlimited-hints product, and the purchase fix
+> - three store-listing rows — short description, full description, six new
+>   phone screenshots
+>
+> **The only open items need the owner, not the console:**
+>
+> 1. **Test purchases on device once 9 clears.** Buy `remove_ads`, then buy
+>    `hints_25` **twice** — the second buy is the one that proves the
+>    consumable path, and it is the path that was broken.
+> 2. **Check Order management for auto-refunded purchases.** Anything bought
+>    against the broken builds went unacknowledged and Google refunds those
+>    automatically after three days.
+> 3. **Eleven more testers.** Twelve must stay opted in for fourteen
+>    *continuous* days, and the clock starts at the twelfth install — not at
+>    the first.
+>
+> **Not started, offered:** audit HomeKept, Investment Tracker and Frost Tower
+> for the same missing-permission bug from step 10 — it is an account-level
+> mistake and nothing about it was specific to this app. And Play Games
+> Services, if the rankings should ever be real cross-device boards rather
+> than the per-chamber local records they are today.
+
 ### 1. ~~Upload the AAB~~ — **DONE 2026-08-14, by the owner**
 
 versionCode 1 / 1.0.0 is uploaded and **live on `Closed testing - Alpha`**
@@ -164,12 +192,26 @@ buy. Everything else is ad-SDK driven and cannot be turned off.
 > checkbox query can report a tick missing when it is actually fine. Trust
 > the `n/m data types selected` counters over a checkbox query.
 
-### 3. ~~Store listing~~ — **DONE 2026-08-14**
+### 3. ~~Store listing~~ — **DONE 2026-08-14, REFRESHED 2026-08-18**
 
-App name, short description (80/80), full description (1800/4000), icon,
-feature graphic and all six screenshots are live in the default en-US
-listing, plus **Store settings**: category *Game → Puzzle*, contact email
+App name, short description, full description, icon, feature graphic and all
+six screenshots are live in the default en-US listing, plus **Store
+settings**: category *Game → Puzzle*, contact email
 `ahmadessam1997@gmail.com`, website the GitHub Pages URL, phone left blank.
+
+> **Refreshed 2026-08-18 and sent for review**, because the redesign made the
+> old listing describe a game that no longer exists — it advertised "five
+> strange places" (there are now twenty) and sold hints as a headline feature
+> (they are now a last-resort ladder, and the unlimited pack is withdrawn).
+>
+> | Field | Now |
+> |---|---|
+> | Short description | `The room tells you where to look. 20 escape rooms. Can you read them?` (69/80) |
+> | Full description | Rewritten around deduction (2077/4000) |
+> | Phone screenshots | All six replaced with 18 Aug captures |
+>
+> Icon and feature graphic were **not** touched — they are still accurate.
+> Tablet and Chromebook slots have always been empty; only phone has a count.
 
 > **New question this time: an "AI asset declaration" on the Review step.**
 > Answered **Don't label assets** — the screenshots are Puppeteer captures of
@@ -188,12 +230,25 @@ The copy lives in `store-listing.md`. Assets used:
 > to the slot. Closing the panel instead discards the selection and the slot
 > stays empty.
 >
-> **Multi-file upload scrambles the order.** Six screenshots pushed in one
-> `file_upload` call came back as 3,1,5,4,6,2 (upload-completion order, not
-> filename order) and were added in that order. Drag-to-reorder *within a
-> row* works; dragging into the second row silently no-ops. The reliable fix
-> is to delete the stragglers and re-add them one at a time — each `Add`
-> appends to the end.
+> **Multi-file upload scrambles the order; one at a time does not.** Six
+> screenshots pushed in one `file_upload` call came back as 3,1,5,4,6,2
+> (upload-completion order, not filename order) and were added in that order.
+> Drag-to-reorder *within a row* works; dragging into the second row silently
+> no-ops.
+>
+> **The procedure that works (verified 2026-08-18, correct on the first try):**
+>
+> 1. Remove the old assets from the slots first.
+> 2. Click **Add assets**. The `input[type=file]` does not exist in the DOM
+>    until the panel opens, so searching for it beforehand only ever finds the
+>    button — that is not a failure, just an ordering mistake.
+> 3. Call `file_upload` **once per file, in order**. Each upload auto-selects
+>    its asset, and it is that *selection* order that binds to the slots.
+> 4. Click **Add** once, with all six selected.
+>
+> The panel sorts *Most recent* first, so during step 3 it displays 6,5,4,3,2,1
+> while the slots come out 1,2,3,4,5,6. **Do not "fix" this** — reading the
+> panel as reversed and re-ordering is how you scramble a correct list.
 
 ### 4. ~~Track setup~~ — **DONE 2026-08-14**
 
@@ -368,7 +423,7 @@ empty, and it does not need to be filled given the above). The value is
 `adb logcat | grep -i setTestDeviceIds` and take the **hash** the SDK logs.
 Mixing the two values up silently does nothing.
 
-### 7b. ~~GDPR / US-state consent~~ — **BUILT 2026-08-15, awaiting your upload**
+### 7b. ~~GDPR / US-state consent~~ — **DONE; shipped in versionCode 9**
 
 Both halves are done. Neither works without the other, which is why they
 were done together.
@@ -466,7 +521,7 @@ are present, so the link can be handed out immediately.
 
 ---
 
-### 9. The game itself was rebuilt — versionCode 7, awaiting your upload
+### 9. ~~The game itself was rebuilt~~ — **versionCode 9 UPLOADED, in review 2026-08-18**
 
 **2026-08-17.** The owner played the shipped build and rejected it: all
 twenty chambers were one room recoloured, and finding the key was blind
@@ -476,12 +531,18 @@ full account and every gotcha.
 
 ```
 android/app/build/outputs/bundle/release/app-release.aab
-10,708,956 bytes · versionCode 7 / 1.2.0 · npm test 104 passed, 0 failed
+versionCode 9 / 1.4.0 · npm test 113 passed, 0 failed
 ```
 
-**versionCode 3 is what is live on the track.** 4, 5 and 6 were each built
-and then superseded before upload — the build directory holds one AAB, so a
-rebuild overwrites the previous one. Upload 7; it contains everything.
+**versionCode 9 superseded 7 before 7 was ever uploaded.** It adds the star
+and per-chamber ranking system, withdraws the unlimited-hints product, and
+carries the purchase fix. 4, 5, 6 and 8 were each built and then superseded
+the same way — the build directory holds one AAB, so a rebuild overwrites the
+previous one.
+
+**Status 2026-08-18:** uploaded by the owner and sitting under *Changes in
+review* as `9 (1.4.0) Start full rollout`, alongside the three refreshed
+store-listing rows. Nothing further to do until Google clears it.
 
 > **The rooms menu now prints `build <version> · store <state>`.** That line
 > exists because "purchases don't work" and "you are running last week's

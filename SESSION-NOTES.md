@@ -600,3 +600,30 @@ regex that keys on capitals cut `READ THE ROOM, DON'T RANSACK IT` after
 
 7-inch, 10-inch and Chromebook screenshots have never been set, so there were
 no stale tablet assets to replace. Only phone shows a count (`6/8`).
+
+### Submission confirmed
+
+Re-read the Publishing overview after submitting. All four rows sit under
+*Changes in review* together:
+
+```
+Closed testing - Alpha   9 (1.4.0)   Start full rollout
+Store listings           en-US       Change short description to '...'
+Store listings           en-US       Change full description
+Store listings           en-US       Change Phone screenshots
+```
+
+`GO-LIVE.md` was stale in four places and has been corrected: the version row
+still said "built 1.2.0 / versionCode 7, live is 3", section 9 was titled
+"awaiting your upload", 7b said the consent work was awaiting upload, and
+section 3 described the pre-redesign listing. A runbook that describes a state
+three versions old is worse than no runbook — it reads as authoritative. It
+now opens *WHAT IS LEFT* with a dated status block naming the three things
+that need the owner rather than the console.
+
+### Git has no identity configured in this repo
+
+`git commit` fails with *Author identity unknown*; earlier commits were
+authored as `Ahmad Essam <ahmadessam1997@gmail.com>` presumably via env vars.
+Commits this session used `git -c user.name=... -c user.email=...` rather than
+writing to the owner's config. If it should be permanent, set it repo-locally.
