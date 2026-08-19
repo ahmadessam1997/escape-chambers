@@ -508,6 +508,69 @@ rebuild overwrites the previous one. Upload 7; it contains everything.
 > self-consistent, but nothing can prove the table matches the drawing.
 
 
+### 10. THE PURCHASE BUG — one unticked checkbox, two days lost
+
+**Solved 2026-08-18.** Symptom: *"purchase completes, nothing happens"* — Play
+took the money, the app granted nothing, no error shown. RevenueCat read
+**Credentials need attention** and all three products **`Store Status: Could
+not check`** for two days, long past any propagation window.
+
+**Cause: the Play service account was missing the permission
+"View app information and download bulk reports (read only)".**
+
+Without it the service account cannot SEE any app in the developer account,
+so **every** Google Play Developer API call RevenueCat makes is rejected —
+including the purchase-validation call. RevenueCat therefore never records
+the transaction, never grants the entitlement, and the app (fail-closed by
+design) grants nothing. The money moves; nothing else does.
+
+> **RevenueCat needs THREE account permissions, not two.** This runbook
+> previously recorded only the two financial ones, which is how the account
+> was created wrong:
+>
+> | Permission | Why |
+> |---|---|
+> | **View app information and download bulk reports (read only)** | **see the app at all — the one that was missing** |
+> | View financial data, orders and cancellation survey responses | read purchases |
+> | Manage orders and subscriptions | refunds, cancellations |
+>
+> Ticking the first auto-ticks *View app quality information (read-only)* and
+> greys it out. That is correct. Leave **Admin (all permissions)** unticked.
+
+**The diagnostic that actually found it**, worth reusing on any sibling app:
+Google Cloud → APIs & Services → **Google Play Android Developer API** →
+**Metrics**, in the service account's project. Over 30 days the traffic was
+**only `401` and `403` — no `200` series at all**, at a 100% error rate on
+`ProductPurchasesService.Get` and `InappproductsService.List`. That proves
+the key is valid and the token mints fine: the failure is AUTHORIZATION at
+Play, not authentication. Comparing the permission checkboxes against a
+WORKING sibling account (`revenuecat-play@frost-tower`) then isolated the
+single differing box.
+
+**Verified fixed:** all three products moved from `Could not check` to
+**`Status: Published`** immediately after the save. The app-config banner may
+still read *Credentials need attention* for a while — it is a cached summary,
+and the products going Published is the authoritative signal.
+
+> **Two wrong turns recorded so nobody repeats them.**
+>
+> The theory that Play was linked to a different Google Cloud project was
+> **wrong** and cost a day. It is disproved by two *different* GCP projects
+> (`frost-tower`, `homekept-503903`) both getting 200s from this same
+> developer account — Play does not restrict API access by linked project.
+>
+> **There is no "API access" page in this Play Console build.** `/api-access`
+> redirects to the app list on cold AND in-app navigation, there is no entry
+> under Settings, Developer account or Linked services, and the string does
+> not appear anywhere in the console bundle. Stop looking for it.
+
+**Still to confirm on a device:** a real licence-tester purchase, ideally
+`hints_25` **twice** (the consumable path, where money actually moves), and
+Restore after reinstall. Also check **Order management** — purchases taken
+while validation was broken were never acknowledged, and Play auto-refunds
+unacknowledged purchases after about 3 days.
+
+
 ## Build commands
 
 ```powershell

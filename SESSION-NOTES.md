@@ -35,6 +35,42 @@
 
 ---
 
+## 2026-08-18 — the purchase bug: one unticked checkbox
+
+Two days of "purchase completes, nothing happens" came down to a single
+missing Play permission: **View app information and download bulk reports
+(read only)**. Without it the service account can see no app in the
+developer account, so EVERY Play API call RevenueCat makes is rejected —
+validation included. Full write-up and the reusable diagnostic in
+GO-LIVE.md step 10.
+
+**RevenueCat needs three account permissions; the runbook recorded two.**
+That is the whole bug. Check the sibling apps.
+
+### What actually found it
+
+GCP → APIs & Services → Google Play Android Developer API → **Metrics**.
+Thirty days of traffic with **only 401 and 403 series and no 200 at all**
+proves the key is valid and the token mints — the failure is AUTHORIZATION,
+not authentication. Diffing the permission checkboxes against a WORKING
+sibling account then isolated the one differing box. Neither RevenueCat nor
+Play ever named the missing permission.
+
+### Two wrong turns, recorded on purpose
+
+- **My linked-GCP-project theory was wrong** and cost a day. Disproved by
+  two different GCP projects both getting 200s from the same developer
+  account. I had been confident enough to tell the owner to go and check it.
+- **There is no "API access" page in this Play Console build.** The route
+  redirects to the app list, no nav entry exists, and the string is absent
+  from the console bundle. I burned several attempts navigating to a page
+  that no longer exists.
+
+The lesson is the same one as the redesign review: **when a system reports a
+generic error, go find a source of ground truth** — here, request metrics —
+rather than reasoning forward from plausible causes.
+
+---
 ## 2026-08-17 — the redesign, and a review that found nine real bugs in it
 
 The owner's two complaints about the shipped build were both correct:
