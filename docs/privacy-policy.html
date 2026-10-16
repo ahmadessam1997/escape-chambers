@@ -31,7 +31,11 @@
   <h1>Privacy Policy</h1>
   <div class="meta">
     Escape Chambers (formerly “Escape: 20 Chambers”) &nbsp;·&nbsp; <code>com.ahmadessam.escapechambers</code><br>
-    Effective 2 October 2026 (version 1.6.0). First published 13 August 2026.
+    Effective 2 October 2026 (version 1.6.0). First published 13 August 2026.<br>
+    Last updated: 15 October 2026.<br>
+    This policy covers both the Android version (Google Play) and the iPhone
+    version (App Store) of the game. They are the same game with the same id;
+    where the two platforms differ, the difference is noted.
   </div>
 
   <div class="box">
@@ -39,7 +43,8 @@
     progress and your hint wallet never leave your phone. But the game is free
     and pays for itself with ads, and the advertising, analytics and purchase
     services it uses do collect data. That is set out in full below, and it matches the Data
-    safety answers on the Google Play listing exactly.
+    safety answers on the Google Play listing and the App Privacy details on the
+    App Store listing exactly.
   </div>
 
   <h2>What stays on your device</h2>
@@ -60,11 +65,12 @@
     Ads appear as a banner on the rooms menu, between chambers, as a small
     card on the escape screen, and sometimes when you return to the game after
     time away. You can also choose to watch a video to earn hints or to skip a
-    chamber. To serve and measure those ads, Google AdMob collects:
+    chamber. The same ad formats appear on Android and on iPhone. To serve and
+    measure those ads, Google AdMob collects:
   </p>
   <table>
     <tr><th>Data</th><th>Why</th></tr>
-    <tr><td>Advertising ID</td><td>Ad delivery, frequency capping, fraud prevention</td></tr>
+    <tr><td>Advertising ID (Android advertising ID; on iPhone the IDFA, only if you allow tracking)</td><td>Ad delivery, frequency capping, fraud prevention</td></tr>
     <tr><td>Approximate location (derived from IP address)</td><td>Regionally appropriate ads and legal compliance</td></tr>
     <tr><td>Device and other identifiers</td><td>Ad delivery, analytics, fraud prevention</td></tr>
     <tr><td>App interactions</td><td>Ad performance measurement</td></tr>
@@ -77,6 +83,24 @@
     <a href="https://policies.google.com/technologies/partner-sites" target="_blank" rel="noopener">
     how Google uses data from apps that use its services</a>.
   </p>
+  <p>
+    <strong>Android only — the advertising ID.</strong> The Android app
+    declares the <code>AD_ID</code> permission so that AdMob can read the
+    Android advertising ID described in the table above. Where the law
+    requires it (EEA, UK and some US states), Google's consent form is shown
+    before any ad is requested.
+  </p>
+  <p>
+    <strong>iPhone only — the tracking prompt.</strong> There is no
+    <code>AD_ID</code> permission on iPhone. Instead, after the consent form
+    (where required) and before the first ad, the game shows Apple's App
+    Tracking Transparency prompt once (“Allow tracking?”). If you allow it,
+    AdMob may read the advertising identifier (IDFA) for personalised ads. If
+    you decline, ads still appear but are not personalised and the IDFA is not
+    read. For measuring which ads led to an install, the iPhone version uses
+    Apple's SKAdNetwork framework through Google, which reports ad
+    attribution without identifying you.
+  </p>
 
   <h3 style="font-size:16px;margin:22px 0 6px;color:#e9dcc0;">Google Analytics for Firebase — how the game is played</h3>
   <p>
@@ -88,8 +112,10 @@
     ad being shown and its format, a rewarded video being finished, a choice
     on the “rate this game” prompt, the daily hint and daily chamber, the
     “out of hints” offer being shown, a chamber being skipped, and a tap on a
-    link to another of our games. Firebase attaches an app-instance identifier, the
-    advertising ID, and general device information (model, OS version,
+    link to another of our games. The same events are sent on Android and on
+    iPhone. Firebase attaches an app-instance identifier, the
+    advertising ID (on Android; on iPhone the IDFA only if you allowed
+    tracking), and general device information (model, OS version,
     language, country) to those events. Nothing you could type is included,
     because the game has no text input. Google keeps these
     events for a limited period (2 to 14 months depending on our Google Analytics setting) and then deletes them automatically. See
@@ -97,30 +123,52 @@
     Privacy and Security in Firebase</a>.
   </p>
 
+  <h3 style="font-size:16px;margin:22px 0 6px;color:#e9dcc0;">The “rate this game” prompt</h3>
+  <p>
+    On Android the game shows its own small “rate this game” dialog, and your
+    choice on it is one of the gameplay events above. On iPhone the game
+    instead asks Apple's own review request sheet to appear at the same
+    moment; that sheet is drawn and handled by iOS, and the game collects no
+    data from it.
+  </p>
+
   <h3 style="font-size:16px;margin:22px 0 6px;color:#e9dcc0;">Notifications — the daily reminder</h3>
   <p>
     If you allow it, the game schedules <strong>one</strong> reminder
     (“Your free hint is ready”) for about a day after you last played. It is a
-    local notification: it is scheduled on your own device, no notification
-    token is created, and nothing is sent to any server to deliver it. The game
-    only asks for the notification permission the first time you claim a daily
-    hint, never when it starts. You can switch the reminder off at any time
-    under <em>Hints &amp; extras</em>, or in Android’s notification settings.
+    local notification on both platforms: it is scheduled on your own device,
+    no notification token is created, and nothing is sent to any server to
+    deliver it. The game only asks for the notification permission the first
+    time you claim a daily hint, never when it starts. You can switch the
+    reminder off at any time under <em>Hints &amp; extras</em>, in Android’s
+    notification settings, or on iPhone under
+    <em>Settings → Notifications → Escape Chambers</em>.
   </p>
 
   <h3 style="font-size:16px;margin:22px 0 6px;color:#e9dcc0;">RevenueCat — purchases</h3>
   <p>
     If you buy anything, RevenueCat records the purchase so it can be restored on
-    a new device. It receives your purchase history and an anonymous app user ID
+    a new device. It manages your entitlements on both Android and iPhone. It
+    receives your purchase history and an anonymous app user ID
     that it generates itself. It does not receive your name or email.
+    A <em>Restore purchases</em> button under <em>Hints &amp; extras</em>
+    re-checks your purchases with the store you bought from.
     See the <a href="https://www.revenuecat.com/privacy" target="_blank" rel="noopener">RevenueCat privacy policy</a>.
   </p>
 
-  <h3 style="font-size:16px;margin:22px 0 6px;color:#e9dcc0;">Google Play — billing</h3>
+  <h3 style="font-size:16px;margin:22px 0 6px;color:#e9dcc0;">Google Play and the App Store — billing</h3>
   <p>
-    Payment is handled entirely by Google Play. The game never sees or stores a
+    <strong>On Android</strong>, payment is handled entirely by Google Play. The game never sees or stores a
     card number, a billing address, or any payment detail. Google Play draws its
     own purchase sheet and hands the app back only a success or failure result.
+  </p>
+  <p>
+    <strong>On iPhone</strong>, the equivalent is Apple In-App Purchase through
+    the App Store: payment is processed by Apple, purchases are tied to your
+    Apple Account, and Apple draws its own purchase sheet. Exactly as on
+    Android, the game never sees or stores any payment detail and receives
+    only a success or failure result. Purchases made on one platform belong
+    to that platform's store account.
   </p>
 
   <h2>What is never collected</h2>
@@ -132,18 +180,25 @@
 
   <h2>Children</h2>
   <p>
-    The game is rated for everyone, but because it uses the advertising ID it is
-    <strong>not</strong> directed at children under 13 and is not part of Google
-    Play’s Designed for Families programme. If you are under 13, please ask a
+    The game is rated for everyone, but because it uses advertising identifiers it is
+    <strong>not</strong> directed at children under 13, is not part of Google
+    Play’s Designed for Families programme, and is not listed in the App
+    Store’s Kids category. If you are under 13, please ask a
     parent or guardian before playing.
   </p>
 
   <h2>Your choices</h2>
   <ul>
     <li>
-      <strong>Reset or delete your advertising ID</strong> on the device:
-      Settings → Google → All services → Ads. Deleting it stops personalised
-      advertising.
+      <strong>Reset or delete your advertising ID</strong> on the device
+      (Android): Settings → Google → All services → Ads. Deleting it stops
+      personalised advertising.
+    </li>
+    <li>
+      <strong>Withdraw tracking permission</strong> (iPhone):
+      Settings → Privacy &amp; Security → Tracking, and switch the game off
+      (or turn off “Allow Apps to Request to Track” for every app). Ads keep
+      showing but are no longer personalised, and the IDFA is not read.
     </li>
     <li>
       <strong>Remove ads</strong> with the one-time in-app purchase. Every ad
@@ -152,15 +207,19 @@
     </li>
     <li>
       <strong>Change your ad-consent choice</strong> where the law gives you one
-      (EEA, UK and some US states): <em>Hints &amp; extras → Privacy choices</em>.
+      (EEA, UK and some US states): <em>Hints &amp; extras → Privacy choices</em>,
+      the same place on Android and iPhone.
     </li>
     <li>
       <strong>Turn the daily reminder off</strong>:
-      <em>Hints &amp; extras → Daily reminder</em>.
+      <em>Hints &amp; extras → Daily reminder</em> on either platform, or in
+      Android’s notification settings / iPhone’s Settings → Notifications.
     </li>
     <li>
-      <strong>Analytics data</strong> is tied to the advertising ID and an
-      app-instance ID, not to your name. Deleting the advertising ID and
+      <strong>Analytics data</strong> is tied to the advertising ID (Android)
+      or the IDFA (iPhone, only if you allowed tracking) and an
+      app-instance ID, not to your name. Deleting the advertising ID (or
+      withdrawing tracking permission on iPhone) and
       clearing the app’s data (or uninstalling) cuts the link to what was
       collected before; deletion requests are explained on the
       <a href="delete-data.html">delete your data</a> page.
