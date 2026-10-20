@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>ANDROID_CLIENT_ID</key>
+	<string>461277311772-c1a79tflg93n6k7rag4s6mgmln16l494.apps.googleusercontent.com</string>
+	<key>API_KEY</key>
+	<string>AIzaSyBoqgIWd7WlZUc_GtByq1_FFoqW_sXA1NI</string>
+	<key>GCM_SENDER_ID</key>
+	<string>461277311772</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.ahmadessam.escapechambers</string>
+	<key>PROJECT_ID</key>
+	<string>ahmad-essam-games</string>
+	<key>STORAGE_BUCKET</key>
+	<string>ahmad-essam-games.firebasestorage.app</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:461277311772:ios:2b2826c49eec27905700d9</string>
+</dict>
+</plist>

@@ -1,0 +1,57 @@
+# iOS simulator smoke test on a GitHub-hosted Mac (free on public repos).
+# Builds the app for the iOS Simulator (no Apple account or signing needed),
+# boots an iPhone, installs and launches the app, checks it is still running
+# after 30 s, and uploads screenshots + the app log as the run's artifacts.
+# Run it from the repo's Actions tab ("Run workflow") or on every push.
+name: iOS simulator test
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+jobs:
+  simulator:
+    runs-on: macos-15
+    timeout-minutes: 60
+    env:
+      BUNDLE_ID: com.ahmadessam.escapechambers
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Install npm dependencies
+        run: npm ci --ignore-scripts
+      - name: Copy www and plugins into the iOS project
+        run: npx cap sync ios
+      - name: Build for the iOS Simulator
+        run: |
+          xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Debug \
+            -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build CODE_SIGNING_ALLOWED=NO build | tail -n 60
+          test ${PIPESTATUS[0]} -eq 0
+      - name: Boot an iPhone, install, launch
+        run: |
+          set -euo pipefail
+          DEV=$(xcrun simctl list devices available -j | python3 -c "import json,sys;d=json.load(sys.stdin)['devices'];c=[x for r,l in d.items() if 'iOS' in r for x in l if x['name'].startswith('iPhone') and 'Pro Max' not in x['name']];print(c[-1]['udid'])")
+          echo "DEV=$DEV" >> "$GITHUB_ENV"
+          xcrun simctl boot "$DEV"
+          xcrun simctl bootstatus "$DEV" -b
+          APP=$(find build/Build/Products/Debug-iphonesimulator -maxdepth 1 -name '*.app' | head -1)
+          xcrun simctl install "$DEV" "$APP"
+          mkdir -p shots
+          xcrun simctl launch "$DEV" "$BUNDLE_ID"
+          for t in 5 15 30; do sleep $([ $t = 5 ] && echo 5 || echo 10); xcrun simctl io "$DEV" screenshot "shots/after-${t}s.png"; done
+      - name: Still running after 30 s (no crash)
+        run: |
+          xcrun simctl spawn "$DEV" launchctl list | grep -q "$BUNDLE_ID" && echo "App is running" || { echo "::error::App is not running - it crashed or exited"; exit 1; }
+      - name: Collect the app log
+        if: always()
+        run: |
+          mkdir -p shots
+          xcrun simctl spawn "$DEV" log show --last 5m --style compact --predicate 'process == "App"' > shots/app.log 2>&1 || true
+          ls ~/Library/Logs/DiagnosticReports/ 2>/dev/null | grep -i App && cp ~/Library/Logs/DiagnosticReports/App* shots/ || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ios-simulator-results
+          path: shots/

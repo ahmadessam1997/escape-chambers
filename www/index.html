@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Escape: 20 Chambers</title>
+<title>Escape Chambers</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
   html,body{height:100%;overflow:hidden;font-family:-apple-system,'Segoe UI',Roboto,sans-serif;
@@ -61,9 +61,20 @@
 
   /* UV mode */
   body.uv #sceneWrap{background:radial-gradient(ellipse at 50% 40%, #0a1c33 0%, #04070d 78%);}
-  body.uv svg{filter:saturate(.45) brightness(.55);}
-  .uv-ink{opacity:0;transition:opacity .5s;fill:#8fe4ff;}
+  /* Only the DRAWING is dimmed under UV. The wall rule lives in #uvLayer,
+     outside #roomArt, so it glows at full strength (1.7.1). */
+  body.uv #roomArt{filter:saturate(.45) brightness(.55);}
+  .uv-ink{opacity:0;transition:opacity .5s;fill:#8fe4ff;
+    paint-order:stroke;stroke:#03101a;stroke-width:4px;stroke-linejoin:round;stroke-opacity:.85;}
+  #uvLayer .uv-ink{fill:#a9ecff;}
+  /* The object the ink belongs to glows, so the writing and the thing it
+     was written on read as one even when the words sit beside it. */
+  body.uv .uvClue{filter:drop-shadow(0 0 7px #8fe4ff);}
   body.uv .uv-ink{opacity:1;}
+  /* A mirrored room (game.js sets .mirrored on #scene) would mirror the ink
+     with it. Flip each line back about its own centre so the rule reads
+     normally and the sigils run left to right, as the door expects. */
+  #scene.mirrored .uv-ink{transform-box:fill-box;transform-origin:center;transform:scaleX(-1);}
   body.uv #glowE,body.uv #flame{opacity:.12 !important;animation:none;}
 
   #inv{display:flex;gap:9px;padding:10px 12px calc(12px + env(safe-area-inset-bottom));
@@ -75,38 +86,145 @@
   .slot.item{border-color:var(--accent);}
   .slot.sel{border-color:#fff;box-shadow:0 0 12px rgba(255,255,255,.4);}
   .slot .lbl{position:absolute;bottom:-1px;left:0;right:0;font-size:8px;text-align:center;color:var(--soft);}
-  #invHint{font-size:11.5px;color:var(--soft);margin-left:auto;max-width:40%;text-align:right;
-    line-height:1.35;opacity:.85;}
 
-  #toast{position:absolute;left:50%;top:14px;transform:translateX(-50%) translateY(-8px);
-    background:rgba(0,0,0,.86);border:1px solid var(--accent);color:var(--ink);
-    padding:10px 16px;border-radius:10px;font-size:13px;max-width:86%;text-align:center;
-    opacity:0;transition:all .3s;pointer-events:none;z-index:10;line-height:1.4;}
-  #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  /* Messages (1.7.1): they no longer flash for 2.8 s at the top of the
+     room. The box sits in the band BELOW the room (game.js layoutHud sets
+     bottom and max-height), stays for a reading time scaled to its length
+     (never under 6 s), and a tap keeps it. Clues stay until tapped away. */
+  #toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%) translateY(8px);
+    background:rgba(0,0,0,.9);border:1px solid var(--accent);color:var(--ink);
+    padding:10px 16px 8px;border-radius:12px;font-size:14px;width:max-content;max-width:min(92%,440px);
+    text-align:center;white-space:pre-line;overflow-y:auto;
+    opacity:0;visibility:hidden;transition:opacity .25s,transform .25s,visibility 0s .25s;
+    pointer-events:none;z-index:30;line-height:1.45;}
+  #toast.show{opacity:1;visibility:visible;transform:translateX(-50%) translateY(0);pointer-events:auto;
+    transition:opacity .25s,transform .25s;}
+  #toast::after{content:attr(data-foot);display:block;margin-top:5px;font-size:10px;
+    letter-spacing:.08em;color:var(--soft);opacity:.8;text-transform:uppercase;}
+  #toast.sticky{box-shadow:0 0 0 1px var(--accent),0 6px 22px rgba(0,0,0,.6);}
+
+  /* ---- notebook button (bag bar) ---- */
+  #noteBtn{margin-left:auto;position:relative;background:var(--panel);border:1.5px solid var(--accent);
+    color:var(--ink);border-radius:14px;padding:8px 10px;font-size:13px;font-weight:600;
+    display:flex;flex-direction:column;align-items:center;line-height:1.15;min-width:84px;}
+  #noteBtn .ni{font-size:22px;}
+  #noteBtn:active{filter:brightness(1.3);}
+  #noteBadge{position:absolute;top:-7px;right:-7px;min-width:20px;height:20px;border-radius:10px;
+    background:#e8a84c;color:#241708;font-size:11px;font-weight:800;line-height:20px;padding:0 5px;display:none;}
+  #noteBtn.fresh #noteBadge{display:block;}
+
+  /* ---- notebook + hint panel ---- */
+  .card.wide{max-width:420px;text-align:left;}
+  .card.wide h2{text-align:center;}
+  #noteBody{font-size:13px;color:#cbd7ee;line-height:1.45;max-height:62vh;overflow-y:auto;
+    margin:4px 0 12px;padding-right:4px;}
+  #noteBody h3{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#e8a84c;
+    font-weight:600;margin:12px 0 5px;}
+  #noteBody h3:first-child{margin-top:2px;}
+  #noteBody ul,#hpList ul{margin:0 0 0 16px;}
+  #noteBody li,#hpList li{margin:0 0 6px;}
+  .nbProps{margin:3px 0 0;font-size:12px;color:#cbd7ee;display:grid;
+    grid-template-columns:auto 1fr;column-gap:10px;row-gap:1px;}
+  .nbProps .k{color:#8fa3c8;}
+  .nbTag{font-size:10.5px;color:#8fe3b0;margin-left:4px;}
+  .nbTag.dim{color:#8fa3c8;}
+  .nbSig{font-size:22px;letter-spacing:6px;color:#8fe4ff;}
+  .cardBtns{text-align:center;}
+  #hpGoal{font-size:14px;color:#e9dcc0;margin:0 0 10px;text-align:center;}
+  #hpSteps{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:0 0 6px;}
+  .hstep{font-size:11.5px;border:1px solid #3a4a70;border-radius:14px;padding:4px 9px;color:#8fa3c8;}
+  .hstep.done{border-color:#4a7a5f;color:#8fe3b0;}
+  .hstep.next{border-color:#e8a84c;color:#e8a84c;}
+  #hpWhere{font-size:12px;color:#8fa3c8;text-align:center;margin:0 0 10px;}
+  #hpList{font-size:13px;color:#cbd7ee;line-height:1.45;max-height:38vh;overflow-y:auto;margin:0 0 8px;}
+  #hpList b{color:#e8a84c;font-weight:600;}
+  #hpWallet{font-size:11.5px;color:#8fa3c8;text-align:center;margin:8px 0 6px;}
+  .btn:disabled{background:none;border:1px solid #3a4a70;color:#63739a;}
 
   .overlay{position:fixed;inset:0;background:rgba(0,0,0,.82);display:none;
     align-items:center;justify-content:center;z-index:20;padding:20px;}
   .overlay.show{display:flex;}
+  /* The banner ad is a native view over the bottom of the page (menu
+     only). ads.js sets body.bannerUp and --banner-h while it is up, so
+     every dialog centres in - and scrolls within - the space above it
+     rather than running underneath. */
+  body.bannerUp .overlay{padding-bottom:calc(20px + var(--banner-h,60px));}
+  body.bannerUp .overlay .card{max-height:calc(100vh - 40px - var(--banner-h,60px));}
+  /* Edge to edge (Android 15+ with a current WebView) the page runs under
+     the status bar and the gesture bar, and the banner sits ABOVE the
+     gesture bar. Measured on a 720x1280 emulator: the rooms card reached
+     under the clock at the top and 4px under the banner at the bottom.
+     Keep every dialog inside the safe area, 8px clear of the bars (the
+     bars are already a margin; a full 20px more pushed the last row of
+     chambers out of sight at 360x640). env() is 0 when the WebView is not
+     edge to edge, so there the 20px margins are exactly as before. */
+  .overlay{--pt:max(20px, calc(8px + env(safe-area-inset-top)));
+    --pb:max(20px, calc(8px + env(safe-area-inset-bottom)));
+    padding-top:var(--pt);padding-bottom:var(--pb);}
+  .overlay .card{max-height:min(88vh, calc(100vh - var(--pt) - var(--pb)));}
+  body.bannerUp .overlay{padding-bottom:calc(var(--pb) + var(--banner-h,60px));}
+  body.bannerUp .overlay .card{max-height:calc(100vh - var(--pt) - var(--pb) - var(--banner-h,60px));}
   .card{background:linear-gradient(#20293e,#131a2c);border:1px solid #3a4a70;border-radius:18px;
     padding:24px 20px;max-width:350px;width:100%;text-align:center;max-height:88vh;overflow:auto;}
   .card h2{font-family:Georgia,serif;font-weight:400;color:#e8a84c;letter-spacing:.1em;
-    font-size:19px;margin-bottom:8px;}
+    font-size:19px;margin-bottom:8px;text-wrap:balance;}
   .card p{font-size:13px;color:#aab8d6;line-height:1.55;margin-bottom:16px;}
   .btn{display:inline-block;background:linear-gradient(#e8a84c,#c98a2e);color:#241708;border:none;
     border-radius:26px;padding:12px 30px;font-size:15px;font-weight:700;letter-spacing:.05em;margin:4px;}
   .btn:active{transform:scale(.96);}
   .btn.ghostb{background:none;border:1px solid #3a4a70;color:#8fa3c8;}
 
-  #grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin:12px 0;}
-  .lv{aspect-ratio:1;border-radius:12px;border:1px solid #3a4a70;font-weight:800;font-size:15px;
-    background:#20293e;color:#e9dcc0;}
+  /* Six across. It was four (twenty chambers, 4x5), then five when the
+     daily row and More games joined this card; thirty chambers at five
+     across would be six rows and push every button under the banner. Six
+     across is 6x5 — one short row more than before — and the column count
+     never has to change again: more chambers add rows, and the card
+     scrolls (max-height on .card) once they no longer fit. */
+  #grid{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin:10px 0;}
+  .lv{aspect-ratio:1;border-radius:10px;border:1px solid #3a4a70;font-weight:800;font-size:14px;
+    background:#20293e;color:#e9dcc0;padding:0;min-width:0;}
   .lv:active{background:#2c3a5c;}
   .lv.done{background:#274035;border-color:#4a7a5f;color:#8fe3b0;}
   .lv.lock{background:#141a28;color:#3a4a70;pointer-events:none;}
 
   #menuHints{font-size:12px;color:#e8a84c;margin-bottom:10px;letter-spacing:.05em;}
+  #menuProgress{font-size:11.5px;color:#8fa3c8;margin:-8px 0 8px;letter-spacing:.04em;}
+  /* Hidden unless the menu title is tapped five times (game.js). A debug
+     string under the buttons read as unfinished to players; testers and
+     the owner can still bring it up on any device. */
   #buildLine{margin-top:12px;font-size:10px;color:#5d6b8f;letter-spacing:.06em;
-    font-family:ui-monospace,Menlo,Consolas,monospace;}
+    font-family:ui-monospace,Menlo,Consolas,monospace;display:none;}
+  #buildLine.show{display:block;}
+
+  /* ---- daily row: today's chamber + the free hint ---- */
+  #dailyRow{display:flex;gap:9px;margin:0 0 4px;}
+  .dbtn{flex:1;min-width:0;background:#1a2338;border:1px solid #e8a84c;border-radius:14px;
+    padding:9px 8px;color:#e9dcc0;text-align:center;}
+  .dbtn:active{background:#243350;}
+  .dbtn .dt{display:block;font-size:13px;font-weight:700;}
+  .dbtn .dd{display:block;font-size:10.5px;color:#8fa3c8;margin-top:2px;line-height:1.3;}
+  .dbtn.done{border-color:#4a7a5f;}
+  .dbtn.done .dt{color:#8fe3b0;}
+  .dbtn.spent{border-color:#3a4a70;}
+  .dbtn.spent .dt{color:#8fa3c8;font-weight:500;}
+
+  /* ---- skip offer: only appears once a player has been stuck a while ---- */
+  #skipBtn{position:absolute;left:8px;top:8px;z-index:7;display:none;
+    background:rgba(10,14,24,.86);}
+  #skipBtn.show{display:block;}
+
+  /* ---- native ad slot on the win card ----
+     An empty reserved box: NativeAdPlugin.java draws the ad as a native
+     view floating exactly over it. Below the buttons and well clear of
+     them, so a tap meant for "Next chamber" cannot land on an ad. */
+  #nativeSlot{height:84px;margin:18px 0 0;border-radius:14px;background:#1a2338;}
+  #nativeSlot.hidden{display:none;}
+
+  /* ---- more games ---- */
+  .mrow{cursor:pointer;}
+  .mrow:active{background:#243350;}
+  .mrow img{width:44px;height:44px;border-radius:10px;flex-shrink:0;}
+  .mrow .go{color:#e8a84c;font-size:12px;font-weight:700;flex-shrink:0;}
 
   /* ---- observations ----
      The clue list is ALWAYS on screen and always free. A toast that expires
@@ -121,6 +239,7 @@
   #obs b{display:block;font-size:10px;letter-spacing:.12em;color:#8fa3c8;
     margin-bottom:4px;text-transform:uppercase;font-weight:600;}
   #obs li{margin:0 0 3px 14px;}
+  #obs .obsFoot{font-size:10.5px;color:#8fa3c8;margin-top:4px;}
   #obsToggle{position:absolute;right:8px;top:8px;z-index:7;}
 
   /* ---- stars & records ---- */
@@ -130,7 +249,7 @@
   .par{color:#8fa3c8;font-size:12px;}
   .rec{margin:10px 0 0;color:#8fe3b0;font-size:13px;}
   .rec.dim{color:#8fa3c8;}
-  .lv .st{display:block;font-size:9px;line-height:1;color:#ffcf5a;letter-spacing:1px;}
+  .lv .st{display:block;font-size:7px;line-height:1.2;color:#ffcf5a;letter-spacing:0;white-space:nowrap;}
   #rankTable{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px;}
   #rankTable th{text-align:left;font-size:10px;letter-spacing:.1em;color:#8fa3c8;
     text-transform:uppercase;padding:4px 6px;font-weight:600;}
@@ -182,6 +301,7 @@
   <div id="sceneWrap">
     <div id="toast"></div>
     <button class="pill" id="obsToggle">🔍</button>
+    <button class="pill" id="skipBtn">⏭ Stuck? Skip</button>
     <div id="obs"></div>
     <svg id="scene" viewBox="0 0 800 560" preserveAspectRatio="xMidYMid meet">
       <defs>
@@ -339,31 +459,70 @@
   <div id="inv">
     <div class="slot" id="s0"></div><div class="slot" id="s1"></div>
     <div class="slot" id="s2"></div><div class="slot" id="s3"></div>
-    <!-- Was "Tap everything." That was accurate for the old build and is now
-         the opposite of the design: the room tells you where to look, and
-         the 🔍 panel holds what you have noticed. -->
-    <div id="invHint">Read what you notice — 🔍<br>Select an item, then tap where to use it.</div>
+    <!-- 1.7.1: the clue notebook. Everything this run has found, every
+         object's properties and the rule once seen — readable any time,
+         for free. It replaces the two-line "read what you notice" hint,
+         which now opens the notebook's own first section. -->
+    <button id="noteBtn"><span class="ni">📓</span>Notebook<span id="noteBadge"></span></button>
   </div>
 </div>
 
 <div class="overlay show" id="menu">
   <div class="card">
-    <h2>20 CHAMBERS</h2>
-    <p>Twenty locked rooms — a prison cell, a sealed tomb, an operating
-       theatre.<br>Every room tells you where to look.<br><b>Read it right and
-       escape in the fewest moves for five stars.</b></p>
+    <!-- The title is the game's NAME and carries no chamber count, so it
+         never needs editing when chambers are added. The counts below it
+         are written by game.js from the data. -->
+    <h2 id="menuTitle">ESCAPE CHAMBERS</h2>
+    <p><span id="menuBlurb">Locked rooms</span> — a prison cell, a sealed tomb, a
+       locksmith’s last workshop.<br>Every room tells you where to look.<br><b>Read
+       it right and escape in the fewest moves for five stars.</b></p>
     <div id="menuHints">5 hints left</div>
+    <div id="menuProgress"></div>
+    <!-- Two reasons to come back tomorrow, above the grid so a player who
+         has finished every chamber still sees them first. -->
+    <div id="dailyRow">
+      <button class="dbtn" id="dailyBtn"><span class="dt">📅 Daily chamber</span>
+        <span class="dd" id="dailyState"></span></button>
+      <button class="dbtn" id="dailyHintBtn"><span class="dt" id="dailyHintTitle">🎁 Free hint</span>
+        <span class="dd" id="dailyHintState"></span></button>
+    </div>
     <div id="grid"></div>
     <button class="btn ghostb" id="resumeBtn" style="display:none">Resume chamber</button>
     <button class="btn ghostb" id="rankBtn">🏅 Rankings</button>
     <button class="btn ghostb" id="shopBtn">🕯️ Hints &amp; extras</button>
-    <!-- Version + billing state, on screen deliberately. Without it there
-         is no way to tell whether a tester is running the build you just
-         shipped, and "purchases don't work" is unanswerable: the symptom of
-         an old build and of a broken store look identical from outside. -->
+    <button class="btn ghostb" id="moreBtn">🎮 More games</button>
+    <!-- Version + billing state. Without it there is no way to tell whether
+         a tester is running the build you just shipped, and "purchases don't
+         work" is unanswerable: the symptom of an old build and of a broken
+         store look identical from outside. HIDDEN from players since 1.6.0:
+         tap the menu title five times to show it. -->
     <div id="buildLine"></div>
   </div>
 </div>
+
+<!-- The hint panel (1.7.1). Goal, the ladder as steps, what the next step
+     costs BEFORE it is bought, and every step already bought. It sits before
+     #hintOv in the DOM so the out-of-hints prompt stacks above it. -->
+<div class="overlay" id="hintPanel"><div class="card wide">
+  <h2>💡 HINTS</h2>
+  <p id="hpGoal"></p>
+  <div id="hpSteps"></div>
+  <p id="hpWhere"></p>
+  <div id="hpList"></div>
+  <div class="cardBtns">
+    <button class="btn" id="hpNext">Show the next step</button>
+    <div id="hpWallet"></div>
+    <button class="btn ghostb" id="hpNotebook">📓 Notebook</button>
+    <button class="btn ghostb" id="hpClose">Back to the room</button>
+  </div>
+</div></div>
+
+<!-- The clue notebook (1.7.1). Built by game.js renderNotebook(). -->
+<div class="overlay" id="noteOv"><div class="card wide">
+  <h2>📓 NOTEBOOK</h2>
+  <div id="noteBody"></div>
+  <div class="cardBtns"><button class="btn ghostb" id="noteClose">Back to the room</button></div>
+</div></div>
 
 <div class="overlay" id="hintOv"><div class="card">
   <h2>OUT OF HINTS</h2>
@@ -371,6 +530,25 @@
   <button class="btn" id="hintOvWatch">🎬 Watch for +2</button>
   <button class="btn ghostb" id="hintOvShop">Get more hints</button>
   <button class="btn ghostb" id="hintOvClose">Keep trying</button>
+</div></div>
+
+<!-- The skip offer. Reached from #skipBtn, which only appears after a long
+     time in one chamber (config.js -> skip). The video is the free route;
+     hints are the route for a Remove ads owner, who has no videos. -->
+<div class="overlay" id="skipOv"><div class="card">
+  <h2>SKIP THIS CHAMBER?</h2>
+  <p id="skipWhy"></p>
+  <button class="btn" id="skipWatch">🎬 Watch a video to skip</button>
+  <button class="btn ghostb" id="skipHints">Skip for 3 hints</button>
+  <button class="btn ghostb" id="skipClose">Keep trying</button>
+</div></div>
+
+<!-- More games. The list is built from config.js -> moreGames. -->
+<div class="overlay" id="moreOv"><div class="card">
+  <h2>MORE GAMES</h2>
+  <p id="moreStoreLine">From the same developer. Free on Google Play.</p>
+  <div id="moreList"></div>
+  <button class="btn ghostb" id="moreClose">Back</button>
 </div></div>
 
 <!-- Rankings. Ordered by the same rule everywhere: stars first, then time.
@@ -412,12 +590,15 @@
   <div class="srow">
     <div class="em">🚫</div>
     <div class="tx"><div class="tt">Remove ads</div>
-      <div class="ds">No more ads between chambers. Hint videos stay if you want them.</div></div>
+      <div class="ds">Every ad goes: banners, the ads between chambers and the hint videos.</div></div>
     <button class="sbuy" id="buyRemoveAds" data-product="remove_ads">—</button>
   </div>
 
   <p id="shopNote"></p>
   <button class="btn ghostb" id="shopRestore">Restore purchases</button>
+  <!-- The daily reminder toggle. Shown only on a device that can actually
+       post a notification; hidden in the browser, where it would be dead. -->
+  <button class="btn ghostb" id="shopNotify" style="display:none">🔔 Daily reminder: off</button>
   <!-- Shown only when Google's UMP says this user is entitled to revisit
        their ad-consent choice. Hidden everywhere else on purpose: outside
        those regions the form does not exist and the button would be dead. -->
@@ -431,7 +612,7 @@
 </div></div>
 
 <div class="overlay" id="symOv"><div class="card" id="symCard">
-  <h2>SIGIL LOCK</h2><p>The door demands four sigils, in order.</p>
+  <h2>SIGIL LOCK</h2><p id="symSub">The door demands four sigils, in order.</p>
   <div id="seqShow"></div><div id="sympad"></div>
 </div></div>
 
@@ -439,13 +620,17 @@
   <h2 id="winTitle">ESCAPED</h2><p id="winText"></p>
   <button class="btn" id="nextBtn">Next chamber</button>
   <button class="btn ghostb" id="backBtn">All rooms</button>
+  <div id="nativeSlot" class="hidden"></div>
 </div></div>
 
 <script src="js/config.js"></script>
+<script src="js/analytics.js"></script>
 <script src="js/save.js"></script>
 <script src="js/billing.js"></script>
 <script src="js/ads.js"></script>
+<script src="js/notify.js"></script>
 <script src="js/shop.js"></script>
+<script src="js/rate.js"></script>
 <!-- Must load before game.js: genLevel() calls ECPuzzle.generate(). -->
 <!-- themes before puzzle before game: genLevel() asks ECThemes for the
      setting's objects, then hands them to ECPuzzle as the candidate spots. -->

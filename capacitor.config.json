@@ -1,9 +1,15 @@
 {
   "appId": "com.ahmadessam.escapechambers",
-  "appName": "Escape 20 Chambers",
+  "appName": "Escape Chambers",
   "webDir": "www",
   "backgroundColor": "#0d1322",
   "android": {
     "backgroundColor": "#0d1322"
+  },
+  "plugins": {
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_hint",
+      "iconColor": "#e8a84c"
+    }
   }
 }

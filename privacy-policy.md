@@ -14,6 +14,14 @@
 >
 > Sources: `docs/privacy-policy.html` and `docs/delete-data.html`.
 > This file is retained only as a historical record.
+>
+> **2026-10-02 (1.6.0):** `docs/privacy-policy.html` was updated for the
+> daily reminder notification (local only, permission asked on the first
+> daily-hint claim), the Firebase Analytics gameplay events, the two new ad
+> placements (app open, native card on the escape screen) and the corrected
+> Remove ads wording (it removes hint videos too). It must be pushed to the
+> hosted site **before** 1.6.0 goes live. Nothing below this banner was
+> changed — it is still the v1.0 text and still must not be hosted.
 
 ---
 

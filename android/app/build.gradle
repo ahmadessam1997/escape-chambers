@@ -27,8 +27,8 @@ android {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         // Play rejects a duplicate versionCode outright. Bump on EVERY upload.
-        versionCode 9
-        versionName "1.4.0"
+        versionCode 18
+        versionName "1.7.2"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -72,10 +72,27 @@ dependencies {
     implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
     implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
     implementation project(':capacitor-android')
+    // Mobile Ads SDK, for NativeAdPlugin. The AdMob Capacitor plugin already
+    // pulls it in, but as `implementation`, which does not expose it to this
+    // module's compile classpath. Same version the plugin resolves (25.4.+),
+    // so Gradle ends up with ONE copy rather than two.
+    implementation "com.google.android.gms:play-services-ads:25.4.0"
     testImplementation "junit:junit:$junitVersion"
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
     implementation project(':capacitor-cordova-android-plugins')
+
+/* Google Analytics for Firebase.
+
+   Guarded on google-services.json the same way the plugin below is: the file is
+   gitignored-adjacent config, and without it the Firebase initialiser has no
+   project to attach to. Only the BOM and analytics artefact are pulled in --
+   nothing here needs Auth, Firestore or Messaging. This is what feeds AdMob's
+   user metrics (ARPU, retention cohorts, eCPM by cohort). */
+if (file('google-services.json').exists()) {
+    implementation platform('com.google.firebase:firebase-bom:34.18.0')
+    implementation 'com.google.firebase:firebase-analytics'
+}
 }
 
 apply from: 'capacitor.build.gradle'

@@ -1,7 +1,7 @@
 /* =====================================================================
-   Escape: 20 Chambers — SETTINGS
+   Escape Chambers — SETTINGS
    ---------------------------------------------------------------------
-   Twenty chambers used to be ONE room. Literally one: index.html carried a
+   The first twenty chambers used to be ONE room. Literally one: index.html carried a
    single hand-written SVG — desk, drawer, bookshelf, two paintings, clock,
    plant, rug, chest, safe, cabinet, candle — and every chamber rendered it
    with a different generated palette and a name from a list. Chamber II was
@@ -3110,6 +3110,2880 @@
   };
 
   /* =====================================================================
+     CHAMBERS 21-30 — parts and backdrops (added in 1.7.0)
+     ---------------------------------------------------------------------
+     Ten more settings, one per chamber. Each brings its own backdrop
+     and its own seven searchable objects; names are prefixed by setting
+     (dk, wc, sb, ap, pj, pr, ar, tx, og, lk) so nothing here can shadow
+     a part above. No readable words in any of this art: half the rooms
+     are drawn mirrored.
+     ===================================================================== */
+
+  /* ---- THE DARKROOM ---- */
+
+  /* ---- THE DARKROOM ---- */
+
+  /* Ribbed rubber duck-mat in front of the wet bench. Black, with the
+     safelight catching the ribs — plain enough that UV ink reads on it. */
+  PARTS.dkMat = function (o) {
+    var out = pth('M-118 -4 l12 -62 h212 l12 62 z', 'fill="' + (o.fill || '#191314') + '" ' + K3);
+    var j, y, inset;
+    for (j = 0; j < 7; j++) {
+      y = -11 - j * 8;
+      inset = 116 - (j + 1) * 1.5;
+      out += ln(-inset, y, inset, y, 'stroke="' + (o.rib || '#4a2c2e') + '" stroke-width="2.4" stroke-opacity=".85"');
+    }
+    out += pth('M-106 -66 h212', 'stroke="#a03a34" stroke-opacity=".55" stroke-width="2"');
+    out += pth('M-118 -4 h236', 'stroke="black" stroke-opacity=".5" stroke-width="3"');
+    out += circ(-98, -12, 3, 'fill="#070505"') + circ(98, -12, 3, 'fill="#070505"');
+    return out;
+  };
+
+  /* A carboy of fixer: amber glass, cork bung, a blank poison label. */
+  PARTS.dkCarboy = function (o) {
+    var g = o.glass || '#8a3d1e';
+    return ell(0, -3, 30, 6, 'fill="black" fill-opacity=".4"') +
+      pth('M-30 -14 C-35 -52 -22 -70 -9 -78 V-94 H9 V-78 C22 -70 35 -52 30 -14 Q0 0 -30 -14 z',
+        'fill="' + g + '" fill-opacity=".92" ' + K3) +
+      pth('M-32 -40 q32 9 64 0 q1 14 -2 26 Q0 0 -30 -14 q-3 -12 -2 -26 z', 'fill="#3a1408" fill-opacity=".7"') +
+      rect(-12, -99, 24, 7, 'rx="3" fill="' + g + '" ' + K2) +
+      rect(-7, -109, 14, 11, 'rx="2" fill="' + (o.cork || '#b89068') + '" ' + K2) +
+      rect(-14, -58, 28, 22, 'rx="2" fill="#dcbcae" ' + K2) +
+      pth('M-7 -53 l14 12 M7 -53 l-14 12', 'stroke="#4a1c18" stroke-width="3" stroke-linecap="round"') +
+      pth('M-22 -62 q-7 14 -5 30', 'fill="none" stroke="#ffc0a8" stroke-opacity=".5" stroke-width="4" stroke-linecap="round"');
+  };
+
+  /* The darkroom timer: black case, pale dial, one long sweep hand and a
+     red wedge for the time that is left. */
+  PARTS.dkTimer = function (o) {
+    var c = o.body || '#2c2426';
+    var out = rect(-8, -42, 16, 10, 'rx="3" fill="#8f8482" ' + K2);
+    out += circ(0, 0, 36, 'fill="' + c + '" ' + K5);
+    out += circ(0, 0, 28, 'fill="' + (o.face || '#dcc6b8') + '"');
+    out += pth('M0 0 L0 -28 A28 28 0 0 1 24.2 14 z', 'fill="#b8302a" fill-opacity=".8"');
+    var i, a;
+    for (i = 0; i < 12; i++) {
+      a = i * Math.PI / 6;
+      out += ln((21 * Math.cos(a)).toFixed(1), (21 * Math.sin(a)).toFixed(1),
+                (27 * Math.cos(a)).toFixed(1), (27 * Math.sin(a)).toFixed(1),
+                'stroke="#1c1416" stroke-width="' + (i % 3 ? 2 : 3.6) + '"');
+    }
+    out += ln(0, 5, 0, -24, 'stroke="#1c1416" stroke-width="3.5" stroke-linecap="round"');
+    out += circ(0, 0, 4.5, 'fill="#1c1416"');
+    out += circ(-25, 25, 5, 'fill="#8f8482" ' + K2) + circ(25, 25, 5, 'fill="#8f8482" ' + K2);
+    return out;
+  };
+
+  /* Strips of negatives clipped to a wire to dry, weighted at the foot. */
+  PARTS.dkNegStrips = function (o) {
+    var out = pth('M-52 -40 q52 6 104 0', 'fill="none" stroke="#9a8c88" stroke-width="2"');
+    var len = [70, 78, 64, 80, 72], i, j, x, top;
+    for (i = 0; i < 5; i++) {
+      x = -47 + i * 20;
+      top = -37 + (i === 0 || i === 4 ? -1 : 1);
+      out += rect(x, top, 14, len[i], 'fill="' + (o.film || '#150f11') + '" stroke="black" stroke-opacity=".55" stroke-width="2"');
+      for (j = 0; j + 13 < len[i]; j += 13) {
+        out += rect(x + 3, top + 4 + j, 8, 9, 'fill="' + ((i + j) % 2 ? '#6e4a44' : '#4a302e') + '"');
+      }
+      out += rect(x + 3, top - 4, 8, 7, 'rx="1.5" fill="#b9a69e" ' + K2);
+      out += rect(x + 2, top + len[i] - 3, 10, 6, 'rx="1.5" fill="#857774" ' + K2);
+    }
+    return out;
+  };
+
+  /* The drying line. Four prints pegged up, still wet; the pictures are
+     dark so the ultraviolet writing has something to sit on. */
+  PARTS.dkPrintLine = function (o) {
+    var p = o.paper || '#c4a69c', d = '#231719', m = '#7d5c56';
+    var out = pth('M-106 -64 q106 16 212 0', 'fill="none" stroke="#9a8c88" stroke-width="2.5"');
+    out += circ(-104, -64, 3.5, 'fill="#5a4a48"') + circ(104, -64, 3.5, 'fill="#5a4a48"');
+    var xs = [-78, -26, 26, 78], ys = [-58, -55, -55, -58], rot = [-3, 2, -1, 3], i, x, y, g;
+    for (i = 0; i < 4; i++) {
+      x = xs[i]; y = ys[i];
+      g = rect(-23, 0, 46, 84, 'rx="1" fill="' + p + '" ' + K2) + rect(-18, 5, 36, 72, 'fill="' + d + '"');
+      if (i === 0) {          /* a sitter */
+        g += circ(0, 30, 9, 'fill="' + m + '"') + pth('M-15 77 q2 -30 15 -32 q13 2 15 32 z', 'fill="' + m + '"');
+      } else if (i === 1) {   /* a house under a moon */
+        g += pth('M-18 77 v-22 l11 -12 l11 12 v-8 h14 v30 z', 'fill="' + m + '"') + circ(8, 18, 6, 'fill="#a88078"');
+      } else if (i === 2) {   /* a bare tree */
+        g += pth('M0 77 v-34 M0 50 l-11 -16 M0 44 l10 -18 M-5 42 l-2 -14 M5 35 l8 -4',
+          'fill="none" stroke="' + m + '" stroke-width="3" stroke-linecap="round"') +
+          pth('M-18 70 q18 -6 36 0 v7 h-36 z', 'fill="' + m + '" fill-opacity=".6"');
+      } else {                /* somebody standing in a lit doorway */
+        g += rect(-9, 22, 18, 55, 'fill="#a88078"') + circ(0, 40, 4.5, 'fill="' + d + '"') +
+          pth('M-6 77 l2 -30 h8 l2 30 z', 'fill="' + d + '"');
+      }
+      g += rect(-5, -6, 10, 13, 'rx="2" fill="#b98d62" ' + K2);
+      out += grp('transform="translate(' + x + ',' + y + ') rotate(' + rot[i] + ')"', g);
+    }
+    out += pth('M-80 34 v6 M24 36 v7 M30 40 v5', 'stroke="#c4a69c" stroke-opacity=".6" stroke-width="2.4" stroke-linecap="round"');
+    return out;
+  };
+
+  /* Shelf of stock solutions: brown glass, blank labels, a glass measure. */
+  PARTS.dkBottleShelf = function (o) {
+    var out = rect(-76, 14, 152, 10, 'rx="2" fill="' + (o.wood || '#3c2a28') + '" ' + K3);
+    var tint = ['#8a4424', '#6a2c1a', '#9a5a2e', '#74341e', '#8a4424'];
+    var hs = [28, 24, 30, 22, 27], i, x, h;
+    for (i = 0; i < 5; i++) {
+      x = -72 + i * 24; h = hs[i];
+      out += rect(x + 6, 6 - h, 8, 9, 'fill="' + tint[i] + '" ' + K2);
+      out += rect(x, 14 - h, 20, h, 'rx="3" fill="' + tint[i] + '" ' + K2);
+      out += rect(x + 5, 2 - h, 10, 5, 'rx="1.5" fill="' + (i % 2 ? '#b89068' : '#1c1416') + '"');
+      out += rect(x + 3, 20 - h, 14, 10, 'fill="#dcbcae" fill-opacity=".9"');
+      out += ln(x + 6, 25 - h, x + 14, 25 - h, 'stroke="#4a1c18" stroke-width="2"');
+      out += ln(x + 3, 16 - h, x + 3, 10, 'stroke="#ffc0a8" stroke-opacity=".35" stroke-width="2"');
+    }
+    /* the measure: a tall glass graduate with ticks, not digits */
+    out += pth('M52 14 l-3 -34 h18 l-3 34 z', 'fill="#e8c8c0" fill-opacity=".28" stroke="#e8c8c0" stroke-opacity=".7" stroke-width="2"');
+    out += pth('M52 4 h8 M52 -3 h5 M51 -10 h8 M51 -17 h5', 'stroke="#e8c8c0" stroke-opacity=".8" stroke-width="1.6"');
+    out += pth('M51 14 l-1 -12 h16 l-1 12 z', 'fill="#8a3d1e" fill-opacity=".7"');
+    return out;
+  };
+
+  /* A film tin: pressed metal, a reel stamped on the front, a lift-off lid. */
+  PARTS.dkFilmTin = function (o) {
+    var m = o.metal || '#6a5a5b', i, a;
+    var out = rect(-60, -62, 120, 62, 'rx="5" fill="' + m + '" ' + K4);
+    out += rect(-52, -52, 104, 44, 'rx="3" fill="none" stroke="black" stroke-opacity=".3" stroke-width="2.5"');
+    out += circ(0, -30, 19, 'fill="#2c2224" ' + K2);
+    for (i = 0; i < 3; i++) {
+      a = i * 2 * Math.PI / 3 - Math.PI / 2;
+      out += circ((10.5 * Math.cos(a)).toFixed(1), (-30 + 10.5 * Math.sin(a)).toFixed(1), 5.2, 'fill="' + m + '"');
+    }
+    out += circ(0, -30, 2.6, 'fill="' + m + '"');
+    out += rect(-48, -36, 10, 14, 'rx="3" fill="none" stroke="#2c2224" stroke-width="3"');
+    out += rect(38, -36, 10, 14, 'rx="3" fill="none" stroke="#2c2224" stroke-width="3"');
+    out += rect(-63, -76, 126, 16, 'rx="4" id="chestLid" fill="' + (o.lid || '#857273') + '" ' + K3);
+    out += grp('id="chestOpenG" style="display:none"',
+      rect(-56, -62, 112, 14, 'fill="#0c0708"') +
+      pth('M-40 -60 q8 -9 16 0 M-6 -60 q9 -10 18 0', 'fill="none" stroke="#3a2a2a" stroke-width="3"') +
+      rect(-63, -100, 126, 16, 'rx="4" fill="' + (o.lid || '#857273') + '" ' + K2 +
+        ' transform="rotate(-10 -63 -84)"'));
+    return out;
+  };
+
+  /* The way out, behind a blackout curtain on a brass rail. The curtain is
+     drawn most of the way across; one edge of the door shows past it. */
+  PARTS.dkCurtainDoor = function (o) {
+    var c = o.cloth || '#170e10', d = o.door || '#4a2c28';
+    var out = rect(-70, -282, 140, 282, 'rx="4" fill="' + d + '" ' + K4);
+    out += rect(34, -262, 26, 112, 'fill="none" stroke="black" stroke-opacity=".4" stroke-width="3"');
+    out += rect(34, -134, 26, 118, 'fill="none" stroke="black" stroke-opacity=".4" stroke-width="3"');
+    out += circ(52, -140, 7, 'class="fAccent"') + rect(48, -130, 8, 12, 'rx="2" fill="#000" fill-opacity=".7"');
+    /* the curtain: seven folds, a scalloped hem that does not reach the floor */
+    out += pth('M-70 -270 H40 q-5 130 2 262 q-8 7 -16 0 q-8 7 -16 0 q-8 7 -16 0 q-8 7 -16 0 q-8 7 -16 0 q-8 7 -16 0 q-8 7 -16 0 z',
+      'fill="' + c + '" ' + K4);
+    var i, x;
+    for (i = 0; i < 7; i++) {
+      x = -62 + i * 16;
+      out += pth('M' + x + ' -268 q-4 130 0 258', 'fill="none" stroke="#5e2226" stroke-opacity=".75" stroke-width="3"');
+      out += pth('M' + (x + 7) + ' -268 q-4 130 0 256', 'fill="none" stroke="black" stroke-opacity=".6" stroke-width="3"');
+    }
+    out += rect(-70, -280, 140, 8, 'rx="4" fill="' + (o.rail || '#8f7a52') + '" ' + K2);
+    for (i = 0; i < 7; i++) out += circ(-62 + i * 16, -272, 4.5, 'fill="none" stroke="' + (o.rail || '#8f7a52') + '" stroke-width="2.5"');
+    return out + sigilBadge();
+  };
+
+  /* The wet bench. An enlarger at one end, three trays in a row, a lead
+     lip round the top so the chemistry stays on it. The right-hand end is
+     left bare: that is where the safelight stands. */
+  PARTS.dkWetBench = function (o) {
+    var w = o.wood || '#4c3230', l = o.leg || '#35221f';
+    var out = rect(-138, -94, 18, 94, 'fill="' + l + '"') + rect(120, -94, 18, 94, 'fill="' + l + '"');
+    out += rect(-138, -28, 276, 9, 'fill="' + l + '" ' + K2);
+    out += rect(84, -45, 34, 17, 'rx="2" fill="#7a5a50" ' + K2) + ln(84, -37, 118, -37, 'stroke="black" stroke-opacity=".35" stroke-width="2"');
+    out += pth('M-112 -28 l3 -20 h18 l3 20 z', 'fill="#8f8482" ' + K2);
+    out += rect(-146, -94, 292, 10, 'fill="black" fill-opacity=".35"');
+    out += rect(-150, -110, 300, 16, 'rx="2" fill="' + w + '" ' + K3);
+    out += rect(-152, -117, 304, 8, 'rx="3" fill="' + (o.lip || '#6a4c48') + '" ' + K2);
+    /* trays: stop, develop, fix */
+    var liq = ['#3a1c18', '#5a2a22', '#2c2022'], i, x;
+    for (i = 0; i < 3; i++) {
+      x = -84 + i * 44;
+      out += pth('M' + (x + 2) + ' -126 l5 -9 h26 l5 9 z', 'fill="' + liq[i] + '" ' + K2);
+      out += rect(x, -127, 40, 10, 'rx="2" fill="' + (o.tray || '#cdb2a8') + '" ' + K2);
+    }
+    out += pth('M-33 -129 l4 -4 h14 l3 4 z', 'fill="#d8beb2"');
+    out += pth('M-70 -131 l22 -15 M-66 -131 l20 -11', 'stroke="#b9a69e" stroke-width="2.5" stroke-linecap="round"');
+    /* the enlarger */
+    out += rect(-148, -124, 58, 7, 'rx="1" fill="#735448" ' + K2);
+    out += rect(-134, -127, 30, 3, 'fill="#d8beb2"');
+    out += pth('M-117 -148 l-15 21 h30 z', 'fill="#ff6a58" fill-opacity=".13"');
+    out += rect(-144, -196, 7, 73, 'fill="#8f8482" ' + K2);
+    out += rect(-140, -184, 14, 8, 'fill="#5a4c4c" ' + K2);
+    out += pth('M-127 -170 h20 l-3 5 l3 4 l-3 5 l3 4 h-20 l3 -4 l-3 -5 l3 -4 z', 'fill="#150f11" ' + K2);
+    out += rect(-133, -194, 32, 25, 'rx="9" fill="#2c2224" ' + K3);
+    out += pth('M-127 -188 h20', 'stroke="#6a5a5b" stroke-width="2.5" stroke-linecap="round"');
+    out += rect(-122, -152, 10, 6, 'rx="1" fill="#b9a69e" ' + K2);
+    return out;
+  };
+
+  /* The safelight: a tin lamp-house with one ruby window. The "flame" is
+     the filament behind the glass. */
+  PARTS.dkSafelight = function (o) {
+    var m = o.metal || '#2e2426';
+    return glow(0, -40, 105) +
+      circ(0, -38, 150, 'fill="#ff2416" fill-opacity=".06" ' + NOHIT) +
+      circ(0, -38, 96, 'fill="#ff2416" fill-opacity=".08" ' + NOHIT) +
+      circ(0, -38, 52, 'fill="#ff3a24" fill-opacity=".12" ' + NOHIT) +
+      pth('M16 -6 q22 -2 30 5', 'fill="none" stroke="#1a1214" stroke-width="3.5"') +
+      rect(-18, -9, 36, 9, 'rx="2" fill="' + m + '" ' + K2) +
+      pth('M-14 -62 q14 -16 28 0 z', 'fill="' + m + '" ' + K2) +
+      rect(-21, -64, 42, 56, 'rx="4" fill="' + m + '" ' + K3) +
+      rect(-15, -57, 30, 42, 'rx="2" fill="#d21f18" stroke="#ff7a5c" stroke-width="2"') +
+      ell(0, -36, 9, 13, 'id="flame" fill="#ffb49a" fill-opacity=".85"') +
+      pth('M-15 -43 h30 M-15 -29 h30', 'stroke="black" stroke-opacity=".3" stroke-width="2"');
+  };
+
+  /* Black-painted walls over a matchboard dado, pipework under the ceiling,
+     a light-trap ventilator, and a chequered lino floor. Everything is
+     washed from the bench end by the one red lamp. */
+  BACKDROPS.dkRoom = function () {
+    var w = '', f = '', i, j;
+    w += circ(352, 290, 470, 'fill="#ff2416" fill-opacity=".05"');
+    w += circ(352, 290, 320, 'fill="#ff2416" fill-opacity=".06"');
+    w += circ(352, 290, 200, 'fill="#ff2416" fill-opacity=".07"');
+    /* dado */
+    w += rect(0, 292, 800, 100, 'fill="black" fill-opacity=".24"');
+    for (i = 0; i <= 800; i += 32) w += ln(i, 296, i, 392, 'stroke="black" stroke-opacity=".34" stroke-width="2.5"');
+    w += rect(0, 284, 800, 10, 'fill="#4e2a2c" ' + K2);
+    /* pipes */
+    w += rect(0, 26, 800, 9, 'fill="#5a3336" ' + K2);
+    w += rect(0, 46, 800, 6, 'fill="#472629" ' + K2);
+    for (i = 0; i < 5; i++) w += rect(70 + i * 170, 20, 10, 38, 'rx="2" fill="#2a1719" ' + K2);
+    w += rect(14, 35, 8, 250, 'fill="#5a3336" ' + K2);
+    w += circ(18, 200, 11, 'fill="none" stroke="#7a3a3a" stroke-width="4"');
+    w += pth('M7 200 h22 M18 189 v22', 'stroke="#7a3a3a" stroke-width="3"');
+    /* light-trap ventilator */
+    w += rect(42, 82, 68, 54, 'rx="3" fill="#190c0d" ' + K3);
+    for (j = 0; j < 5; j++) w += pth('M48 ' + (92 + j * 9) + ' h56', 'stroke="#5a3336" stroke-width="4"');
+    /* a second wire, empty, sagging */
+    w += pth('M560 76 q100 22 240 6', 'fill="none" stroke="#9a8c88" stroke-opacity=".5" stroke-width="2"');
+    w += rect(640, 86, 6, 12, 'rx="1.5" fill="#b98d62" fill-opacity=".7"') + rect(720, 86, 6, 12, 'rx="1.5" fill="#b98d62" fill-opacity=".7"');
+    /* lino: a chequer running away to the wall */
+    var ys = [402, 436, 486, 560], k, xa, xb, xc, xd;
+    for (j = 0; j < 3; j++) {
+      for (k = -9; k < 9; k++) {
+        if ((k + j) % 2) continue;
+        xa = 400 + k * (62 + (ys[j] - 402) * 0.28);
+        xb = 400 + (k + 1) * (62 + (ys[j] - 402) * 0.28);
+        xc = 400 + (k + 1) * (62 + (ys[j + 1] - 402) * 0.28);
+        xd = 400 + k * (62 + (ys[j + 1] - 402) * 0.28);
+        f += pth('M' + xa.toFixed(0) + ' ' + ys[j] + ' L' + xb.toFixed(0) + ' ' + ys[j] +
+          ' L' + xc.toFixed(0) + ' ' + ys[j + 1] + ' L' + xd.toFixed(0) + ' ' + ys[j + 1] + ' z',
+          'fill="black" fill-opacity=".3"');
+      }
+    }
+    f += ell(340, 440, 330, 70, 'fill="#ff2416" fill-opacity=".07"');
+    return base(w, f);
+  };
+
+  /* ---- THE WINE CELLAR ---- */
+
+  /* ---- THE WINE CELLAR ---- */
+
+  /* A duckboard: five slats on battens, laid where the floor sweats. Dark
+     wood, so the ultraviolet writing reads on it. */
+  PARTS.wcDuckboard = function (o) {
+    var w = o.wood || '#54402a';
+    var out = pth('M-118 -2 l12 -64 h212 l12 64 z', 'fill="#100b07" ' + K3);
+    var j, y0, y1, a, b, k;
+    for (j = 0; j < 5; j++) {
+      y0 = -4 - j * 12.4; y1 = y0 - 10;
+      a = 118 - 12 * ((-2 - y0) / 64); b = 118 - 12 * ((-2 - y1) / 64);
+      out += pth('M' + (-a).toFixed(1) + ' ' + y0.toFixed(1) + ' L' + a.toFixed(1) + ' ' + y0.toFixed(1) +
+        ' L' + b.toFixed(1) + ' ' + y1.toFixed(1) + ' L' + (-b).toFixed(1) + ' ' + y1.toFixed(1) + ' z',
+        'fill="' + w + '" ' + K2);
+      for (k = -1; k <= 1; k++) out += circ(k * 86, (y0 - 5).toFixed(1), 1.8, 'fill="#1c140c"');
+    }
+    out += pth('M-112 -8 l-14 3 M-108 -16 l-16 -3 M96 -62 l18 -8 M102 -58 l16 2',
+      'stroke="#c8a858" stroke-width="2.5" stroke-linecap="round" stroke-opacity=".8"');
+    return out;
+  };
+
+  /* A demijohn: green glass balloon, cork, and a wicker foot to stand it in. */
+  PARTS.wcDemijohn = function (o) {
+    var g = o.glass || '#2f5c3c', k = o.wicker || '#a58648';
+    return ell(0, -2, 30, 6, 'fill="black" fill-opacity=".4"') +
+      rect(-7, -98, 14, 26, 'fill="' + g + '" ' + K2) +
+      rect(-10, -100, 20, 6, 'rx="3" fill="' + g + '" ' + K2) +
+      rect(-5, -109, 10, 10, 'rx="2" fill="#b89a6a" ' + K2) +
+      ell(0, -44, 31, 35, 'fill="' + g + '" ' + K3) +
+      pth('M-19 -62 q-8 12 -7 26', 'fill="none" stroke="#a8dcb0" stroke-opacity=".5" stroke-width="4" stroke-linecap="round"') +
+      pth('M-30 -34 q2 34 16 34 h28 q14 0 16 -34 q-30 12 -60 0 z', 'fill="' + k + '" ' + K3) +
+      pth('M-27 -22 q27 10 54 0 M-22 -11 q22 8 44 0', 'fill="none" stroke="black" stroke-opacity=".35" stroke-width="2"') +
+      pth('M-14 -27 v26 M0 -25 v25 M14 -27 v26', 'stroke="black" stroke-opacity=".3" stroke-width="2"') +
+      pth('M-30 -32 q-7 8 -1 18 M30 -32 q7 8 1 18', 'fill="none" stroke="' + k + '" stroke-width="3.5"');
+  };
+
+  /* The tastevin: a shallow dimpled brass cup hung from a peg by its ring. */
+  PARTS.wcTastevin = function (o) {
+    var b = o.brass || '#c9a24e';
+    return rect(-28, -36, 56, 9, 'rx="2" fill="' + (o.wood || '#4a3826') + '" ' + K2) +
+      pth('M0 -30 v8', 'stroke="#2c2824" stroke-width="4" stroke-linecap="round"') +
+      circ(0, -14, 8, 'fill="none" stroke="' + b + '" stroke-width="4"') +
+      pth('M-30 6 q2 23 30 23 q28 0 30 -23 z', 'fill="' + b + '" ' + K3) +
+      ell(0, 6, 30, 11, 'fill="#7d5f26" ' + K3) +
+      ell(-13, 6, 4.5, 2.6, 'fill="#f0d78a" fill-opacity=".75"') + ell(0, 9, 4.5, 2.6, 'fill="#f0d78a" fill-opacity=".75"') +
+      ell(13, 6, 4.5, 2.6, 'fill="#f0d78a" fill-opacity=".75"') + ell(0, 2, 4, 2.2, 'fill="#f0d78a" fill-opacity=".5"') +
+      pth('M-22 14 q4 9 16 11', 'fill="none" stroke="#f6e3a4" stroke-opacity=".6" stroke-width="2.5" stroke-linecap="round"');
+  };
+
+  /* The bin slate: a framed slate with the count chalked on it in strokes
+     and gates. The middle is left clear. */
+  PARTS.wcSlate = function (o) {
+    var c = o.chalk || '#dcd8ca';
+    var out = rect(-52, -44, 104, 88, 'rx="2" fill="' + (o.frame || '#6a5238') + '" ' + K4);
+    out += rect(-45, -37, 90, 74, 'fill="' + (o.slate || '#23282a') + '"');
+    out += ell(10, 2, 30, 10, 'fill="#dcd8ca" fill-opacity=".05"');
+    var groups = [[-36, -23, 5], [-8, -23, 5], [20, -23, 5], [-36, 24, 5], [-8, 24, 3]], i, j, g;
+    for (i = 0; i < groups.length; i++) {
+      g = groups[i];
+      for (j = 0; j < Math.min(g[2], 4); j++) {
+        out += ln(g[0] + j * 5, g[1] - 8, g[0] + j * 5 + 1.5, g[1] + 8,
+          'stroke="' + c + '" stroke-width="2.4" stroke-opacity="' + (0.7 + (j % 3) * 0.1) + '" stroke-linecap="round"');
+      }
+      if (g[2] === 5) out += ln(g[0] - 3, g[1] + 5, g[0] + 20, g[1] - 6, 'stroke="' + c + '" stroke-width="2.4" stroke-opacity=".85"');
+    }
+    out += circ(0, -40.5, 2.2, 'fill="#1c140c"');
+    out += pth('M40 22 q7 6 2 13', 'fill="none" stroke="#b8a878" stroke-width="1.6"');
+    out += rect(36, 33, 10, 5, 'rx="2" fill="' + c + '"');
+    return out;
+  };
+
+  /* The rack: forty bottles laid on their sides, punts outward, three gaps. */
+  PARTS.wcBottleRack = function (o) {
+    var out = rect(-106, -73, 212, 146, 'rx="3" fill="' + (o.wood || '#4a3826') + '" ' + K5);
+    out += rect(-98, -65, 196, 130, 'fill="#120d09"');
+    var tint = ['#27472f', '#1f3b2a', '#2f5234'], r, i, n, x, y, skip;
+    for (r = 0; r < 5; r++) {
+      y = -52 + r * 26; n = (r % 2) ? 7 : 8;
+      for (i = 0; i < n; i++) {
+        x = ((r % 2) ? -72 : -84) + i * 24;
+        skip = (r === 1 && i === 5) || (r === 3 && i === 1) || (r === 4 && i === 6);
+        if (skip) continue;
+        out += circ(x, y, 11, 'fill="' + tint[(r + i * 2) % 3] + '" ' + K2);
+        out += circ(x, y, 4.6, 'fill="#0c1a12"');
+        out += pth('M' + (x - 7) + ' ' + (y - 2) + ' a7.5 7.5 0 0 1 6 -5.4', 'fill="none" stroke="#9cc8a4" stroke-opacity=".5" stroke-width="2"');
+      }
+    }
+    out += rect(-98, -65, 196, 24, 'fill="#c8beaa" fill-opacity=".09"');
+    out += pth('M-98 -39 h196 M-98 13 h196', 'stroke="' + (o.wood || '#4a3826') + '" stroke-opacity=".0" stroke-width="2"');
+    return out;
+  };
+
+  /* The cellar-books: a short shelf of tall bound ledgers, two lying flat. */
+  PARTS.wcLedgers = function (o) {
+    var out = rect(-76, 14, 152, 10, 'rx="2" fill="' + (o.wood || '#4a3826') + '" ' + K3);
+    var w = [14, 12, 16, 13, 15], h = [34, 30, 36, 31, 34];
+    var c = ['#6a3a26', '#5a4a2c', '#74482a', '#4c2c24', '#684e30'], i, x = -70;
+    for (i = 0; i < 5; i++) {
+      out += rect(x, 14 - h[i], w[i], h[i], 'rx="1.5" fill="' + c[i] + '" ' + K2);
+      out += pth('M' + (x + 2) + ' ' + (20 - h[i]) + ' h' + (w[i] - 4) + ' M' + (x + 2) + ' ' + (7) + ' h' + (w[i] - 4),
+        'stroke="#d8b25a" stroke-opacity=".75" stroke-width="2"');
+      out += rect(x + w[i] / 2 - 3, 0 - h[i] / 2 + 6, 6, 8, 'fill="#d8caa4" fill-opacity=".7"');
+      x += w[i] + 1;
+    }
+    out += rect(x + 2, -20, 13, 34, 'rx="1.5" fill="#5a3324" ' + K2 + ' transform="rotate(-13 ' + (x + 2) + ' 14)"');
+    out += rect(28, 3, 44, 11, 'rx="1.5" fill="#74482a" ' + K2) + rect(30, 5, 3, 7, 'fill="#d8caa4"');
+    out += rect(32, -7, 37, 10, 'rx="1.5" fill="#4c2c24" ' + K2) + rect(64, -5, 3, 6, 'fill="#d8caa4"');
+    out += pth('M44 -7 q2 14 -3 24', 'fill="none" stroke="#9a2f2f" stroke-width="2.5"');
+    return out;
+  };
+
+  /* A bottle crate: three boards a side, straw in the gaps, a vine brand. */
+  PARTS.wcCrate = function (o) {
+    var w = o.wood || '#7a5c36', p = o.post || '#5e4426', i;
+    var out = rect(-58, -60, 116, 60, 'fill="#150f0a" ' + K4);
+    for (i = 0; i < 3; i++) out += rect(-60, -60 + i * 20.5, 120, 17, 'rx="1" fill="' + w + '" ' + K2);
+    out += pth('M-30 -42 l5 -4 M-12 -41 l7 -3 M22 -42 l6 -4 M-38 -21 l6 -4 M8 -21 l7 -4 M34 -22 l5 -3',
+      'stroke="#c8a858" stroke-width="2.2" stroke-linecap="round"');
+    out += rect(-60, -62, 13, 62, 'fill="' + p + '" ' + K2) + rect(47, -62, 13, 62, 'fill="' + p + '" ' + K2);
+    /* brand: a bunch of grapes, burnt in */
+    out += circ(-7, -34, 3.2, 'fill="#2c1c10"') + circ(0, -34, 3.2, 'fill="#2c1c10"') + circ(7, -34, 3.2, 'fill="#2c1c10"') +
+      circ(-3.5, -28, 3.2, 'fill="#2c1c10"') + circ(3.5, -28, 3.2, 'fill="#2c1c10"');
+    out += circ(0, -10, 3.2, 'fill="#2c1c10"') + pth('M0 -6 v-1', 'stroke="#2c1c10" stroke-width="2"');
+    out += rect(-62, -75, 124, 14, 'rx="2" id="chestLid" fill="' + (o.lid || '#8c6c40') + '" ' + K3);
+    var open = rect(-47, -62, 94, 6, 'fill="#0c0806"');
+    for (i = 0; i < 3; i++) {
+      open += rect(-32 + i * 27, -80, 10, 20, 'rx="2" fill="#2f5c3c" ' + K2);
+      open += rect(-33 + i * 27, -84, 12, 8, 'rx="2" fill="' + (i === 1 ? '#c9a24e' : '#7a2430') + '" ' + K2);
+    }
+    open += pth('M-44 -62 l-4 -9 M-16 -62 l3 -8 M12 -62 l-3 -9 M40 -62 l5 -8', 'stroke="#c8a858" stroke-width="2.4" stroke-linecap="round"');
+    open += rect(-62, -75, 124, 14, 'rx="2" fill="' + (o.lid || '#8c6c40') + '" ' + K2 + ' transform="translate(6,-22) rotate(-13 -62 -68)"');
+    out += grp('id="chestOpenG" style="display:none"', open);
+    return out;
+  };
+
+  /* The tasting table: two planks on trestles. A bottle, a glass with a
+     finger of wine left in it, the cellar-book open, a drawn cork. The
+     right-hand end is bare — the candle stands there. */
+  PARTS.wcTastingTable = function (o) {
+    var w = o.wood || '#5e4630', l = o.leg || '#46341f';
+    var out = pth('M-140 0 l16 -94 h14 l16 94 h-12 l-11 -64 l-11 64 z', 'fill="' + l + '" ' + K2);
+    out += pth('M140 0 l-16 -94 h-14 l-16 94 h12 l11 -64 l11 64 z', 'fill="' + l + '" ' + K2);
+    out += rect(-120, -36, 240, 8, 'fill="' + l + '" ' + K2);
+    out += pth('M-150 0 l14 -5 M-146 -8 l12 3 M-98 -2 l16 -5 M-90 -1 l14 2 M92 -2 l14 -5',
+      'stroke="#c8a858" stroke-width="2.5" stroke-linecap="round" stroke-opacity=".8"');
+    out += rect(-150, -110, 300, 17, 'rx="2" fill="' + w + '" ' + K3);
+    out += pth('M-150 -101 h300', 'stroke="black" stroke-opacity=".3" stroke-width="2"');
+    out += pth('M-40 -110 v9 M70 -101 v8', 'stroke="black" stroke-opacity=".3" stroke-width="2"');
+    /* bottle */
+    out += pth('M-136 -110 v-28 q0 -7 5 -10 v-14 h6 v14 q5 3 5 10 v28 z', 'fill="#2f5c3c" ' + K2);
+    out += rect(-132, -165, 8, 7, 'rx="1.5" fill="#7a2430"');
+    out += rect(-134, -132, 12, 13, 'fill="#d8caa4" fill-opacity=".85"');
+    /* glass */
+    out += pth('M-108 -142 q0 16 9 16 q9 0 9 -16 z', 'fill="#e8e0d0" fill-opacity=".2" stroke="#e8e0d0" stroke-opacity=".75" stroke-width="2"');
+    out += pth('M-106 -134 q2 7 7 7 q5 0 7 -7 z', 'fill="#7a1c2c"');
+    out += pth('M-99 -126 v14 M-106 -111 h14', 'stroke="#e8e0d0" stroke-opacity=".75" stroke-width="2.4"');
+    /* the cellar-book, open */
+    out += pth('M-76 -111 l5 -11 q16 -6 29 1 q13 -7 29 -1 l5 11 z', 'fill="#d8caa4" ' + K2);
+    out += pth('M-42 -121 v10', 'stroke="black" stroke-opacity=".4" stroke-width="2"');
+    out += pth('M-66 -117 h18 M-68 -113 h20 M-36 -117 h18 M-36 -113 h14', 'stroke="#6a5238" stroke-width="1.6"');
+    /* corkscrew and cork */
+    out += rect(4, -118, 11, 7, 'rx="2" fill="#b89a6a" ' + K2);
+    out += rect(22, -117, 7, 6, 'rx="2" fill="#4a3826" ' + K2);
+    out += pth('M29 -114 h5 l3 -3 l3 6 l3 -6 l3 5', 'fill="none" stroke="#9aa2a6" stroke-width="2.2" stroke-linecap="round"');
+    return out;
+  };
+
+  /* A candle stuck in the neck of an empty bottle, and a year of wax. */
+  PARTS.wcBottleCandle = function (o) {
+    var g = o.glass || '#2f5c3c';
+    return glow(0, -72, 105) +
+      ell(0, 0, 17, 4, 'fill="#e9dcc0" fill-opacity=".8"') +
+      pth('M-12 0 v-28 q0 -9 8 -13 v-13 h8 v13 q8 4 8 13 v28 z', 'fill="' + g + '" ' + K3) +
+      pth('M-7 -6 v-20', 'stroke="#a8dcb0" stroke-opacity=".45" stroke-width="3" stroke-linecap="round"') +
+      rect(-4, -74, 8, 20, 'rx="1.5" fill="#e9dcc0" ' + K2) +
+      pth('M-6 -56 h12 q2 8 -1 16 q-2 5 -3 -3 q-1 14 -4 22 q-3 4 -3 -8 q-2 -6 -1 -27 z', 'fill="#e9dcc0"') +
+      pth('M5 -40 q4 12 2 22 q-3 3 -3 -6 z', 'fill="#e9dcc0"') +
+      ln(0, -74, 0, -78, 'stroke="#2a1d10" stroke-width="2"') +
+      pth('M0 -100 q9 12 0 24 q-9 -12 0 -24', 'id="flame" fill="#ffcf6e" stroke="#ff9d3c" stroke-width="2"');
+  };
+
+  /* The cask that does not pour: end-on in its cradle, a dial let into the
+     head where the bung should be, and a brass tap that gives nothing. */
+  PARTS.wcCaskSafe = function (o) {
+    var w = o.wood || '#6e4e2a', m = o.iron || '#2c2824';
+    var out = rect(-49, -6, 98, 6, 'fill="#3e2e1c" ' + K2);
+    out += pth('M-49 -6 v-12 l16 -6 l8 18 z', 'fill="#4a3826" ' + K2) + pth('M49 -6 v-12 l-16 -6 l-8 18 z', 'fill="#4a3826" ' + K2);
+    out += circ(0, -42, 36, 'fill="' + w + '" ' + K4);
+    out += pth('M-20 -69.5 v55 M-7 -75 v66 M7 -75 v66 M20 -69.5 v55', 'stroke="black" stroke-opacity=".32" stroke-width="2.5"');
+    out += circ(0, -42, 33, 'fill="none" stroke="' + m + '" stroke-width="5"');
+    out += circ(0, -47, 14, 'fill="' + m + '" class="sAccent" stroke-width="3"');
+    out += ln(0, -47, 0, -58, 'class="sAccent" stroke-width="3" stroke-linecap="round"');
+    out += rect(-4, -26, 8, 15, 'rx="2" class="fAccent" ' + K2);
+    out += rect(-10, -29, 20, 5, 'rx="2" class="fAccent" ' + K2);
+    return out + safeInnards(o);
+  };
+
+  /* A screw press. Oak frame, iron screw, a slatted basket, a stained tray.
+     The crank socket is in the pressing head. */
+  PARTS.wcPress = function (o) {
+    var w = o.wood || '#5e4630', m = o.iron || '#4a4640', i;
+    var out = rect(-37, -190, 11, 182, 'fill="' + w + '" ' + K3) + rect(26, -190, 11, 182, 'fill="' + w + '" ' + K3);
+    out += rect(-6, -178, 12, 70, 'fill="' + m + '" ' + K2);
+    for (i = 0; i < 9; i++) out += ln(-6, -172 + i * 7, 6, -168 + i * 7, 'stroke="black" stroke-opacity=".5" stroke-width="2"');
+    out += rect(-38, -198, 76, 20, 'rx="3" fill="' + w + '" ' + K3);
+    out += circ(-31, -188, 2.6, 'fill="#1c140c"') + circ(31, -188, 2.6, 'fill="#1c140c"');
+    out += rect(-30, -166, 60, 7, 'rx="3.5" fill="' + m + '" ' + K2);
+    out += circ(-30, -162.5, 5, 'fill="' + m + '" ' + K2) + circ(30, -162.5, 5, 'fill="' + m + '" ' + K2);
+    out += rect(-25, -86, 50, 62, 'fill="' + (o.slat || '#80603a') + '" ' + K3);
+    for (i = -15; i <= 15; i += 10) out += ln(i, -86, i, -24, 'stroke="black" stroke-opacity=".45" stroke-width="2.5"');
+    out += rect(-27, -76, 54, 6, 'fill="' + m + '"') + rect(-27, -40, 54, 6, 'fill="' + m + '"');
+    out += rect(-27, -116, 54, 30, 'rx="3" fill="' + (o.head || '#3e2e1e') + '" ' + K3);
+    out += rect(-38, -26, 76, 14, 'rx="2" fill="' + w + '" ' + K3);
+    out += pth('M-30 -26 q30 9 60 0', 'fill="#5a1c30" fill-opacity=".85"');
+    out += rect(-5, -14, 10, 8, 'fill="' + m + '" ' + K2) + pth('M0 -6 v5', 'stroke="#7a1c3a" stroke-width="2.5" stroke-linecap="round"');
+    out += rect(-36, -12, 12, 12, 'fill="' + w + '" ' + K2) + rect(24, -12, 12, 12, 'fill="' + w + '" ' + K2);
+    return out + cabInnards(o);
+  };
+
+  /* Coursed brick, three arched bays on stone imposts (the narrow one is
+     where the door stands), a cobweb, flagstones and trodden straw. */
+  BACKDROPS.wcVault = function () {
+    var w = '', f = '', i, j, d = '';
+    for (j = 0; j < 18; j++) {
+      d += 'M0 ' + (j * 22) + ' h800 ';
+      for (i = 0; i < 15; i++) d += 'M' + (i * 58 + (j % 2 ? 29 : 0)) + ' ' + (j * 22) + ' v22 ';
+    }
+    for (i = 0; i < 46; i++) {
+      j = (i * 7) % 18;
+      w += rect(((i * 5) % 14) * 58 + (j % 2 ? 29 : 0), j * 22, 58, 22,
+        'fill="' + (i % 3 ? '#000' : '#8a4a34') + '" fill-opacity="' + (i % 3 ? '.14' : '.2') + '"');
+    }
+    w += pth(d, 'fill="none" stroke="black" stroke-opacity=".3" stroke-width="2"');
+    /* bays: [x0, x1, springing, rise] */
+    var bays = [[122, 340, 138, 98], [362, 596, 138, 108], [616, 776, 198, 74]], b, rx, arc;
+    for (i = 0; i < bays.length; i++) {
+      b = bays[i]; rx = (b[1] - b[0]) / 2;
+      arc = 'M' + b[0] + ' ' + b[2] + ' A' + rx + ' ' + b[3] + ' 0 0 1 ' + b[1] + ' ' + b[2];
+      w += pth(arc + ' V392 H' + b[0] + ' z', 'fill="black" fill-opacity=".26"');
+      w += pth(arc, 'fill="none" stroke="#6e4838" stroke-width="20"');
+      w += pth(arc, 'fill="none" stroke="black" stroke-opacity=".45" stroke-width="20" stroke-dasharray="2.5 15"');
+      w += pth('M' + (b[0] - 10) + ' ' + b[2] + ' A' + (rx + 10) + ' ' + (b[3] + 10) + ' 0 0 1 ' + (b[1] + 10) + ' ' + b[2],
+        'fill="none" stroke="black" stroke-opacity=".4" stroke-width="2"');
+    }
+    /* piers and imposts */
+    var piers = [[100, 22, 138], [340, 22, 138], [596, 20, 138], [776, 24, 198]];
+    for (i = 0; i < piers.length; i++) {
+      b = piers[i];
+      w += rect(b[0], b[2], b[1], 392 - b[2], 'fill="#5c4234" fill-opacity=".75" ' + K2);
+      for (j = b[2] + 30; j < 392; j += 30) w += ln(b[0], j, b[0] + b[1], j, 'stroke="black" stroke-opacity=".3" stroke-width="2"');
+      w += rect(b[0] - 5, b[2] - 8, b[1] + 10, 13, 'rx="2" fill="#7c7062" ' + K2);
+    }
+    /* cobweb, and a ring let into the wall */
+    w += pth('M0 0 L78 52 M0 0 L34 84 M0 0 L92 18 M0 60 Q30 54 26 64 Q44 40 52 35 Q56 22 62 12 M0 34 Q16 32 14 34 Q26 22 30 20 Q32 12 34 6',
+      'fill="none" stroke="#e0d8c8" stroke-opacity=".22" stroke-width="1.6"');
+    w += rect(48, 232, 12, 10, 'rx="2" fill="#2c2824" ' + K2) + circ(54, 254, 12, 'fill="none" stroke="#3a3630" stroke-width="4"');
+    /* flags */
+    f += pth('M0 446 h800 M0 500 h800', 'stroke="black" stroke-opacity=".34" stroke-width="3"');
+    for (i = 0; i < 8; i++) {
+      f += ln(i * 112 + 30, 402, i * 112 + 22, 446, 'stroke="black" stroke-opacity=".3" stroke-width="3"');
+      f += ln(i * 132 + 84, 446, i * 132 + 72, 500, 'stroke="black" stroke-opacity=".3" stroke-width="3"');
+      f += ln(i * 152 + 20, 500, i * 152 + 2, 560, 'stroke="black" stroke-opacity=".3" stroke-width="3"');
+    }
+    for (i = 0; i < 30; i++) {
+      j = (i * 211) % 780 + 8;
+      f += ln(j, 412 + (i * 67) % 140, j + 12 + (i % 4) * 3, 412 + (i * 67) % 140 + ((i % 3) - 1) * 5,
+        'stroke="#c8a858" stroke-opacity=".42" stroke-width="2.2" stroke-linecap="round"');
+    }
+    return base(w, f);
+  };
+
+  /* ---- THE CONTROL ROOM ---- */
+
+  /* ---- THE CONTROL ROOM (a diesel boat, on the bottom) ---- */
+
+  /* Ribbed rubber deck matting. Black, square-cornered, one corner lifting.
+     The ribs are kept low-contrast because the UV sigils are written
+     across the middle of it. */
+  PARTS.sbDeckMat = function (o) {
+    var out = pth('M-118 -4 l12 -62 h212 l12 62 z', 'fill="' + (o.fill || '#161b1d') + '" ' + K3);
+    var j, y, hw;
+    for (j = 0; j < 7; j++) {
+      y = -10 - j * 8.4;
+      hw = 118 - (-4 - y) * 12 / 62 - 5;
+      out += ln((-hw).toFixed(1), y, hw.toFixed(1), y, 'stroke="' + (o.rib || '#2b3537') + '" stroke-width="3"');
+    }
+    out += pth('M-118 -4 l12 -62', 'fill="none" stroke="#3a4649" stroke-width="5"');
+    out += pth('M118 -4 l-12 -62', 'fill="none" stroke="#3a4649" stroke-width="5"');
+    for (j = 0; j < 5; j++) {
+      out += circ(-110 + j * 2.2, -12 - j * 11, 1.8, 'fill="#0a0d0e"');
+      out += circ(110 - j * 2.2, -12 - j * 11, 1.8, 'fill="#0a0d0e"');
+    }
+    out += pth('M-118 -4 l30 0 l-22 -14 z', 'fill="#3a4649" ' + K2);
+    return out;
+  };
+
+  /* Oxygen flask in a deck cradle: a stout pale bottle, two straps, and a
+     red wheel on the neck. Fatter and shorter than the laboratory cylinder. */
+  PARTS.sbOxyFlask = function (o) {
+    var c = o.fill || '#8fa39f';
+    return rect(-30, -10, 60, 10, 'rx="2" fill="#26333a" ' + K2) +
+      pth('M-25 -6 v-56 q0 -26 25 -26 q25 0 25 26 v56 z', 'fill="' + c + '" ' + K3) +
+      pth('M-17 -14 v-46 q0 -14 8 -18', 'fill="none" stroke="#ffffff" stroke-opacity=".22" stroke-width="4" stroke-linecap="round"') +
+      rect(-27, -62, 54, 7, 'fill="#26333a" fill-opacity=".9"') +
+      rect(-27, -26, 54, 7, 'fill="#26333a" fill-opacity=".9"') +
+      rect(-6, -98, 12, 12, 'fill="#5d7478" ' + K2) +
+      rect(-2, -106, 4, 9, 'fill="#5d7478"') +
+      ell(0, -106, 17, 5, 'fill="none" stroke="' + (o.wheel || '#c23a30') + '" stroke-width="4"') +
+      ln(-17, -106, 17, -106, 'stroke="' + (o.wheel || '#c23a30') + '" stroke-width="3"') +
+      circ(0, -106, 3, 'fill="#e8ece0"') +
+      pth('M6 -92 h14 v10', 'fill="none" stroke="#5d7478" stroke-width="4"') +
+      circ(20, -78, 7, 'fill="#e6e2d6" ' + K2) +
+      ln(20, -78, 23, -82, 'stroke="#1c1c1c" stroke-width="2"');
+  };
+
+  /* Depth gauge: a brass bezel bolted to the hull, a black dial, and the
+     needle lying well round into the red. */
+  PARTS.sbDepthGauge = function (o) {
+    var b = o.brass || '#b08d3f', out = circ(0, 0, 36, 'fill="' + b + '" ' + K5);
+    var i, a;
+    for (i = 0; i < 4; i++) {
+      a = Math.PI / 4 + i * Math.PI / 2;
+      out += circ((31.5 * Math.cos(a)).toFixed(1), (31.5 * Math.sin(a)).toFixed(1), 2.6, 'fill="#5d4718"');
+    }
+    out += circ(0, 0, 27, 'fill="#0e1a1c"');
+    out += pth('M19.9 -11.5 A23 23 0 0 1 19.9 11.5', 'fill="none" stroke="#d8483a" stroke-width="6"');
+    for (i = 0; i <= 12; i++) {
+      a = (150 + i * 20) * Math.PI / 180;
+      out += ln((19 * Math.cos(a)).toFixed(1), (19 * Math.sin(a)).toFixed(1),
+                (25.5 * Math.cos(a)).toFixed(1), (25.5 * Math.sin(a)).toFixed(1),
+                'stroke="#dfe8dc" stroke-width="' + (i % 3 ? 1.8 : 3) + '"');
+    }
+    out += ln(-5, -1, 20, 4, 'stroke="#f0f2e6" stroke-width="3" stroke-linecap="round"');
+    out += circ(0, 0, 4.4, 'fill="' + b + '" ' + K2);
+    out += pth('M-20 -12 a23 23 0 0 1 14 -10', 'fill="none" stroke="#ffffff" stroke-opacity=".18" stroke-width="4" stroke-linecap="round"');
+    return out;
+  };
+
+  /* Ballast manifold: a header pipe carrying three red handwheels, a
+     return pipe below, on a dark backing plate. The middle of the plate is
+     left bare — that is where the ink goes. */
+  PARTS.sbManifold = function (o) {
+    var p = o.pipe || '#52696d', r = o.wheel || '#c23a30';
+    var out = rect(-52, -44, 104, 88, 'rx="3" fill="#152022" ' + K4);
+    out += rect(-48, -24, 8, 52, 'fill="' + p + '" ' + K2) + rect(40, -24, 8, 52, 'fill="' + p + '" ' + K2);
+    out += rect(-52, -36, 104, 12, 'fill="' + p + '" ' + K2);
+    out += rect(-52, 24, 104, 11, 'fill="' + p + '" ' + K2);
+    out += ln(-52, -33, 52, -33, 'stroke="#ffffff" stroke-opacity=".18" stroke-width="2"');
+    var i, x;
+    for (i = 0; i < 3; i++) {
+      x = -30 + i * 30;
+      out += rect(x - 6, -40, 12, 20, 'rx="2" fill="#33464a" ' + K2);
+      out += circ(x, -30, 11, 'fill="none" stroke="' + r + '" stroke-width="4"');
+      out += pth('M' + (x - 11) + ' -30 h22 M' + x + ' -41 v22', 'stroke="' + r + '" stroke-width="3"');
+      out += circ(x, -30, 3, 'fill="#e8ece0"');
+      out += rect(x - 5, 27, 10, 5, 'rx="1" fill="#b08d3f"');
+    }
+    out += circ(-46, 38, 2, 'fill="#5d7478"') + circ(46, 38, 2, 'fill="#5d7478"');
+    return out;
+  };
+
+  /* The chart of soundings, clamped to a steel board: dark printed sea,
+     two bits of coast, depth marks, and the track pencilled in red to the
+     cross where the boat lies. */
+  PARTS.sbSoundingChart = function (o) {
+    var sea = o.sea || '#27444e', land = o.land || '#6f6a4c', pale = '#9cc4c4';
+    var out = rect(-106, -73, 212, 146, 'rx="2" fill="#141f22" ' + K5);
+    out += rect(-98, -60, 196, 126, 'fill="' + sea + '" ' + K2);
+    out += pth('M-49 -60 v126 M49 -60 v126 M-98 -18 h196 M-98 24 h196',
+      'stroke="' + pale + '" stroke-opacity=".16" stroke-width="2" fill="none"');
+    out += pth('M-98 -60 h74 q-6 20 -30 24 q-16 4 -20 22 q-10 10 -24 6 z', 'fill="' + land + '" ' + K2);
+    out += pth('M98 66 h-70 q4 -20 28 -24 q16 -4 20 -22 q8 -10 22 -8 z', 'fill="' + land + '" ' + K2);
+    out += pth('M-98 8 q22 2 32 -14 q6 -20 30 -24 q18 -4 24 -30',
+      'fill="none" stroke="' + pale + '" stroke-opacity=".5" stroke-width="2"');
+    out += pth('M-98 26 q30 0 44 -20 q8 -20 32 -26 q22 -6 30 -40',
+      'fill="none" stroke="' + pale + '" stroke-opacity=".28" stroke-width="2" stroke-dasharray="5 4"');
+    out += pth('M98 6 q-16 0 -24 12 q-8 18 -30 20 q-22 4 -30 28',
+      'fill="none" stroke="' + pale + '" stroke-opacity=".5" stroke-width="2"');
+    var d = [[-58, 44], [-32, 52], [-84, 54], [36, -44], [70, -30], [24, -50], [84, -48],
+             [-40, 34], [50, 14], [78, -4], [-22, 28], [-70, 36]];
+    var i;
+    for (i = 0; i < d.length; i++) out += circ(d[i][0], d[i][1], 1.9, 'fill="#dfe8dc" fill-opacity=".7"');
+    out += circ(-72, 44, 11, 'fill="none" stroke="' + pale + '" stroke-opacity=".6" stroke-width="2"');
+    out += pth('M-72 30 l3.5 10.5 l10.5 3.5 l-10.5 3.5 l-3.5 10.5 l-3.5 -10.5 l-10.5 -3.5 l10.5 -3.5 z',
+      'fill="' + pale + '" fill-opacity=".75"');
+    out += pth('M-44 58 L-14 34 L36 30 L62 -12', 'fill="none" stroke="#e0463a" stroke-width="2.6" stroke-dasharray="7 5"');
+    out += pth('M55 -19 l14 14 M69 -19 l-14 14', 'stroke="#e0463a" stroke-width="3.4" stroke-linecap="round"');
+    out += rect(-106, -73, 212, 12, 'rx="2" fill="#4a5f63" ' + K2);
+    out += circ(-72, -67, 4, 'fill="#9fb3af" ' + K2) + circ(72, -67, 4, 'fill="#9fb3af" ' + K2);
+    out += pth('M98 66 l-16 0 l16 -14 z', 'fill="#3f6470" ' + K2);
+    return out;
+  };
+
+  /* Signal flares: brass cartridges stood in a rack behind a keeper bar,
+     coloured at the crimp, with the pistol that fires them. */
+  PARTS.sbFlareRack = function (o) {
+    var b = o.brass || '#b89444', m = o.metal || '#4a5f63';
+    var tip = ['#c23a30', '#dfe2d4', '#4d9a6a', '#c23a30', '#c23a30', '#4d9a6a'];
+    var out = rect(-76, 14, 152, 10, 'rx="2" fill="' + m + '" ' + K3);
+    var i, x;
+    for (i = 0; i < 6; i++) {
+      x = -70 + i * 15;
+      out += rect(x, -22, 11, 36, 'rx="2" fill="' + b + '" ' + K2);
+      out += rect(x, -22, 11, 9, 'rx="2" fill="' + tip[i] + '"');
+      out += rect(x - 1, 9, 13, 5, 'fill="#8a6a2c"');
+    }
+    out += rect(-74, -4, 94, 5, 'rx="2" fill="' + m + '" ' + K2);
+    out += rect(26, -16, 44, 13, 'rx="4" fill="' + b + '" ' + K2);
+    out += rect(64, -18, 8, 17, 'rx="2" fill="#8a6a2c" ' + K2);
+    out += pth('M28 -4 h16 l8 18 h-13 z', 'fill="#231d1a" ' + K2);
+    out += pth('M46 -3 q8 12 16 0', 'fill="none" stroke="' + b + '" stroke-width="2.6"');
+    out += ln(31, -20, 31, -16, 'stroke="#231d1a" stroke-width="4"');
+    return out;
+  };
+
+  /* Steel tool locker, lashed to the deck: pressed ribs, two toggles and
+     crossed spanners on the front; the lid stands up when it is open and
+     the spanners inside show their jaws. */
+  PARTS.sbToolLocker = function (o) {
+    var m = o.metal || '#3f5357', pale = '#a9bcb8';
+    var out = rect(-60, -64, 120, 64, 'rx="3" fill="' + m + '" ' + K4);
+    out += pth('M-42 -60 v56 M42 -60 v56', 'stroke="black" stroke-opacity=".3" stroke-width="4"');
+    out += rect(-60, -10, 120, 5, 'fill="black" fill-opacity=".25"');
+    out += pth('M-13 -18 L13 -44 M13 -18 L-13 -44', 'stroke="' + pale + '" stroke-width="4.5" stroke-linecap="round"');
+    out += circ(-15, -46, 5, 'fill="none" stroke="' + pale + '" stroke-width="3.5"');
+    out += circ(15, -46, 5, 'fill="none" stroke="' + pale + '" stroke-width="3.5"');
+    out += pth('M-56 -40 q-8 8 0 16 M56 -40 q8 8 0 16', 'fill="none" stroke="#8fa39f" stroke-width="3.5"');
+    out += grp('id="chestOpenG" style="display:none"',
+      rect(-60, -104, 120, 34, 'rx="3" fill="#2c3b3e" ' + K3) +
+      rect(-52, -98, 104, 22, 'rx="2" fill="none" stroke="black" stroke-opacity=".35" stroke-width="3"') +
+      rect(-56, -72, 112, 12, 'fill="#090e0f"') +
+      pth('M-34 -62 v-12 M-14 -62 v-16 M10 -62 v-10 M30 -62 v-15', 'stroke="' + pale + '" stroke-width="4"') +
+      circ(-34, -77, 4.5, 'fill="none" stroke="' + pale + '" stroke-width="3"') +
+      circ(-14, -81, 4.5, 'fill="none" stroke="' + pale + '" stroke-width="3"') +
+      rect(5, -78, 10, 7, 'fill="' + pale + '"') +
+      circ(30, -80, 4.5, 'fill="none" stroke="' + pale + '" stroke-width="3"'));
+    out += grp('id="chestLid"',
+      rect(-62, -76, 124, 14, 'rx="3" fill="#52696d" ' + K3) +
+      rect(-36, -72, 12, 14, 'rx="2" fill="#9fb3af" ' + K2) +
+      rect(24, -72, 12, 14, 'rx="2" fill="#9fb3af" ' + K2));
+    return out;
+  };
+
+  /* The plot table: a lit glass top over two banks of flat chart drawers,
+     rolled charts, dividers and the gyro repeater. The right-hand end of
+     the top is left clear for the lamp. */
+  PARTS.sbPlotTable = function (o) {
+    var m = o.metal || '#4a5f63', d = o.dark || '#2a393c';
+    var out = '', i, s, x0;
+    for (s = 0; s < 2; s++) {
+      x0 = s ? 82 : -138;
+      out += rect(x0, -96, 56, 92, 'fill="' + d + '" ' + K2);
+      for (i = 0; i < 5; i++) {
+        out += ln(x0 + 3, -78 + i * 18, x0 + 53, -78 + i * 18, 'stroke="black" stroke-opacity=".45" stroke-width="2.5"');
+        out += rect(x0 + 21, -90 + i * 18, 14, 4, 'rx="2" fill="#8fa39f"');
+      }
+      out += rect(x0 - 4, -6, 64, 6, 'rx="1" fill="#1a2426" ' + K2);
+    }
+    out += rect(-82, -96, 164, 8, 'fill="' + d + '"');
+    out += rect(-150, -110, 300, 14, 'rx="2" fill="' + m + '" ' + K3);
+    out += rect(-144, -108, 288, 4, 'fill="#a8d8d0" fill-opacity=".4"');
+    out += rect(-134, -122, 62, 12, 'rx="6" fill="#c9d0bc" ' + K2);
+    out += ell(-73, -116, 3, 5, 'fill="#59665e"');
+    out += rect(-126, -133, 48, 11, 'rx="5.5" fill="#aab69f" ' + K2);
+    out += ell(-79, -127.5, 2.6, 4.4, 'fill="#59665e"');
+    out += pth('M-54 -110 l8 -32 l8 32', 'fill="none" stroke="#b89444" stroke-width="3.2" stroke-linejoin="round"');
+    out += circ(-46, -143, 3.4, 'fill="#b89444" ' + K2);
+    out += rect(-26, -115, 58, 5, 'rx="1" fill="#16191a"');
+    out += pth('M-18 -115 l6 5 M20 -115 l6 5', 'stroke="#b89444" stroke-width="2"');
+    out += rect(120, -122, 18, 12, 'fill="' + d + '" ' + K2);
+    out += circ(129, -134, 14, 'fill="#0e1a1c" stroke="#b89444" stroke-width="3.4"');
+    out += pth('M129 -145 v5 M129 -128 v5 M118 -134 h5 M135 -134 h5', 'stroke="#dfe8dc" stroke-width="2"');
+    out += ln(129, -134, 135, -141, 'stroke="#e0463a" stroke-width="2.6" stroke-linecap="round"');
+    return out;
+  };
+
+  /* Battle lamp: a caged red glass on a steel base. The room is lit red so
+     that eyes stay dark-adapted, which is why everything else looks cold. */
+  PARTS.sbBattleLamp = function (o) {
+    var m = o.metal || '#5d7478';
+    return glow(0, -42, 100) +
+      circ(0, -42, 74, 'fill="#e0463a" fill-opacity=".10" ' + NOHIT) +
+      rect(-19, -8, 38, 8, 'rx="2" fill="' + m + '" ' + K2) +
+      rect(-11, -18, 22, 10, 'fill="' + m + '" ' + K2) +
+      rect(-14, -64, 28, 46, 'rx="12" fill="#c8362c" fill-opacity=".8" ' + K2) +
+      pth('M0 -52 q7 9 0 20 q-7 -11 0 -20', 'id="flame" fill="#ffd9c0" stroke="#ff9a7a" stroke-width="2"') +
+      pth('M-14 -50 h28 M-14 -34 h28 M-6 -64 v46 M6 -64 v46', 'fill="none" stroke="' + m + '" stroke-width="2.4"') +
+      rect(-10, -70, 20, 8, 'rx="3" fill="' + m + '" ' + K2);
+  };
+
+  /* The watertight door: a round door in a riveted bulkhead, eight dogs,
+     two hinges and a spoked locking wheel. The sill is knee-high, as it
+     is in every boat ever built. */
+  PARTS.sbWheelDoor = function (o) {
+    var m = o.metal || '#405559', bh = o.bulkhead || '#25343a', r = o.wheel || '#b83a30';
+    var out = rect(-70, -282, 140, 282, 'rx="4" fill="' + bh + '" ' + K4);
+    var i, a;
+    for (i = 0; i < 11; i++) {
+      out += circ(-62, -272 + i * 26, 2.6, 'fill="#5d7478"') + circ(62, -272 + i * 26, 2.6, 'fill="#5d7478"');
+    }
+    out += rect(-42, -270, 84, 26, 'rx="3" fill="#11191b" ' + K2);
+    out += pth('M-36 -263 h72 M-36 -257 h72 M-36 -251 h72', 'stroke="#405559" stroke-width="3"');
+    out += ln(-70, -20, 70, -20, 'stroke="black" stroke-opacity=".4" stroke-width="3"');
+    out += circ(0, -104, 67, 'fill="#566e72" ' + K4);
+    out += rect(-70, -130, 20, 13, 'rx="2" fill="#6d8386" ' + K2) + rect(-70, -91, 20, 13, 'rx="2" fill="#6d8386" ' + K2);
+    out += circ(0, -104, 56, 'fill="' + m + '" ' + K3);
+    for (i = 0; i < 8; i++) {
+      a = i * Math.PI / 4 + Math.PI / 8;
+      out += rect(-5, -4, 10, 8, 'rx="2" fill="#9fb3af" transform="translate(' +
+        (61.5 * Math.cos(a)).toFixed(1) + ',' + (-104 + 61.5 * Math.sin(a)).toFixed(1) + ') rotate(' + (i * 45 + 22.5) + ')"');
+    }
+    out += circ(0, -104, 43, 'fill="none" stroke="black" stroke-opacity=".3" stroke-width="3"');
+    out += circ(0, -104, 26, 'fill="none" stroke="' + r + '" stroke-width="7"');
+    for (i = 0; i < 3; i++) {
+      a = i * Math.PI / 3;
+      out += ln((26 * Math.cos(a)).toFixed(1), (-104 + 26 * Math.sin(a)).toFixed(1),
+                (-26 * Math.cos(a)).toFixed(1), (-104 - 26 * Math.sin(a)).toFixed(1),
+                'stroke="' + r + '" stroke-width="5"');
+    }
+    out += circ(0, -104, 26, 'fill="none" stroke="black" stroke-opacity=".3" stroke-width="1.5"');
+    out += circ(0, -104, 8, 'fill="#9fb3af" ' + K2);
+    return out + sigilBadge();
+  };
+
+  /* Pressure hull: curved plate seams and their rivets, ring frames, pipe
+     and cable runs overhead with red handwheels, and the periscope coming
+     down out of the deckhead into its well. */
+  BACKDROPS.sbHull = function () {
+    var w = '', f = '', i, j, x, y, t;
+    for (j = 0; j < 3; j++) {
+      y = 132 + j * 96;
+      w += pth('M0 ' + y + ' Q400 ' + (y - 30) + ' 800 ' + y, 'fill="none" stroke="black" stroke-opacity=".36" stroke-width="3"');
+      for (i = 0; i < 27; i++) {
+        x = i * 30 + 12; t = x / 800;
+        w += circ(x, (y + 9 - 60 * t * (1 - t)).toFixed(1), 2.4, 'fill="black" fill-opacity=".34"');
+      }
+    }
+    var fx = [2, 352, 608, 786];
+    for (i = 0; i < fx.length; i++) {
+      w += rect(fx[i], 0, 13, 392, 'class="fWall2" ' + K2);
+      w += ln(fx[i] + 3, 0, fx[i] + 3, 392, 'stroke="#ffffff" stroke-opacity=".07" stroke-width="2"');
+      for (j = 0; j < 9; j++) w += circ(fx[i] + 6.5, 100 + j * 34, 2.2, 'fill="#5d7478" fill-opacity=".7"');
+    }
+    w += rect(0, 0, 800, 86, 'fill="black" fill-opacity=".3"');
+    w += rect(0, 12, 800, 8, 'fill="#6a5a46" ' + K2);
+    w += rect(0, 38, 800, 15, 'fill="#3f5659" ' + K2);
+    w += ln(0, 42, 800, 42, 'stroke="#ffffff" stroke-opacity=".16" stroke-width="2"');
+    var fl = [150, 300, 470, 660];
+    for (i = 0; i < fl.length; i++) w += rect(fl[i], 33, 10, 25, 'rx="2" fill="#52696d" ' + K2);
+    var wh = [226, 548];
+    for (i = 0; i < wh.length; i++) {
+      x = wh[i];
+      w += rect(x - 9, 30, 18, 30, 'rx="3" fill="#33464a" ' + K2);
+      w += circ(x, 45, 15, 'fill="none" stroke="#b83a30" stroke-width="4.5"');
+      w += pth('M' + (x - 15) + ' 45 h30 M' + x + ' 30 v30', 'stroke="#b83a30" stroke-width="3.4"');
+      w += circ(x, 45, 3.6, 'fill="#dfe8dc"');
+    }
+    for (j = 0; j < 3; j++) w += ln(0, 70 + j * 4, 800, 70 + j * 4, 'stroke="black" stroke-opacity=".5" stroke-width="2.4"');
+    for (i = 0; i < 7; i++) w += rect(i * 120 + 100, 66, 7, 16, 'rx="2" fill="#52696d"');
+    w += rect(772, 20, 8, 372, 'fill="#6a5a46" ' + K2);
+
+    for (i = 1; i < 9; i++) f += ln(i * 100 - 10, 402, i * 100 - 44, 560, 'stroke="black" stroke-opacity=".3" stroke-width="3"');
+    f += ln(0, 448, 800, 448, 'stroke="black" stroke-opacity=".3" stroke-width="3"');
+    f += ln(0, 512, 800, 512, 'stroke="black" stroke-opacity=".3" stroke-width="3"');
+    for (i = 0; i < 9; i++) {
+      f += circ(i * 100 + 6, 456, 2.4, 'fill="black" fill-opacity=".35"');
+      f += circ(i * 100 + 62, 440, 2.4, 'fill="black" fill-opacity=".35"');
+      f += circ(i * 100 - 8, 520, 2.4, 'fill="black" fill-opacity=".35"');
+      f += circ(i * 100 + 46, 504, 2.4, 'fill="black" fill-opacity=".35"');
+    }
+    /* The periscope. Drawn with the floor so the tube can run down past
+       the skirting into the well. It lives in the one strip of wall that
+       no object ever occupies, x 16..100. */
+    f += ell(58, 414, 38, 10, 'fill="#070c0d" stroke="#52696d" stroke-width="5"');
+    f += rect(47, 0, 22, 414, 'fill="#7d9396" ' + K2);
+    f += ln(52, 0, 52, 410, 'stroke="#ffffff" stroke-opacity=".28" stroke-width="3"');
+    f += ln(65, 0, 65, 410, 'stroke="black" stroke-opacity=".25" stroke-width="3"');
+    f += rect(43, 84, 30, 12, 'rx="3" fill="#33464a" ' + K2);
+    f += pth('M20 414 a38 10 0 0 0 76 0', 'fill="none" stroke="#52696d" stroke-width="5"');
+    f += rect(36, 236, 44, 46, 'rx="6" fill="#26333a" ' + K3);
+    f += circ(58, 255, 11, 'fill="#070c0d" stroke="#b08d3f" stroke-width="3.4"');
+    f += circ(55, 252, 3, 'fill="#ffffff" fill-opacity=".25"');
+    f += rect(16, 268, 24, 9, 'rx="4" fill="#9c342a" ' + K2) + rect(76, 268, 24, 9, 'rx="4" fill="#9c342a" ' + K2);
+    return base(w, f);
+  };
+
+  /* ---- THE APOTHECARY ---- */
+
+  /* ---- THE APOTHECARY (a Victorian chemist's back room) ---- */
+
+  /* Painted oilcloth: a dark floorcloth with a ruled cream border and a
+     row of amber lozenges along both long edges. The middle is left plain
+     for the ink. */
+  PARTS.apOilcloth = function (o) {
+    var c = o.trim || '#d8cba0', a = o.dot || '#c9973f';
+    var out = pth('M-120 -4 l12 -62 h216 l12 62 z', 'fill="' + (o.fill || '#232d26') + '" ' + K3);
+    out += pth('M-109 -9 l10 -52 h198 l10 52 z', 'fill="none" stroke="' + c + '" stroke-opacity=".75" stroke-width="2.5"');
+    var i;
+    for (i = -4; i <= 4; i++) {
+      out += pth('M' + (i * 23 - 5) + ' -15 l5 -4 l5 4 l-5 4 z', 'fill="' + a + '" fill-opacity=".9"');
+      out += pth('M' + (i * 21 - 4) + ' -56 l4 -3 l4 3 l-4 3 z', 'fill="' + a + '" fill-opacity=".9"');
+    }
+    out += pth('M-120 -4 l30 0 l-22 -15 z', 'fill="#5a644e" ' + K2);
+    out += pth('M40 -66 l6 14 l-4 10', 'fill="none" stroke="black" stroke-opacity=".3" stroke-width="2"');
+    return out;
+  };
+
+  /* The great brass mortar on its elm stump, pestle left standing in it. */
+  PARTS.apMortar = function (o) {
+    var b = o.brass || '#b8913f', hi = '#d9b65c';
+    return rect(-24, -46, 48, 46, 'rx="3" fill="' + (o.stump || '#5a4630') + '" ' + K3) +
+      pth('M-13 -38 v32 M1 -40 v36 M13 -36 v28', 'fill="none" stroke="black" stroke-opacity=".28" stroke-width="2.5"') +
+      ell(0, -46, 24, 6, 'fill="#8a6f4a" ' + K2) +
+      rect(-17, -54, 34, 8, 'rx="2" fill="#8a6a2c" ' + K2) +
+      pth('M-29 -94 q-2 32 13 42 h32 q15 -10 13 -42 z', 'fill="' + b + '" ' + K3) +
+      pth('M-26 -78 q26 7 52 0 M-21 -64 q21 6 42 0', 'fill="none" stroke="#7a5f24" stroke-width="2.5"') +
+      circ(-28, -72, 4.5, 'fill="' + hi + '" ' + K2) + circ(28, -72, 4.5, 'fill="' + hi + '" ' + K2) +
+      ell(0, -94, 30, 6.5, 'fill="' + hi + '" ' + K2) +
+      ell(0, -94, 23, 4, 'fill="#3a2a10"') +
+      ln(4, -94, 17, -106, 'stroke="' + hi + '" stroke-width="7" stroke-linecap="round"') +
+      circ(18, -107, 5, 'fill="' + hi + '" ' + K2) +
+      pth('M-19 -86 q-2 16 6 26', 'fill="none" stroke="#fff3d0" stroke-opacity=".3" stroke-width="3" stroke-linecap="round"');
+  };
+
+  /* Dispensing scales on a bracket: pillar, beam a little out of true, two
+     pans on chains, and a few weights left out. All brass. */
+  PARTS.apBalance = function (o) {
+    var b = o.brass || '#c9a24e';
+    return rect(-33, 26, 66, 8, 'rx="2" fill="' + (o.wood || '#3a5642') + '" ' + K3) +
+      rect(-14, 19, 28, 7, 'rx="2" fill="' + b + '" ' + K2) +
+      rect(-3.5, -24, 7, 44, 'fill="' + b + '" ' + K2) +
+      pth('M-26 -20 l-8 26 M-26 -20 l8 26 M26 -25 l-8 22 M26 -25 l8 22',
+        'fill="none" stroke="' + b + '" stroke-width="1.8"') +
+      pth('M-26 -20 L26 -25', 'stroke="' + b + '" stroke-width="4.5" stroke-linecap="round"') +
+      pth('M-26 -20 L26 -25', 'stroke="black" stroke-opacity=".35" stroke-width="1"') +
+      pth('M-35 6 q9 10 18 0 z', 'fill="' + b + '" ' + K2) +
+      pth('M17 -3 q9 10 18 0 z', 'fill="' + b + '" ' + K2) +
+      circ(0, -27, 5, 'fill="' + b + '" ' + K2) +
+      ln(0, -20, 0, -6, 'stroke="#3a2a10" stroke-width="2"') +
+      rect(-26, 0, 6, 5, 'fill="#8a6a2c"') +
+      rect(17, 20, 7, 6, 'rx="1" fill="' + b + '" ' + K2) +
+      rect(25, 22, 5, 4, 'rx="1" fill="' + b + '" ' + K2);
+  };
+
+  /* Herbs hung to dry from a rail, heads down: sage, lavender, camomile,
+     something rust-coloured. Long dead. The gap in the middle is where the
+     ink shows on the wall behind. */
+  PARTS.apHerbs = function (o) {
+    var out = rect(-52, -44, 104, 7, 'rx="3" fill="' + (o.rail || '#6a5238') + '" ' + K2);
+    var b = [[-39, 52, '#7d8558', '#a4ab78'], [-18, 42, '#6c6a4a', '#8a6fa0'],
+             [18, 56, '#8f8250', '#e0d49a'], [39, 44, '#7a4f34', '#b0683e']];
+    var i, x, n, c, d, j;
+    for (i = 0; i < b.length; i++) {
+      x = b[i][0]; n = b[i][1]; c = b[i][2]; d = b[i][3];
+      out += ln(x, -37, x, -27, 'stroke="#d8cba0" stroke-width="1.8"');
+      out += pth('M' + (x - 3) + ' -24 h6 l6 ' + n + ' q-9 9 -18 0 z', 'fill="' + c + '" ' + K2);
+      out += pth('M' + x + ' -22 v' + (n - 2) + ' M' + (x - 1) + ' -22 l-5 ' + (n - 6) + ' M' + (x + 1) + ' -22 l5 ' + (n - 6),
+        'fill="none" stroke="black" stroke-opacity=".28" stroke-width="1.6"');
+      for (j = 0; j < 4; j++) {
+        out += circ(x - 6 + j * 4, -24 + n - 4 + (j % 2) * 5, 2.4, 'fill="' + d + '"');
+      }
+      out += rect(x - 4.5, -28, 9, 5, 'rx="1" fill="#d8cba0" ' + K2);
+    }
+    out += circ(-52, -40.5, 4, 'fill="#c9a24e" ' + K2) + circ(52, -40.5, 4, 'fill="#c9a24e" ' + K2);
+    return out;
+  };
+
+  /* The drug run: a wall of small labelled drawers round a locked centre
+     panel. Labels are a dash, not a word — the room gets mirrored. */
+  PARTS.apDrawerWall = function (o) {
+    var w = o.wood || '#1a2a20', fr = o.front || '#33503d';
+    var out = rect(-106, -73, 212, 146, 'rx="3" fill="' + w + '" ' + K5);
+    var i, j, x, y;
+    for (j = 0; j < 4; j++) {
+      for (i = 0; i < 6; i++) {
+        if ((i === 2 || i === 3) && (j === 1 || j === 2)) continue;
+        x = -99 + i * 33; y = -62 + j * 32.5;
+        out += rect(x + 1.5, y + 1.5, 30, 29.5, 'rx="2" fill="' + fr + '" ' + K2);
+        out += rect(x + 7, y + 6, 19, 8, 'fill="#e6dcc0" fill-opacity=".9"');
+        out += ln(x + 10, y + 10, x + 23, y + 10, 'stroke="#5a4a30" stroke-width="1.6"');
+        out += circ(x + 16.5, y + 22, 3.2, 'fill="' + (o.knob || '#d6a94a') + '"');
+      }
+    }
+    out += rect(-31.5, -28, 63, 62, 'rx="2" fill="#121c16" ' + K3);
+    out += rect(-24, -21, 48, 48, 'rx="2" fill="none" stroke="#33503d" stroke-width="2.5"');
+    out += circ(25, 3, 2.6, 'fill="' + (o.knob || '#d6a94a') + '"');
+    out += rect(-108, -75, 216, 11, 'rx="2" fill="#3a5642" ' + K3);
+    out += rect(-106, 68, 212, 6, 'fill="#3a5642" ' + K2);
+    return out;
+  };
+
+  /* A shelf of shop rounds: shouldered bottles with ground-glass stoppers
+     and blank cream labels. */
+  PARTS.apJarShelf = function (o) {
+    var out = rect(-76, 14, 152, 9, 'rx="2" fill="' + (o.wood || '#3a5642') + '" ' + K3);
+    var b = [[-62, 20, 22, '#b5762a'], [-37, 18, 26, '#3f7a5a'], [-12, 22, 20, '#4f7fa6'],
+             [14, 18, 26, '#9a5a22'], [39, 22, 22, '#3f7a5a'], [63, 16, 17, '#4f7fa6']];
+    var i, x, w, h, c, top;
+    for (i = 0; i < b.length; i++) {
+      x = b[i][0]; w = b[i][1]; h = b[i][2]; c = b[i][3]; top = 14 - h;
+      out += rect(x - 3.5, top - 6, 7, 8, 'fill="' + c + '" fill-opacity=".9" ' + K2);
+      out += rect(x - w / 2, top, w, h, 'rx="4" fill="' + c + '" fill-opacity=".9" ' + K2);
+      out += circ(x, top - 9, 4.4, 'fill="#e8e4d0" ' + K2);
+      out += rect(x - w / 2 + 2.5, top + h * 0.38, w - 5, h * 0.34, 'fill="#e6dcc0" fill-opacity=".9"');
+      out += ln(x - w / 2 + 3.5, top + 4, x - w / 2 + 3.5, 10, 'stroke="#ffffff" stroke-opacity=".32" stroke-width="2"');
+    }
+    return out;
+  };
+
+  /* Travelling medicine chest: mahogany, brass corners, a drop handle and
+     two little drawers in the base. Open, the lid stands up and the tops
+     of the bottles show in their partitions. */
+  PARTS.apMedChest = function (o) {
+    var w = o.wood || '#5c3524', b = o.brass || '#c9a24e';
+    var out = rect(-60, -60, 120, 60, 'rx="3" fill="' + w + '" ' + K4);
+    out += ln(-60, -28, 60, -28, 'stroke="black" stroke-opacity=".45" stroke-width="3"');
+    out += rect(-54, -23, 52, 17, 'rx="2" fill="#6f4330" ' + K2) + rect(2, -23, 52, 17, 'rx="2" fill="#6f4330" ' + K2);
+    out += circ(-28, -14.5, 3, 'fill="' + b + '"') + circ(28, -14.5, 3, 'fill="' + b + '"');
+    out += pth('M-60 0 v-11 l11 11 z M60 0 v-11 l-11 11 z', 'fill="' + b + '" ' + K2);
+    out += rect(-5.5, -52, 11, 15, 'rx="3" fill="' + b + '" ' + K2);
+    out += rect(-1.5, -47, 3, 6, 'rx="1" fill="black" fill-opacity=".7"');
+    var tops = ['#b5762a', '#4f7fa6', '#3f7a5a', '#b5762a', '#3f7a5a', '#4f7fa6', '#b5762a'];
+    var i, inner = rect(-60, -112, 120, 40, 'rx="3" fill="#47281b" ' + K3) +
+      rect(-52, -105, 104, 27, 'fill="#7a2f2a" fill-opacity=".8"') +
+      rect(-56, -74, 112, 14, 'fill="#120b07"');
+    for (i = 0; i < 7; i++) {
+      inner += rect(-50 + i * 15, -72, 10, 12, 'rx="2" fill="' + tops[i] + '" ' + K2);
+      inner += circ(-45 + i * 15, -75, 3.6, 'fill="#e8e4d0" ' + K2);
+    }
+    out += grp('id="chestOpenG" style="display:none"', inner);
+    out += grp('id="chestLid"',
+      rect(-62, -77, 124, 19, 'rx="3" fill="' + w + '" ' + K3) +
+      pth('M-62 -77 h11 l-11 11 z M62 -77 h-11 l11 11 z', 'fill="' + b + '"') +
+      pth('M-15 -72 q15 12 30 0', 'fill="none" stroke="' + b + '" stroke-width="3.2"') +
+      circ(-15, -72, 2.6, 'fill="' + b + '"') + circ(15, -72, 2.6, 'fill="' + b + '"'));
+    return out;
+  };
+
+  /* The dispensing counter: panelled green front, mahogany top, and on it
+     a pill tile with the last batch still on it, a dispensing bottle, a
+     measure and a stack of chip boxes. The right-hand end is the lamp's. */
+  PARTS.apCounter = function (o) {
+    var g = o.wood || '#24392c', top = o.top || '#5c3524';
+    var out = rect(-144, -96, 288, 96, 'fill="' + g + '" ' + K3);
+    var s, x0;
+    for (s = 0; s < 2; s++) {
+      x0 = s ? 82 : -136;
+      out += rect(x0, -86, 54, 70, 'rx="2" fill="black" fill-opacity=".14" stroke="black" stroke-opacity=".38" stroke-width="3"');
+      out += rect(x0 + 9, -77, 36, 52, 'rx="2" fill="none" stroke="#3a5642" stroke-width="2.5"');
+    }
+    out += rect(-70, -38, 140, 22, 'rx="2" fill="none" stroke="black" stroke-opacity=".32" stroke-width="3"');
+    out += rect(-148, -10, 296, 10, 'fill="#15221a" ' + K2);
+    out += rect(-150, -110, 300, 14, 'rx="2" fill="' + top + '" ' + K3);
+    out += ln(-146, -107, 146, -107, 'stroke="#e6dcc0" stroke-opacity=".22" stroke-width="2"');
+    /* pill tile */
+    out += rect(-138, -117, 50, 7, 'rx="1" fill="#e6dcc0" ' + K2);
+    out += pth('M-130 -112 v2 M-122 -112 v2 M-114 -112 v2 M-106 -112 v2 M-98 -112 v2', 'stroke="#3a4a6a" stroke-width="1.6"');
+    out += circ(-128, -120, 2.6, 'fill="#8a5a3a"') + circ(-121, -120, 2.6, 'fill="#8a5a3a"') +
+      circ(-114, -120, 2.6, 'fill="#8a5a3a"') + circ(-107, -120, 2.6, 'fill="#8a5a3a"');
+    out += ln(-100, -119, -82, -124, 'stroke="#aab0a8" stroke-width="3" stroke-linecap="round"');
+    /* dispensing bottle, corked */
+    out += rect(-71, -146, 7, 9, 'fill="#3f7a5a" ' + K2);
+    out += rect(-72.5, -151, 10, 6, 'rx="1" fill="#b89868" ' + K2);
+    out += rect(-78, -138, 21, 28, 'rx="4" fill="#3f7a5a" ' + K2);
+    out += rect(-75, -129, 15, 11, 'fill="#e6dcc0" fill-opacity=".9"');
+    /* conical measure */
+    out += pth('M-44 -112 l-7 -24 h22 l-7 24 z', 'fill="#cfe8e0" fill-opacity=".3" stroke="#cfe8e0" stroke-opacity=".7" stroke-width="2"');
+    out += pth('M-47 -124 h14 l-4 12 h-6 z', 'fill="#b5762a" fill-opacity=".75"');
+    out += rect(-48, -113, 16, 3, 'fill="#cfe8e0" fill-opacity=".7"');
+    /* chip boxes */
+    out += rect(116, -119, 26, 9, 'rx="2" fill="#d8cba0" ' + K2);
+    out += rect(120, -127, 18, 8, 'rx="2" fill="#c4b488" ' + K2);
+    return out;
+  };
+
+  /* A brass paraffin lamp with a glass chimney. */
+  PARTS.apOilLamp = function (o) {
+    var b = o.brass || '#c9a24e';
+    return glow(0, -44, 104) +
+      pth('M-16 0 h32 l-6 -8 h-20 z', 'fill="' + b + '" ' + K2) +
+      ell(0, -17, 16, 10, 'fill="' + b + '" ' + K2) +
+      pth('M-10 -20 q10 5 20 0', 'fill="none" stroke="#fff3d0" stroke-opacity=".4" stroke-width="2"') +
+      rect(-7, -31, 14, 6, 'rx="1" fill="#8a6a2c" ' + K2) +
+      ln(7, -28, 13, -28, 'stroke="#8a6a2c" stroke-width="2.4"') + circ(14, -28, 3, 'fill="' + b + '" ' + K2) +
+      pth('M0 -54 q7 9 0 20 q-7 -11 0 -20', 'id="flame" fill="#ffcf6e" stroke="#ff9d3c" stroke-width="2"') +
+      pth('M-9 -31 q-7 -15 0 -28 q4 -6 3 -19 h12 q-1 13 3 19 q7 13 0 28 z',
+        'fill="#fff3d0" fill-opacity=".14" stroke="#fff3d0" stroke-opacity=".55" stroke-width="2"');
+  };
+
+  /* The poison cupboard: glazed above, with the ribbed blue and green
+     bottles on two shelves, and a panelled door below carrying the mark.
+     Cornice and plinth so that it is furniture and not a second door. */
+  PARTS.apPoisonCupboard = function (o) {
+    var g = o.wood || '#1c2f24', tr = o.trim || '#34503d', cr = '#e6dcc0';
+    var out = rect(-38, -190, 76, 182, 'rx="3" fill="' + g + '" ' + K4);
+    out += rect(-45, -204, 90, 16, 'rx="3" fill="' + tr + '" ' + K3);
+    out += rect(-43, -10, 86, 12, 'rx="2" fill="' + tr + '" ' + K3);
+    out += rect(-31, -182, 62, 64, 'fill="#0a120e" ' + K2);
+    var cols = ['#2f6f96', '#3f7a5a', '#8a3a2a', '#2f6f96'];
+    var i, x;
+    for (i = 0; i < 4; i++) {
+      x = -27 + i * 14.5;
+      out += rect(x, -170, 10, 18, 'rx="2" fill="' + cols[i] + '" ' + K2);
+      out += rect(x + 3, -175, 4, 6, 'fill="' + cols[i] + '"');
+      out += rect(x, -141, 10, 20, 'rx="2" fill="' + cols[(i + 1) % 4] + '" ' + K2);
+      out += rect(x + 3, -146, 4, 6, 'fill="' + cols[(i + 1) % 4] + '"');
+    }
+    out += ln(-31, -151, 31, -151, 'stroke="' + tr + '" stroke-width="3"');
+    out += rect(-31, -182, 62, 64, 'fill="url(#ecGlass)"');
+    out += ln(0, -182, 0, -118, 'stroke="' + g + '" stroke-width="4"');
+    out += rect(-13, -113, 26, 26, 'rx="3" fill="#c9a24e" fill-opacity=".9" ' + K2);
+    out += rect(-31, -80, 62, 64, 'rx="2" fill="none" stroke="black" stroke-opacity=".4" stroke-width="3"');
+    out += pth('M-13 -40 l26 13 M13 -40 l-26 13', 'stroke="' + cr + '" stroke-opacity=".8" stroke-width="4" stroke-linecap="round"');
+    out += circ(0, -54, 9, 'fill="' + cr + '" fill-opacity=".85"');
+    out += rect(-5, -48, 10, 7, 'rx="1" fill="' + cr + '" fill-opacity=".85"');
+    out += circ(-3.4, -55, 2.2, 'fill="#1c2f24"') + circ(3.4, -55, 2.2, 'fill="#1c2f24"');
+    return out + cabInnards(o);
+  };
+
+  /* Green matchboarding, a cream dado rail, a high shelf of shop rounds
+     and drug jars under the cornice, and a black-and-buff tiled floor. */
+  BACKDROPS.apShop = function () {
+    var w = '', f = '', i, j, x;
+    for (i = 0; i <= 800; i += 25) w += ln(i, 84, i, 330, 'stroke="black" stroke-opacity=".24" stroke-width="2.5"');
+    w += rect(0, 330, 800, 9, 'fill="#d8cba0" fill-opacity=".5" ' + K2);
+    w += rect(0, 339, 800, 53, 'fill="black" fill-opacity=".22"');
+    for (i = 0; i < 8; i++) w += rect(i * 100 + 8, 348, 84, 36, 'rx="2" fill="none" stroke="black" stroke-opacity=".28" stroke-width="3"');
+    /* the high shelf */
+    w += rect(0, 0, 800, 84, 'fill="black" fill-opacity=".3"');
+    var cols = ['#b5762a', '#d8cba0', '#3f7a5a', '#d8cba0', '#4f7fa6', '#9a5a22'];
+    for (i = 0; i < 16; i++) {
+      x = 24 + i * 50; j = i % 6;
+      if (j === 1 || j === 3) {
+        /* a cream drug jar with a domed lid and a dark band */
+        w += rect(x - 14, 34, 28, 38, 'rx="4" fill="' + cols[j] + '" fill-opacity=".62" ' + K2);
+        w += pth('M' + (x - 12) + ' 34 q12 -12 24 0 z', 'fill="' + cols[j] + '" fill-opacity=".62" ' + K2);
+        w += circ(x, 25, 3, 'fill="' + cols[j] + '" fill-opacity=".7"');
+        w += rect(x - 14, 46, 28, 10, 'fill="#24392c" fill-opacity=".8"');
+      } else if (j === 4) {
+        /* a carboy: the show-globe */
+        w += circ(x, 54, 18, 'fill="' + cols[j] + '" fill-opacity=".6" ' + K2);
+        w += rect(x - 5, 24, 10, 14, 'fill="' + cols[j] + '" fill-opacity=".6" ' + K2);
+        w += circ(x, 20, 5, 'fill="#e8e4d0" fill-opacity=".7"');
+        w += pth('M' + (x - 11) + ' 46 q3 -8 9 -9', 'fill="none" stroke="#ffffff" stroke-opacity=".3" stroke-width="3" stroke-linecap="round"');
+      } else {
+        w += rect(x - 4, 22, 8, 12, 'fill="' + cols[j] + '" fill-opacity=".62" ' + K2);
+        w += rect(x - 12, 32, 24, 40, 'rx="5" fill="' + cols[j] + '" fill-opacity=".62" ' + K2);
+        w += circ(x, 19, 4.4, 'fill="#e8e4d0" fill-opacity=".7"');
+        w += rect(x - 9, 46, 18, 12, 'fill="#e6dcc0" fill-opacity=".6"');
+      }
+    }
+    w += rect(0, 72, 800, 10, 'fill="#3a5642" ' + K2);
+    for (i = 0; i < 5; i++) w += pth('M' + (i * 190 + 14) + ' 82 h14 l-14 16 z', 'fill="#3a5642" ' + K2);
+    /* tiles */
+    for (j = 0; j < 4; j++) {
+      for (i = -1; i < 18; i++) {
+        if ((i + j) % 2) continue;
+        var y0 = 402 + j * 40, sk = j * 10;
+        f += pth('M' + (i * 50 - sk) + ' ' + y0 + ' h50 l-10 40 h-50 z', 'fill="black" fill-opacity=".3"');
+      }
+    }
+    f += ln(0, 442, 800, 442, 'stroke="black" stroke-opacity=".2" stroke-width="2"');
+    f += ln(0, 482, 800, 482, 'stroke="black" stroke-opacity=".2" stroke-width="2"');
+    f += ln(0, 522, 800, 522, 'stroke="black" stroke-opacity=".2" stroke-width="2"');
+    return base(w, f);
+  };
+
+  /* ---- THE PROJECTION BOOTH ---- */
+
+  /* ---- THE PROJECTION BOOTH ---- */
+
+  /* The asbestos fire blanket, folded on the floor by the machine. Grey
+     quilting with a red-bound hem — the red is what stops it being a mat. */
+  PARTS.pjBlanket = function (o) {
+    var c = o.fill || '#6c6962';
+    var out = pth('M-114 -6 l12 -58 h204 l12 58 z', 'fill="' + c + '" ' + K3);
+    var i;
+    for (i = -84; i <= 84; i += 42) {
+      out += ln(i - 6, -8, i + 12, -62, 'stroke="black" stroke-opacity=".2" stroke-width="2.5"');
+      out += ln(i + 12, -8, i - 6, -62, 'stroke="black" stroke-opacity=".2" stroke-width="2.5"');
+    }
+    out += pth('M-114 -6 l2 -10 h224 l2 10 z', 'fill="' + (o.hem || '#a2362b') + '" ' + K2);
+    out += pth('M102 -64 l-40 0 l30 26 z', 'fill="#9a968c" ' + K2);
+    out += pth('M62 -64 l30 26', 'stroke="' + (o.hem || '#a2362b') + '" stroke-width="4"');
+    out += circ(-96, -52, 4, 'fill="#c8ced0" ' + K2) + circ(-104, -22, 4, 'fill="#c8ced0" ' + K2);
+    out += pth('M-96 -52 q-22 4 -26 22', 'fill="none" stroke="#d8d2c4" stroke-width="3" stroke-linecap="round"');
+    return out;
+  };
+
+  /* A red fire bucket, heaped with sand, a scoop stuck in it. */
+  PARTS.pjSandBucket = function (o) {
+    var r = o.fill || '#a8322a';
+    return ell(0, -2, 26, 6, 'fill="black" fill-opacity=".3"') +
+      pth('M-28 -54 q28 -44 56 0', 'fill="none" stroke="#2c2622" stroke-width="4"') +
+      pth('M-21 0 l-8 -54 h58 l-8 54 z', 'fill="' + r + '" ' + K3) +
+      pth('M-26 -36 h52 l-2 12 h-48 z', 'fill="#e6dcc4" fill-opacity=".85"') +
+      ell(0, -54, 29, 7, 'fill="#c4483a" ' + K2) +
+      ell(0, -54, 22, 4.6, 'fill="#3a2c1c"') +
+      pth('M-22 -55 q8 -14 22 -15 q14 1 22 15 q-22 6 -44 0 z', 'fill="' + (o.sand || '#d2ba80') + '" ' + K2) +
+      circ(-6, -61, 1.6, 'fill="#8a7444"') + circ(7, -58, 1.6, 'fill="#8a7444"') + circ(1, -65, 1.4, 'fill="#8a7444"') +
+      ln(8, -62, 20, -98, 'stroke="#6a4a2a" stroke-width="5" stroke-linecap="round"') +
+      rect(14, -108, 12, 12, 'rx="3" fill="#6a4a2a" ' + K2 + ' transform="rotate(18 20 -102)"');
+  };
+
+  /* The wall rewinder: a reel of film on a geared head, with its crank. */
+  PARTS.pjRewinder = function (o) {
+    var m = o.metal || '#9aa2a6', b = o.brass || '#b8913f';
+    var out = rect(-5, -4, 10, 40, 'fill="#3a3632" ' + K2);
+    out += rect(-15, 30, 30, 9, 'rx="2" fill="#3a3632" ' + K2);
+    out += pth('M-29 4 q-8 18 -2 34', 'fill="none" stroke="#1a1512" stroke-width="5" stroke-linecap="round"');
+    out += circ(0, -4, 31, 'fill="#14110f" fill-opacity=".55" stroke="' + m + '" stroke-width="5"');
+    out += circ(0, -4, 31, 'fill="none" ' + K2);
+    out += circ(0, -4, 20, 'fill="#1e1814" stroke="#4a3c30" stroke-width="2"');
+    out += circ(0, -4, 15, 'fill="none" stroke="#4a3c30" stroke-width="1.5"');
+    var i;
+    for (i = 0; i < 3; i++) {
+      out += rect(-3.5, -30, 7, 28, 'fill="' + m + '" transform="translate(0,-4) rotate(' + (i * 120 + 20) + ')"');
+    }
+    out += circ(0, -4, 8, 'fill="' + m + '" ' + K2);
+    out += ln(0, -4, 22, 14, 'stroke="' + b + '" stroke-width="5" stroke-linecap="round"');
+    out += circ(0, -4, 3.4, 'fill="#2a2420"');
+    out += rect(18, 9, 10, 16, 'rx="4" fill="#6a4a2a" ' + K2);
+    return out;
+  };
+
+  /* A framed lobby card: a night scene, a figure, and the title reduced to
+     two bars so it survives being mirrored. */
+  PARTS.pjLobbyCard = function (o) {
+    var out = rect(-52, -44, 104, 88, 'rx="3" fill="' + (o.frame || '#6a5230') + '" ' + K4);
+    out += rect(-45, -37, 90, 74, 'fill="#d6caa9"');
+    out += rect(-40, -32, 80, 52, 'fill="' + (o.ground || '#141b2b') + '"');
+    out += circ(22, -17, 9, 'fill="#e4e8ea" fill-opacity=".85"');
+    out += pth('M-40 20 v-12 h10 v-10 h8 v14 h12 v-6 h10 v14 z', 'fill="#07090e"');
+    out += pth('M8 20 q-1 -18 7 -21 q-5 -5 -2 -11 l-7 0 l0 -3 l7 0 q1 -7 7 -7 q6 0 7 7 l7 0 l0 3 l-7 0 q3 6 -2 11 q8 3 7 21 z',
+      'fill="#07090e"');
+    out += pth('M-40 -32 l80 0', 'stroke="black" stroke-opacity=".4" stroke-width="2"');
+    out += rect(-34, 25, 42, 6, 'fill="#8a2a22"');
+    out += rect(14, 25, 20, 6, 'fill="#3a3530"');
+    out += pth('M-45 -37 l24 0 l-24 24 z', 'fill="#ffffff" fill-opacity=".07"');
+    return out;
+  };
+
+  /* The observation port and its fire shutter: an iron plate hung on
+     chains over pulleys, held up by a fusible link and half dropped. The
+     house is visible through the gap underneath. */
+  PARTS.pjShutter = function (o) {
+    var m = o.metal || '#4c463e', f = o.frame || '#38332d';
+    var out = rect(-106, -73, 212, 9, 'rx="2" fill="' + f + '" ' + K3);
+    out += rect(-100, -60, 200, 126, 'rx="3" fill="' + f + '" ' + K5);
+    out += rect(-88, -48, 176, 102, 'fill="#0a0f18"');
+    /* the house, seen over the sill: cold light and empty seat backs */
+    out += pth('M-88 30 h176 v24 h-176 z', 'fill="#cfe6ff" fill-opacity=".34"');
+    out += pth('M-30 30 h60 l28 24 h-116 z', 'fill="#eaf5ff" fill-opacity=".4"');
+    var i;
+    for (i = 0; i < 7; i++) {
+      out += rect(-84 + i * 25, 43, 18, 12, 'rx="6" fill="#090b10"');
+    }
+    out += rect(-88, -48, 176, 78, 'fill="' + m + '" ' + K3);
+    out += pth('M-88 -22 h176 M-88 4 h176', 'stroke="black" stroke-opacity=".28" stroke-width="2.5"');
+    for (i = 0; i < 8; i++) {
+      out += circ(-80 + i * 22.8, -41, 2.6, 'fill="#8d8478"');
+      out += circ(-80 + i * 22.8, 23, 2.6, 'fill="#8d8478"');
+    }
+    out += rect(-88, 27, 176, 5, 'fill="black" fill-opacity=".5"');
+    /* chains, pulleys, fusible link and the counterweight */
+    out += ln(-62, -64, -62, -48, 'stroke="#a8a49a" stroke-width="3" stroke-dasharray="4 3"');
+    out += ln(62, -64, 62, -48, 'stroke="#a8a49a" stroke-width="3" stroke-dasharray="4 3"');
+    out += circ(-62, -66, 8, 'fill="#8d8478" ' + K2) + circ(62, -66, 8, 'fill="#8d8478" ' + K2);
+    out += circ(-62, -66, 2.4, 'fill="#2a2420"') + circ(62, -66, 2.4, 'fill="#2a2420"');
+    out += ln(-62, -72, 62, -72, 'stroke="#a8a49a" stroke-width="2.5" stroke-dasharray="4 3"');
+    out += rect(-7, -77, 14, 9, 'rx="2" fill="#c8483a" ' + K2);
+    out += rect(-104, 62, 208, 11, 'rx="2" fill="' + f + '" ' + K3);
+    return out;
+  };
+
+  /* A shelf of film cans: flat tins stacked edge-on, one stood face out. */
+  PARTS.pjCanShelf = function (o) {
+    var out = rect(-76, 14, 152, 10, 'rx="2" fill="' + (o.wood || '#4a3a2a') + '" ' + K3);
+    var tins = ['#8d9498', '#777e82', '#9aa2a6', '#6f7579'];
+    var i;
+    for (i = 0; i < 4; i++) {
+      out += rect(-72 + (i % 2) * 2, 5 - i * 9, 46, 9, 'rx="3" fill="' + tins[i] + '" ' + K2);
+      out += ln(-70 + (i % 2) * 2, 8 - i * 9, -28 + (i % 2) * 2, 8 - i * 9, 'stroke="black" stroke-opacity=".3" stroke-width="1.5"');
+    }
+    for (i = 0; i < 3; i++) {
+      out += rect(-20 - (i % 2) * 2, 5 - i * 9, 46, 9, 'rx="3" fill="' + tins[(i + 1) % 4] + '" ' + K2);
+      out += ln(-18 - (i % 2) * 2, 8 - i * 9, 24 - (i % 2) * 2, 8 - i * 9, 'stroke="black" stroke-opacity=".3" stroke-width="1.5"');
+    }
+    out += rect(-12, -9, 20, 6, 'fill="#e0d3b0" fill-opacity=".85"');
+    out += circ(52, -8, 22, 'fill="#858c90" ' + K3);
+    out += circ(52, -8, 16, 'fill="none" stroke="black" stroke-opacity=".3" stroke-width="2"');
+    out += pth('M38 -20 a19 19 0 0 1 22 -6', 'fill="none" stroke="#dfe4e6" stroke-opacity=".6" stroke-width="3" stroke-linecap="round"');
+    out += rect(42, -13, 20, 10, 'rx="1" fill="#e0d3b0" ' + K2);
+    out += pth('M45 -8 h14', 'stroke="#8a2a22" stroke-width="2.5"');
+    return out;
+  };
+
+  /* A film transit case: a strapped wooden box with tin corners and the
+     reel mark stencilled on the front. */
+  PARTS.pjTransitCase = function (o) {
+    var w = o.wood || '#6f4e2c', s = o.strap || '#33251a';
+    var out = rect(-58, -62, 116, 62, 'rx="3" fill="' + w + '" ' + K4);
+    out += pth('M-58 -30 h116', 'stroke="black" stroke-opacity=".25" stroke-width="2.5"');
+    out += circ(0, -30, 15, 'fill="none" stroke="#e8d9a8" stroke-opacity=".75" stroke-width="3"');
+    out += circ(0, -38, 3.2, 'fill="#e8d9a8" fill-opacity=".75"') + circ(-7, -26, 3.2, 'fill="#e8d9a8" fill-opacity=".75"') +
+      circ(7, -26, 3.2, 'fill="#e8d9a8" fill-opacity=".75"');
+    out += rect(-40, -62, 11, 62, 'fill="' + s + '" ' + K2) + rect(29, -62, 11, 62, 'fill="' + s + '" ' + K2);
+    out += rect(-41, -22, 13, 9, 'rx="2" fill="#b8913f"') + rect(28, -22, 13, 9, 'rx="2" fill="#b8913f"');
+    out += pth('M-58 0 v-12 l12 12 z M58 0 v-12 l-12 12 z', 'fill="#9aa2a6" ' + K2);
+    out += rect(-60, -76, 120, 16, 'rx="3" id="chestLid" fill="' + (o.lid || '#805c36') + '" ' + K3);
+    out += grp('id="chestOpenG" style="display:none"',
+      rect(-54, -62, 108, 17, 'fill="#0d0a07"') +
+      rect(-46, -56, 40, 8, 'rx="3" fill="#8d9498" ' + K2) +
+      rect(4, -56, 40, 8, 'rx="3" fill="#777e82" ' + K2) +
+      rect(-60, -94, 120, 14, 'rx="3" fill="' + (o.lid || '#805c36') + '" ' + K2 +
+        ' transform="rotate(-9 -60 -94)"'));
+    return out;
+  };
+
+  /* The machine. A carbon-arc projector seen side-on, bolted to an iron
+     pedestal with the drawer in it: lens, head, upper and lower spool
+     boxes, and the cone that joins the head to the lamphouse — which is
+     the room's light and is drawn by pjLamphouse at local (84,-110). The
+     beam leaves the lens and runs out of frame to the port in the end wall,
+     so it is drawn here, NOHIT, and deliberately leaves the bounding box. */
+  PARTS.pjProjector = function (o) {
+    var m = o.metal || '#3d3934', d = o.dark || '#2b2825', b = o.brass || '#b8913f';
+    var out = grp(NOHIT,
+      pth('M-140 -137 L-262 -164 L-262 -110 z', 'fill="#cfe6ff" fill-opacity=".17"') +
+      pth('M-140 -137 L-262 -150 L-262 -124 z', 'fill="#eaf5ff" fill-opacity=".2"') +
+      circ(-176, -140, 1.6, 'fill="#ffffff" fill-opacity=".7"') +
+      circ(-204, -128, 1.4, 'fill="#ffffff" fill-opacity=".6"') +
+      circ(-228, -146, 1.6, 'fill="#ffffff" fill-opacity=".6"') +
+      circ(-192, -147, 1.2, 'fill="#ffffff" fill-opacity=".5"'));
+    /* pedestal */
+    out += rect(-104, -9, 208, 10, 'rx="2" fill="' + d + '" ' + K2);
+    out += rect(-84, -96, 168, 90, 'fill="' + d + '" ' + K3);
+    out += pth('M-142 -96 l44 88 M142 -96 l-44 88', 'stroke="' + m + '" stroke-width="8" stroke-opacity=".9"');
+    /* arc resistance on the off side, and its cable */
+    out += rect(96, -84, 46, 50, 'rx="3" fill="' + m + '" ' + K2);
+    out += pth('M103 -74 h32 M103 -65 h32 M103 -56 h32 M103 -47 h32', 'stroke="#c8683a" stroke-opacity=".75" stroke-width="3"');
+    out += pth('M120 -34 q10 20 -6 30', 'fill="none" stroke="#1a1512" stroke-width="4"');
+    /* lower spool box */
+    out += ln(-104, -112, -112, -84, 'stroke="#1a1512" stroke-width="4"');
+    out += circ(-116, -56, 30, 'fill="' + m + '" ' + K3);
+    out += circ(-116, -56, 21, 'fill="none" stroke="black" stroke-opacity=".32" stroke-width="2.5"');
+    out += circ(-116, -56, 6, 'fill="#9aa2a6" ' + K2);
+    out += rect(-150, -110, 300, 14, 'rx="2" fill="' + m + '" ' + K3);
+    /* upper spool box, behind the head */
+    out += circ(-56, -152, 27, 'fill="' + m + '" ' + K3);
+    out += circ(-56, -152, 19, 'fill="none" stroke="black" stroke-opacity=".32" stroke-width="2.5"');
+    out += circ(-56, -152, 5, 'fill="#9aa2a6" ' + K2);
+    /* cone to the lamphouse */
+    out += pth('M-54 -144 L52 -160 L52 -116 L-54 -130 z', 'fill="' + d + '" ' + K3);
+    out += pth('M-10 -150 v27 M22 -155 v36', 'stroke="black" stroke-opacity=".3" stroke-width="2.5"');
+    /* head */
+    out += rect(-110, -160, 58, 50, 'rx="4" fill="#4d4841" ' + K3);
+    out += circ(-82, -136, 13, 'fill="' + d + '" ' + K2);
+    out += circ(-82, -136, 5, 'fill="#9aa2a6"');
+    out += circ(-102, -153, 2.4, 'fill="#8d8478"') + circ(-60, -153, 2.4, 'fill="#8d8478"') +
+      circ(-102, -117, 2.4, 'fill="#8d8478"') + circ(-60, -117, 2.4, 'fill="#8d8478"');
+    /* lens */
+    out += rect(-134, -147, 26, 20, 'rx="2" fill="' + b + '" ' + K2);
+    out += rect(-142, -150, 9, 26, 'rx="2" fill="#8a6a2c" ' + K2);
+    out += ln(-122, -147, -122, -127, 'stroke="black" stroke-opacity=".3" stroke-width="2"');
+    return out;
+  };
+
+  /* The arc lamphouse. The "flame" is the arc itself, seen through the
+     dark glass of the inspection window. */
+  PARTS.pjLamphouse = function (o) {
+    var m = o.metal || '#3d3934';
+    return glow(0, -32, 100) +
+      rect(-12, -80, 24, 22, 'fill="' + m + '" ' + K2) +
+      rect(-17, -86, 34, 8, 'rx="2" fill="#2b2825" ' + K2) +
+      rect(-34, -62, 68, 62, 'rx="5" fill="' + m + '" ' + K3) +
+      pth('M-24 -54 h20 M-24 -48 h20 M4 -54 h20 M4 -48 h20', 'stroke="black" stroke-opacity=".5" stroke-width="3"') +
+      circ(0, -24, 16, 'fill="#0e1422" stroke="' + (o.brass || '#b8913f') + '" stroke-width="3.5"') +
+      circ(0, -24, 11, 'fill="#bfe0ff" fill-opacity=".22"') +
+      pth('M-13 -24 h9 M4 -24 h9', 'stroke="#2a2420" stroke-width="3" stroke-linecap="round"') +
+      pth('M0 -35 q7 11 0 22 q-7 -11 0 -22', 'id="flame" fill="#f2f9ff" stroke="#8fd0ff" stroke-width="2"') +
+      circ(34, -44, 5, 'fill="#8a6a2c" ' + K2) + circ(34, -14, 5, 'fill="#8a6a2c" ' + K2) +
+      rect(-34, -6, 68, 6, 'fill="black" fill-opacity=".3"');
+  };
+
+  /* A tin-lined box: riveted sheets on every wall, a vent trunk along the
+     ceiling, and at the end of the room the port the picture leaves by. */
+  BACKDROPS.pjBooth = function () {
+    var w = '', f = '', i, j;
+    for (i = 0; i <= 8; i++) {
+      w += ln(i * 100 + 50, 34, i * 100 + 50, 392, 'stroke="black" stroke-opacity=".3" stroke-width="3"');
+      for (j = 0; j < 9; j++) {
+        w += circ(i * 100 + 42, 52 + j * 42, 2.6, 'fill="black" fill-opacity=".34"');
+        w += circ(i * 100 + 58, 52 + j * 42, 2.2, 'fill="#c9b79c" fill-opacity=".16"');
+      }
+    }
+    w += ln(0, 214, 800, 214, 'stroke="black" stroke-opacity=".2" stroke-width="3"');
+    for (i = 0; i < 8; i++) {
+      w += pth('M' + (i * 100 + 62) + ' 40 l76 0', 'stroke="#c9b79c" stroke-opacity=".07" stroke-width="5"');
+    }
+    /* vent trunk */
+    w += rect(0, 0, 800, 30, 'fill="black" fill-opacity=".38"');
+    w += rect(0, 28, 800, 6, 'class="fWall2"');
+    for (i = 0; i < 6; i++) w += rect(i * 140 + 40, 9, 60, 10, 'rx="5" fill="black" fill-opacity=".5"');
+    /* the end wall and its port */
+    w += rect(0, 0, 34, 392, 'fill="black" fill-opacity=".42"');
+    w += ell(18, 293, 46, 70, 'fill="#bfe0ff" fill-opacity=".07"');
+    w += rect(3, 258, 26, 70, 'rx="2" fill="#57493c" ' + K3);
+    w += rect(8, 265, 16, 56, 'fill="#e6f3ff" fill-opacity=".9"');
+    w += rect(8, 265, 16, 9, 'fill="#3a332c"');
+    w += rect(0, 340, 800, 52, 'fill="black" fill-opacity=".16"');
+    f += ln(0, 462, 800, 462, 'stroke="black" stroke-opacity=".24" stroke-width="3"');
+    f += ln(0, 522, 800, 522, 'stroke="black" stroke-opacity=".24" stroke-width="3"');
+    for (i = 0; i < 6; i++) f += ln(i * 160 + 30, 402, i * 160 - 20, 560, 'stroke="black" stroke-opacity=".2" stroke-width="3"');
+    for (i = 0; i < 46; i++) {
+      f += circ((i * 139) % 790 + 5, 408 + ((i * 59) % 148), 1.6 + (i % 3) * 0.8, 'fill="black" fill-opacity=".3"');
+    }
+    /* a curl of scrap film, and the beam's spill on the boards */
+    f += pth('M640 520 q14 -18 30 -4 q12 12 -4 18 q-14 2 -8 -10', 'fill="none" stroke="black" stroke-opacity=".5" stroke-width="5" stroke-linecap="round"');
+    f += pth('M0 410 l90 0 l-50 40 l-40 0 z', 'fill="#bfe0ff" fill-opacity=".05"');
+    return base(w, f);
+  };
+
+  /* ---- THE PRINTING HOUSE ---- */
+
+  /* ---- THE PRINTING HOUSE ---- */
+
+  /* The duckboard the pressman stands on, with a drift of offcuts under
+     it. Slats with dark between them: you can see there is a space below. */
+  PARTS.prDuckboard = function (o) {
+    var w = o.wood || '#5a4a32', p = o.paper || '#cfc8b4';
+    var out = pth('M-124 -10 l22 -8 l6 12 l-20 6 z', 'fill="' + p + '" ' + K2);
+    out += pth('M96 -66 l24 4 l-6 14 l-22 -6 z', 'fill="' + p + '" ' + K2);
+    out += pth('M104 -14 l20 -10 l2 16 l-18 6 z', 'fill="#b9b2a0" ' + K2);
+    out += pth('M-112 -62 l18 -8 l8 10 l-20 8 z', 'fill="#b9b2a0" ' + K2);
+    out += pth('M-110 -4 l10 -60 h200 l10 60 z', 'fill="#12100d" ' + K3);
+    var j, y, x;
+    for (j = 0; j < 5; j++) {
+      y = -8 - j * 12;
+      x = 109 + (y + 4) / 6;
+      out += pth('M' + (-x).toFixed(1) + ' ' + y + ' l1.5 -9 h' + (2 * x - 3).toFixed(1) + ' l1.5 9 z',
+        'fill="' + w + '" ' + K2);
+    }
+    out += pth('M-70 -6 l6 -56 M70 -6 l-6 -56', 'stroke="black" stroke-opacity=".3" stroke-width="5"');
+    out += ell(40, -24, 13, 4, 'fill="#0c0b0a" fill-opacity=".8"');
+    out += ell(-46, -47, 9, 3, 'fill="' + (o.ink || '#d8452a') + '" fill-opacity=".85"');
+    return out;
+  };
+
+  /* A drum of news black with an ink knife left standing in it. */
+  PARTS.prInkDrum = function (o) {
+    var v = o.ink || '#d8452a';
+    return ell(0, -2, 28, 6, 'fill="black" fill-opacity=".35"') +
+      ln(-6, -70, -16, -100, 'stroke="#9aa2a6" stroke-width="5" stroke-linecap="round"') +
+      rect(-23, -112, 11, 16, 'rx="4" fill="#7a5a34" ' + K2 + ' transform="rotate(-18 -17 -104)"') +
+      rect(-25, -70, 50, 70, 'rx="5" fill="' + (o.fill || '#1d1c1b') + '" ' + K3) +
+      rect(-27, -58, 54, 6, 'rx="2" fill="#55524e"') + rect(-27, -18, 54, 6, 'rx="2" fill="#55524e"') +
+      ell(0, -70, 25, 7, 'fill="#3a3835" ' + K2) +
+      ell(0, -70, 18, 4.4, 'fill="#070707"') +
+      rect(-15, -46, 30, 22, 'rx="1" fill="' + v + '" ' + K2) +
+      rect(-9, -40, 18, 4, 'fill="#1d1c1b"') + rect(-9, -33, 11, 4, 'fill="#1d1c1b"') +
+      pth('M16 -70 q4 12 1 22 q-2 7 -5 0 q-2 -10 -2 -21 z', 'fill="#070707"') +
+      pth('M-22 -64 v52', 'stroke="#ffffff" stroke-opacity=".1" stroke-width="4"');
+  };
+
+  /* The ink disc: an iron plate with a charge of red rolled out on it and
+     the hand roller hung across. */
+  PARTS.prInkDisc = function (o) {
+    var v = o.ink || '#d8452a';
+    var out = rect(-6, 28, 12, 12, 'fill="#2a2928" ' + K2);
+    out += circ(0, 0, 34, 'fill="' + (o.metal || '#3d3c3a') + '" ' + K5);
+    out += circ(0, 0, 26, 'fill="#141313"');
+    out += pth('M-20 -6 q10 -18 30 -10 q12 6 8 16 q-10 -6 -20 0 q-12 6 -18 -6 z', 'fill="' + v + '"');
+    out += pth('M-14 -22 a27 27 0 0 1 28 0', 'fill="none" stroke="#ffffff" stroke-opacity=".18" stroke-width="3" stroke-linecap="round"');
+    out += grp('transform="rotate(-24)"',
+      rect(-24, 6, 34, 12, 'rx="6" fill="#262524" ' + K2) +
+      pth('M-28 12 h-4 v-10 M14 12 h4 v-10', 'fill="none" stroke="#9aa2a6" stroke-width="3"') +
+      pth('M-32 2 h50', 'fill="none" stroke="#9aa2a6" stroke-width="3"') +
+      rect(-12, -12, 10, 16, 'rx="4" fill="#7a5a34" ' + K2));
+    return out;
+  };
+
+  /* A woodcut block hung on two nails: the black is the printing face, the
+     pale is where the wood was cut away. A moon over water. */
+  PARTS.prWoodcut = function (o) {
+    var w = o.wood || '#7a5a36', c = o.cut || '#b89a68';
+    var out = circ(-34, -45, 2.6, 'fill="#9aa2a6"') + circ(34, -45, 2.6, 'fill="#9aa2a6"');
+    out += rect(-52, -42, 104, 84, 'rx="2" fill="' + w + '" ' + K4);
+    out += rect(-44, -34, 88, 68, 'fill="#151210"');
+    out += rect(-40, -30, 80, 60, 'fill="none" stroke="' + c + '" stroke-width="2"');
+    out += circ(-22, -14, 10, 'fill="' + c + '"') + circ(-18, -17, 9, 'fill="#151210"');
+    out += circ(8, -22, 1.8, 'fill="' + c + '"') + circ(26, -12, 1.8, 'fill="' + c + '"') + circ(18, -24, 1.4, 'fill="' + c + '"');
+    out += pth('M-36 16 q9 -6 18 0 q9 6 18 0 q9 -6 18 0 q9 6 18 0 M-36 24 q9 -6 18 0 q9 6 18 0 q9 -6 18 0 q9 6 18 0',
+      'fill="none" stroke="' + c + '" stroke-width="2.5" stroke-linecap="round"');
+    out += pth('M20 16 l6 -16 l8 16 M26 0 v-6', 'fill="none" stroke="' + c + '" stroke-width="2.5" stroke-linejoin="round"');
+    out += pth('M-52 -42 h104', 'stroke="#ffffff" stroke-opacity=".12" stroke-width="3"');
+    return out;
+  };
+
+  /* The type case: a shallow cabinet of compartments, small boxes above
+     and uneven ones below, a few sorts glinting in each. */
+  PARTS.prTypeCase = function (o) {
+    var w = o.wood || '#4e3d28', d = o.rule || '#63503a';
+    var out = rect(-106, -73, 212, 146, 'rx="3" fill="' + w + '" ' + K5);
+    out += rect(-97, -64, 194, 120, 'fill="#17120d"');
+    var i, j, x, y;
+    /* upper case: fourteen by two */
+    for (i = 1; i < 14; i++) {
+      x = -97 + i * 13.86;
+      out += ln(x.toFixed(1), -64, x.toFixed(1), -30, 'stroke="' + d + '" stroke-width="2"');
+    }
+    out += ln(-97, -47, 97, -47, 'stroke="' + d + '" stroke-width="2"');
+    for (i = 0; i < 14; i++) {
+      for (j = 0; j < 2; j++) {
+        if ((i * 3 + j * 5) % 4 === 0) continue;
+        out += rect((-94 + i * 13.86).toFixed(1), -52 + j * 17, 7, 3, 'fill="#8d9194" fill-opacity="' +
+          (0.35 + ((i + j) % 3) * 0.12) + '"');
+      }
+    }
+    out += rect(-97, -31, 194, 6, 'fill="' + w + '"');
+    /* lower case: uneven boxes */
+    var cols = [-97, -75, -53, -20, 14, 47, 69, 97];
+    for (i = 1; i < cols.length - 1; i++) out += ln(cols[i], -25, cols[i], 56, 'stroke="' + d + '" stroke-width="2"');
+    out += ln(-97, 2, -20, 2, 'stroke="' + d + '" stroke-width="2"');
+    out += ln(14, 2, 97, 2, 'stroke="' + d + '" stroke-width="2"');
+    out += ln(-97, 29, 97, 29, 'stroke="' + d + '" stroke-width="2"');
+    for (i = 0; i < cols.length - 1; i++) {
+      for (j = 0; j < 3; j++) {
+        if (j === 1 && (i === 2 || i === 3)) continue;
+        x = cols[i] + 4; y = -4 + j * 27;
+        out += rect(x, y, Math.min(14, cols[i + 1] - cols[i] - 8), 3.4, 'fill="#8d9194" fill-opacity="' +
+          (0.3 + ((i * 2 + j) % 3) * 0.12) + '"');
+      }
+    }
+    out += rect(-106, 56, 212, 17, 'rx="3" fill="' + w + '" ' + K3);
+    out += circ(-50, 64, 4.6, 'fill="' + (o.brass || '#b8913f') + '" ' + K2) +
+      circ(50, 64, 4.6, 'fill="' + (o.brass || '#b8913f') + '" ' + K2);
+    out += rect(-13, 60, 26, 9, 'rx="1" fill="#d6cdb6" ' + K2);
+    return out;
+  };
+
+  /* Sheets pegged on a line to dry, each pulled from the same forme. */
+  PARTS.prDryLine = function (o) {
+    var p = o.paper || '#d9d2bf', v = o.ink || '#d8452a';
+    var out = circ(-76, -21, 3.4, 'fill="#9aa2a6" ' + K2) + circ(76, -21, 3.4, 'fill="#9aa2a6" ' + K2);
+    out += pth('M-76 -21 q76 9 152 0', 'fill="none" stroke="#b8a878" stroke-width="2.5"');
+    var i, x, rot = [-4, 3, -2, 5, -3];
+    for (i = 0; i < 5; i++) {
+      x = -60 + i * 30;
+      out += grp('transform="translate(' + x + ',-16) rotate(' + rot[i] + ')"',
+        rect(-12, 0, 24, 38, 'fill="' + (i === 3 ? '#c4bca6' : p) + '" ' + K2) +
+        rect(-8, 5, 16, 5, 'fill="#1d1c1b"') +
+        rect(-8, 13, 16, 11, 'fill="' + (i % 2 ? '#1d1c1b' : v) + '"') +
+        pth('M-8 28 h16 M-8 32 h10', 'stroke="#1d1c1b" stroke-opacity=".7" stroke-width="1.8"') +
+        rect(-2.5, -5, 5, 10, 'rx="1" fill="#8a6a3a" ' + K2));
+    }
+    return out;
+  };
+
+  /* A japanned tin trunk for founts of type: domed lid, bands, a hasp. */
+  PARTS.prTrunk = function (o) {
+    var m = o.metal || '#3a3c40', l = o.lid || '#4a4d52';
+    return rect(-60, -62, 120, 62, 'rx="4" fill="' + m + '" ' + K4) +
+      rect(-60, -40, 120, 7, 'fill="#232426"') + rect(-60, -12, 120, 7, 'fill="#232426"') +
+      circ(-50, -50, 2.6, 'fill="#8d9194"') + circ(50, -50, 2.6, 'fill="#8d9194"') +
+      circ(-50, -22, 2.6, 'fill="#8d9194"') + circ(50, -22, 2.6, 'fill="#8d9194"') +
+      pth('M-40 -30 q10 12 20 0', 'fill="none" stroke="#8d9194" stroke-width="3"') +
+      pth('M20 -30 q10 12 20 0', 'fill="none" stroke="#8d9194" stroke-width="3"') +
+      pth('M34 -6 q8 -6 16 0 q-8 5 -16 0 z', 'fill="' + (o.ink || '#d8452a') + '" fill-opacity=".85"') +
+      pth('M-60 -58 v-6 q60 -22 120 0 v6 z', 'id="chestLid" fill="' + l + '" ' + K4) +
+      grp('id="chestOpenG" style="display:none"',
+        rect(-56, -62, 112, 14, 'fill="#08080a"') +
+        rect(-40, -66, 22, 12, 'fill="#cfc8b4" ' + K2) + rect(-12, -68, 22, 14, 'fill="#b9b2a0" ' + K2) +
+        pth('M-36 -60 h14 M-8 -61 h14', 'stroke="#1d1c1b" stroke-opacity=".6" stroke-width="2"') +
+        pth('M-60 -58 v-6 q60 -22 120 0 v6 z', 'fill="' + l + '" ' + K3 +
+          ' transform="translate(0,-10) rotate(-15 -60 -62)"')) +
+      rect(-9, -60, 18, 22, 'rx="3" class="fAccent" stroke="black" stroke-opacity=".5" stroke-width="2.5"');
+  };
+
+  /* The iron hand press, standing in the cabinet's place: staple, crown,
+     screw, bar and platen over a bed. The crank socket is in the platen. */
+  PARTS.prPress = function (o) {
+    var m = o.metal || '#2f2e2d', s = o.steel || '#9aa2a6';
+    var out = rect(-30, -62, 11, 56, 'fill="' + m + '" ' + K2) + rect(19, -62, 11, 56, 'fill="' + m + '" ' + K2);
+    out += pth('M-19 -44 l38 30 M19 -44 l-38 30', 'stroke="' + m + '" stroke-width="5"');
+    out += rect(-38, -10, 76, 10, 'rx="2" fill="' + m + '" ' + K3);
+    out += rect(-35, -176, 13, 106, 'fill="' + m + '" ' + K3) + rect(22, -176, 13, 106, 'fill="' + m + '" ' + K3);
+    out += pth('M-38 -170 v-10 q38 -24 76 0 v10 z', 'fill="' + m + '" ' + K3);
+    out += circ(0, -194, 5, 'fill="' + (o.brass || '#b8913f') + '" ' + K2);
+    out += ell(0, -178, 11, 4.4, 'fill="' + (o.ink || '#d8452a') + '"');
+    out += rect(-6, -170, 12, 48, 'fill="' + s + '" ' + K2);
+    out += pth('M-6 -163 l12 -4 M-6 -155 l12 -4 M-6 -147 l12 -4 M-6 -139 l12 -4 M-6 -131 l12 -4',
+      'stroke="black" stroke-opacity=".45" stroke-width="2"');
+    out += rect(-11, -146, 22, 9, 'rx="2" fill="' + m + '" ' + K2);
+    out += ln(4, -142, 33, -132, 'stroke="' + s + '" stroke-width="5" stroke-linecap="round"');
+    out += rect(27, -139, 12, 14, 'rx="5" fill="#7a5a34" ' + K2);
+    out += rect(-22, -122, 44, 40, 'rx="3" fill="#3d3c3a" ' + K3);
+    out += rect(-18, -80, 36, 4, 'fill="#d9d2bf"');
+    out += rect(-38, -76, 76, 14, 'rx="2" fill="' + m + '" ' + K3);
+    out += rect(-20, -76, 40, 4, 'fill="#141313"');
+    return out + cabInnards(o);
+  };
+
+  /* The composing stone: a slab on a heavy frame, with a forme locked up
+     on it, a mallet, two ink tins, and reams on the shelf below. Everything
+     standing on the slab is at the LEFT end; the right is the lamp's. */
+  PARTS.prStone = function (o) {
+    var w = o.wood || '#3d3229', st = o.stone || '#8e8e88', v = o.ink || '#d8452a';
+    var out = rect(-136, -96, 20, 96, 'fill="' + w + '" ' + K2) + rect(116, -96, 20, 96, 'fill="' + w + '" ' + K2);
+    out += rect(-136, -30, 272, 9, 'fill="' + w + '" ' + K2);
+    /* reams and tins on the shelf */
+    out += rect(-112, -52, 34, 22, 'fill="#cfc8b4" ' + K2);
+    out += pth('M-112 -45 h34 M-112 -38 h34', 'stroke="black" stroke-opacity=".25" stroke-width="1.5"');
+    out += rect(-112, -44, 34, 6, 'fill="#8a6a3a" fill-opacity=".5"');
+    out += rect(80, -48, 30, 18, 'fill="#b9b2a0" ' + K2);
+    out += pth('M80 -42 h30 M80 -36 h30', 'stroke="black" stroke-opacity=".25" stroke-width="1.5"');
+    out += rect(-144, -98, 288, 12, 'fill="' + w + '" ' + K2);
+    out += rect(-150, -112, 300, 16, 'rx="1" fill="' + st + '" ' + K3);
+    out += pth('M-146 -108 h292', 'stroke="#ffffff" stroke-opacity=".25" stroke-width="2"');
+    out += pth('M60 -112 l8 16 M-20 -104 l14 8', 'stroke="black" stroke-opacity=".25" stroke-width="1.5"');
+    /* the forme: an iron chase with type and furniture inside it */
+    out += rect(-132, -124, 86, 12, 'fill="#262524" ' + K2);
+    var i;
+    for (i = 0; i < 6; i++) {
+      out += rect(-126 + i * 12.5, -130 - (i % 2) * 2, 11, 6 + (i % 2) * 2, 'fill="' + (i === 4 ? '#7a5a34' : '#9a9da0') + '" ' + K2);
+    }
+    /* mallet */
+    out += ln(-22, -124, -4, -158, 'stroke="#7a5a34" stroke-width="5" stroke-linecap="round"');
+    out += rect(-36, -132, 28, 20, 'rx="4" fill="#8a6a40" ' + K2);
+    /* ink tins */
+    out += rect(8, -126, 30, 14, 'rx="2" fill="#1d1c1b" ' + K2);
+    out += rect(8, -122, 30, 5, 'fill="' + v + '"');
+    out += rect(12, -138, 22, 12, 'rx="2" fill="#2a2928" ' + K2);
+    out += rect(12, -134, 22, 4, 'fill="#d9d2bf"');
+    return out;
+  };
+
+  /* A paraffin lamp with a tall glass chimney. */
+  PARTS.prLamp = function (o) {
+    var b = o.brass || '#9a8450';
+    return glow(0, -48, 100) +
+      ell(0, -2, 19, 5, 'fill="' + b + '" ' + K2) +
+      rect(-4, -10, 8, 8, 'fill="' + b + '"') +
+      pth('M-17 -10 q-3 -20 17 -22 q20 2 17 22 z', 'fill="' + b + '" ' + K2) +
+      pth('M-11 -22 q11 -5 22 0', 'fill="none" stroke="#ffffff" stroke-opacity=".3" stroke-width="2"') +
+      rect(-8, -40, 16, 9, 'rx="2" fill="#5a4a2a" ' + K2) +
+      circ(13, -35, 3.4, 'fill="#5a4a2a" ' + K2) +
+      pth('M-8 -40 q-9 -14 -1 -28 l2 -24 h14 l2 24 q8 14 -1 28 z',
+        'fill="#fff3d0" fill-opacity=".15" stroke="#d8d2c4" stroke-opacity=".75" stroke-width="2.5"') +
+      pth('M0 -70 q9 13 0 26 q-9 -13 0 -26', 'id="flame" fill="#ffcf6e" stroke="#ff9d3c" stroke-width="2"');
+  };
+
+  /* Limewashed plaster over a matchboard dado, pasted with old bills, and a
+     board floor that has been dripped on for thirty years. */
+  BACKDROPS.prShop = function () {
+    var w = '', f = '', i;
+    /* old bills pasted to the plaster: blocks and rules, no words */
+    var bills = [[34, 62, 62, 92, -5, 0], [596, 44, 70, 104, 4, 1], [352, 22, 52, 48, -3, 0],
+                 [40, 196, 54, 70, 6, 1], [470, 16, 44, 46, 5, 1]];
+    for (i = 0; i < bills.length; i++) {
+      var B = bills[i];
+      w += grp('transform="rotate(' + B[4] + ' ' + (B[0] + B[2] / 2) + ' ' + (B[1] + B[3] / 2) + ')"',
+        rect(B[0], B[1], B[2], B[3], 'fill="#d9d2bf" fill-opacity=".2"') +
+        rect(B[0] + 7, B[1] + 8, B[2] - 14, 7, 'fill="black" fill-opacity=".4"') +
+        rect(B[0] + 7, B[1] + 20, B[2] - 14, B[3] * 0.3, 'fill="' + (B[5] ? '#e8472b' : '#000000') + '" fill-opacity="' + (B[5] ? '.32' : '.34') + '"') +
+        rect(B[0] + 7, B[1] + B[3] * 0.3 + 26, B[2] - 24, 4, 'fill="black" fill-opacity=".34"') +
+        rect(B[0] + 7, B[1] + B[3] * 0.3 + 34, B[2] - 18, 4, 'fill="black" fill-opacity=".34"'));
+    }
+    w += rect(0, 0, 800, 14, 'fill="black" fill-opacity=".35"');
+    /* matchboard dado */
+    w += rect(0, 292, 800, 100, 'fill="black" fill-opacity=".24"');
+    for (i = 0; i <= 800; i += 32) w += ln(i, 300, i, 392, 'stroke="black" stroke-opacity=".3" stroke-width="2.5"');
+    w += rect(0, 288, 800, 11, 'class="fFloorB"');
+    w += rect(0, 288, 800, 11, 'fill="none" ' + K2);
+    /* inky hand-height smears along the rail */
+    w += pth('M150 288 q30 -14 70 -2 M480 288 q24 -10 54 -1', 'fill="none" stroke="black" stroke-opacity=".3" stroke-width="7" stroke-linecap="round"');
+    for (i = -2; i < 12; i++) f += ln(i * 78, 402, i * 78 + 58, 560, 'stroke="black" stroke-opacity=".28" stroke-width="3"');
+    f += ln(0, 476, 800, 476, 'stroke="black" stroke-opacity=".14" stroke-width="3"');
+    var blots = [[96, 446, 20, 6], [300, 432, 12, 4], [470, 546, 26, 7], [640, 470, 15, 5], [742, 528, 22, 6], [228, 548, 10, 4]];
+    for (i = 0; i < blots.length; i++) {
+      f += ell(blots[i][0], blots[i][1], blots[i][2], blots[i][3], 'fill="black" fill-opacity=".42"');
+    }
+    f += ell(612, 528, 12, 4, 'fill="#e8472b" fill-opacity=".5"');
+    f += ell(634, 536, 4, 1.6, 'fill="#e8472b" fill-opacity=".5"');
+    for (i = 0; i < 12; i++) {
+      var ox = (i * 211) % 760 + 20, oy = 412 + ((i * 67) % 140);
+      f += pth('M' + ox + ' ' + oy + ' l' + (12 + (i % 3) * 5) + ' -3 l3 6 l-' + (13 + (i % 3) * 5) + ' 4 z',
+        'fill="#d9d2bf" fill-opacity=".34"');
+    }
+    return base(w, f);
+  };
+
+  /* ---- THE ARMOURY ---- */
+
+  /* ---- THE ARMOURY ---- */
+
+  /* A banner come down off its bracket: the pole lies along the back and
+     the cloth has slumped toward you, dagged edge and all. The middle of
+     the field is left plain on purpose — the UV ink is written there. */
+  PARTS.arBanner = function (o) {
+    var c = o.cloth || '#6e1f24', t = o.trim || '#c9a455';
+    var out = pth('M-92 -4 l10 4 h190 l8 -6 z', 'fill="black" fill-opacity=".3"');
+    out += pth('M-84 -62 L98 -66 L116 -10 L82 -24 L50 -6 L16 -22 L-20 -6 L-54 -22 L-96 -6 Z',
+      'fill="' + c + '" ' + K3);
+    out += pth('M-81 -53 L100 -57', 'fill="none" stroke="' + t + '" stroke-width="4" stroke-opacity=".85"');
+    out += pth('M-90 -12 L-54 -28 L-20 -12 L16 -28 L50 -12 L82 -30 L112 -17',
+      'fill="none" stroke="' + t + '" stroke-width="2.5" stroke-opacity=".55"');
+    out += pth('M-36 -50 q-6 16 0 26 M44 -52 q8 14 4 28',
+      'fill="none" stroke="black" stroke-opacity=".28" stroke-width="3"');
+    out += circ(-96, -6, 4, 'fill="' + t + '"') + circ(-20, -6, 4, 'fill="' + t + '"') +
+      circ(50, -6, 4, 'fill="' + t + '"') + circ(116, -10, 4, 'fill="' + t + '"');
+    out += ln(-100, -63, 118, -68, 'stroke="' + (o.pole || '#7a5a36') + '" stroke-width="7" stroke-linecap="round"');
+    out += ln(-100, -63, 118, -68, 'stroke="black" stroke-opacity=".3" stroke-width="2"');
+    out += pth('M-100 -57 l-10 -6 l10 -6 z', 'fill="#aab3ba" ' + K2);
+    out += circ(120, -68, 5, 'fill="' + t + '" ' + K2);
+    return out;
+  };
+
+  /* The quench tub: half a cask of black water with a blade standing in
+     it and the tongs left on the rim. */
+  PARTS.arQuench = function (o) {
+    var w = o.wood || '#6b4a2a', m = o.iron || '#343a41';
+    var out = ell(0, -2, 34, 6, 'fill="black" fill-opacity=".3"');
+    out += ln(10, -50, 20, -104, 'stroke="#b4bec6" stroke-width="6" stroke-linecap="round"');
+    out += ln(11, -52, 20, -100, 'stroke="black" stroke-opacity=".3" stroke-width="1.6"');
+    out += ln(12, -110, 26, -102, 'stroke="' + m + '" stroke-width="5" stroke-linecap="round"');
+    out += pth('M-31 0 l-3 -52 h68 l-3 52 z', 'fill="' + w + '" ' + K3);
+    out += pth('M-17 -50 l1 48 M0 -50 v48 M17 -50 l-1 48', 'stroke="black" stroke-opacity=".3" stroke-width="2.5" fill="none"');
+    out += pth('M-34 -42 h68 l-1 9 h-66 z', 'fill="' + m + '" ' + K2);
+    out += pth('M-32 -16 h64 l-1 9 h-62 z', 'fill="' + m + '" ' + K2);
+    out += ell(0, -52, 34, 9, 'fill="' + w + '" ' + K2);
+    out += ell(0, -52, 28, 6.4, 'fill="#10181e"');
+    out += pth('M-16 -53 q8 -3 16 0', 'fill="none" stroke="#7c93a3" stroke-width="2" stroke-opacity=".7"');
+    out += pth('M-30 -58 l22 -30 M-24 -54 l12 -38', 'stroke="' + m + '" stroke-width="4" stroke-linecap="round" fill="none"');
+    out += circ(-10, -90, 4, 'fill="' + m + '"');
+    out += pth('M-6 -64 q-8 -10 0 -18 q8 -8 0 -18', 'fill="none" stroke="#c9d4dc" stroke-opacity=".28" stroke-width="3" stroke-linecap="round"');
+    return out;
+  };
+
+  /* A fist buckler hung by its strap: steel dish, raised boss, a painted
+     ring and eight rivets. */
+  PARTS.arBuckler = function (o) {
+    var s = o.steel || '#8d98a2', out = '';
+    var i;
+    out += circ(0, 0, 36, 'fill="' + s + '" ' + K5);
+    out += circ(0, 0, 28, 'fill="none" stroke="black" stroke-opacity=".28" stroke-width="2.5"');
+    out += circ(0, 0, 21, 'fill="none" stroke="' + (o.paint || '#8c2329') + '" stroke-width="7"');
+    for (i = 0; i < 8; i++) {
+      var a = i * Math.PI / 4 + 0.39;
+      out += circ((31.5 * Math.cos(a)).toFixed(1), (31.5 * Math.sin(a)).toFixed(1), 2.6, 'fill="#3a4047"');
+    }
+    out += circ(0, 0, 13, 'fill="#c2ccd3" ' + K3);
+    out += circ(0, 0, 4, 'fill="#5c666e"');
+    out += pth('M-8 -5 q4 -6 10 -6', 'fill="none" stroke="#ffffff" stroke-opacity=".6" stroke-width="2.5" stroke-linecap="round"');
+    out += pth('M-24 -22 a33 33 0 0 1 20 -10', 'fill="none" stroke="#ffffff" stroke-opacity=".25" stroke-width="3" stroke-linecap="round"');
+    return out;
+  };
+
+  /* Two arming swords crossed on a pair of iron hooks. One sword is drawn
+     once and turned twice. */
+  PARTS.arSwords = function (o) {
+    var s = o.steel || '#b9c3ca', g = o.grip || '#4a2a22';
+    function sword(rot) {
+      return grp('transform="translate(0,-14) rotate(' + rot + ')"',
+        pth('M-4.5 -16 h9 v62 l-4.5 14 l-4.5 -14 z', 'fill="' + s + '" ' + K2) +
+        ln(0, -14, 0, 50, 'stroke="black" stroke-opacity=".3" stroke-width="1.6"') +
+        rect(-15, -21, 30, 6, 'rx="2.5" fill="#6d767e" ' + K2) +
+        rect(-3.5, -36, 7, 16, 'fill="' + g + '" ' + K2) +
+        circ(0, -39, 5, 'fill="#8e98a0" ' + K2));
+    }
+    return sword(44) + sword(-44) +
+      circ(0, -14, 5.5, 'fill="#3a4047" ' + K2) +
+      rect(-30, 12, 6, 9, 'rx="2" fill="#3a4047"') + rect(24, 12, 6, 9, 'rx="2" fill="#3a4047"');
+  };
+
+  /* The bow rack: six yew staves stood between two rails, strung, each a
+     slightly different age of wood. Nothing on it but timber and string. */
+  PARTS.arBowRack = function (o) {
+    var b = o.board || '#2f241b', r = o.rail || '#6a4c2c';
+    var yew = ['#c29a58', '#a87c40', '#b88c4c', '#9c7038', '#c29a58', '#a87c40'];
+    var out = rect(-106, -73, 212, 146, 'rx="3" fill="' + b + '" ' + K5);
+    var i, x;
+    for (i = -53; i <= 53; i += 53) out += ln(i, -70, i, 70, 'stroke="black" stroke-opacity=".3" stroke-width="2.5"');
+    out += rect(-100, -52, 200, 10, 'rx="2" fill="' + r + '" ' + K2);
+    out += rect(-100, 44, 200, 10, 'rx="2" fill="' + r + '" ' + K2);
+    for (i = 0; i < 6; i++) {
+      x = -88 + i * 33;
+      out += ln(x, -64, x, 64, 'stroke="#e6dcc0" stroke-opacity=".7" stroke-width="1.4"');
+      out += pth('M' + x + ' -65 q20 65 0 130', 'fill="none" stroke="black" stroke-opacity=".5" stroke-width="8" stroke-linecap="round"');
+      out += pth('M' + x + ' -65 q20 65 0 130', 'fill="none" stroke="' + yew[i] + '" stroke-width="5" stroke-linecap="round"');
+      out += rect(x + 6, -8, 8, 16, 'rx="3" fill="#4a2a22" ' + K2);
+      out += rect(x - 4, -55, 22, 5, 'rx="2" fill="' + r + '" ' + K2);
+      out += rect(x - 4, 50, 22, 5, 'rx="2" fill="' + r + '" ' + K2);
+    }
+    return out;
+  };
+
+  /* Three helmets on a plank: a great helm, a sallet and a kettle hat.
+     Each one is dark where a face would be. */
+  PARTS.arHelmShelf = function (o) {
+    var s = o.steel || '#8f9aa3', d = '#0e1114';
+    var out = rect(-76, 14, 152, 10, 'rx="2" fill="' + (o.wood || '#5c4127') + '" ' + K3);
+    out += pth('M-62 24 l6 10 M62 24 l-6 10', 'stroke="#343a41" stroke-width="5" stroke-linecap="round"');
+    /* great helm */
+    out += pth('M-68 14 v-28 q0 -8 8 -8 h16 q8 0 8 8 v28 z', 'fill="' + s + '" ' + K3);
+    out += rect(-64, -8, 24, 4.5, 'fill="' + d + '"');
+    out += ln(-52, -20, -52, 12, 'stroke="black" stroke-opacity=".4" stroke-width="2.5"');
+    out += circ(-60, 4, 1.6, 'fill="' + d + '"') + circ(-44, 4, 1.6, 'fill="' + d + '"') +
+      circ(-60, 9, 1.6, 'fill="' + d + '"') + circ(-44, 9, 1.6, 'fill="' + d + '"');
+    /* sallet, with its tail */
+    out += pth('M-20 14 q-4 -38 20 -38 q22 0 22 26 l10 12 z', 'fill="#a3adb5" ' + K3);
+    out += pth('M-16 -2 h30', 'stroke="' + d + '" stroke-width="4.5" stroke-linecap="round"');
+    out += pth('M0 -24 q2 10 0 20', 'fill="none" stroke="black" stroke-opacity=".3" stroke-width="2"');
+    out += pth('M-19 6 h40', 'stroke="black" stroke-opacity=".3" stroke-width="2"');
+    /* kettle hat */
+    out += pth('M38 6 q16 -40 32 0 z', 'fill="' + s + '" ' + K3);
+    out += ell(54, 8, 23, 6, 'fill="#a3adb5" ' + K3);
+    out += pth('M43 3 q11 5 22 0', 'fill="none" stroke="' + d + '" stroke-opacity=".7" stroke-width="3"');
+    out += pth('M54 -14 v14', 'stroke="black" stroke-opacity=".3" stroke-width="2"');
+    return out;
+  };
+
+  /* The arrow chest: long, low and iron-strapped. Open, it is a sheaf of
+     fletchings standing in the dark. */
+  PARTS.arArrowChest = function (o) {
+    var w = o.wood || '#5c4127', m = o.iron || '#30353b', l = o.lid || '#70502f';
+    var out = rect(-60, -56, 120, 56, 'rx="3" fill="' + w + '" ' + K4);
+    var i;
+    out += pth('M-58 -38 h116 M-58 -19 h116', 'stroke="black" stroke-opacity=".3" stroke-width="2.5"');
+    out += rect(-44, -56, 11, 56, 'fill="' + m + '" ' + K2) + rect(33, -56, 11, 56, 'fill="' + m + '" ' + K2);
+    for (i = 0; i < 3; i++) {
+      out += circ(-38.5, -46 + i * 18, 2.2, 'fill="#8e98a0"') + circ(38.5, -46 + i * 18, 2.2, 'fill="#8e98a0"');
+    }
+    out += pth('M-10 -30 l10 -8 l10 8 M0 -38 v22', 'fill="none" stroke="#c9a455" stroke-opacity=".75" stroke-width="3"');
+    var open = rect(-56, -58, 112, 16, 'fill="#0b0c0e"');
+    open = rect(-62, -92, 124, 30, 'rx="3" fill="' + l + '" ' + K3) +
+      rect(-44, -92, 11, 30, 'fill="' + m + '"') + rect(33, -92, 11, 30, 'fill="' + m + '"') +
+      pth('M-58 -78 h116', 'stroke="black" stroke-opacity=".3" stroke-width="2.5"') + open;
+    for (i = 0; i < 8; i++) {
+      var x = -26 + i * 11;
+      open += ln(x, -44, x, -60, 'stroke="#c9b68c" stroke-width="2"');
+      open += pth('M' + x + ' -54 l-4 -4 v-10 l4 4 l4 -4 v10 z', 'fill="' + (i % 3 ? '#d8d2c0' : '#8c2329') + '" ' +
+        'stroke="black" stroke-opacity=".4" stroke-width="1"');
+    }
+    out += grp('id="chestOpenG" style="display:none"', open);
+    out += grp('id="chestLid"',
+      rect(-63, -74, 126, 20, 'rx="3" fill="' + l + '" ' + K3) +
+      rect(-44, -74, 11, 20, 'fill="' + m + '"') + rect(33, -74, 11, 20, 'fill="' + m + '"') +
+      rect(-8, -60, 16, 14, 'rx="2" class="fAccent" stroke="black" stroke-opacity=".5" stroke-width="2"'));
+    return out;
+  };
+
+  /* The armourer's bench. An anvil and a hammer on the left of the top; at
+     the right end the grindstone stands in its own frame, half under the
+     bench, where the right leg would otherwise be. The right of the TOP is
+     kept bare: that is where the light stands. */
+  PARTS.arBench = function (o) {
+    var w = o.wood || '#5a442e', m = o.iron || '#3c434a', st = o.stone || '#9a978c';
+    var out = rect(-138, -92, 24, 92, 'fill="' + w + '" ' + K2);
+    out += rect(-114, -36, 190, 10, 'fill="' + w + '" fill-opacity=".8"');
+    /* grindstone */
+    out += pth('M112 -46 L84 0 M112 -46 L142 0', 'stroke="' + w + '" stroke-width="9" stroke-linecap="round" fill="none"');
+    out += rect(78, -12, 70, 12, 'rx="2" fill="' + w + '" ' + K2);
+    out += circ(112, -48, 35, 'fill="' + st + '" ' + K4);
+    out += circ(112, -48, 28, 'fill="none" stroke="black" stroke-opacity=".16" stroke-width="3"');
+    out += circ(112, -48, 17, 'fill="none" stroke="black" stroke-opacity=".12" stroke-width="3"');
+    out += pth('M92 -70 l6 5 M128 -74 l-3 7 M134 -34 l-7 -2 M96 -26 l5 -5', 'stroke="black" stroke-opacity=".25" stroke-width="2.5"');
+    out += rect(105, -55, 14, 14, 'rx="2" fill="' + m + '" ' + K2);
+    out += pth('M112 -48 L134 -64 h12', 'fill="none" stroke="' + m + '" stroke-width="5" stroke-linecap="round"');
+    out += rect(140, -70, 8, 12, 'rx="3" fill="' + w + '" ' + K2);
+    /* the top, over everything below it */
+    out += rect(-150, -110, 300, 20, 'rx="2" fill="' + w + '" ' + K3);
+    out += pth('M-146 -100 h292', 'stroke="black" stroke-opacity=".22" stroke-width="2"');
+    /* anvil */
+    out += pth('M-134 -142 h52 l18 5 l-18 5 h-8 q-6 8 -4 14 h8 l4 8 h-52 l4 -8 h8 q2 -6 -4 -14 h-8 z',
+      'fill="' + m + '" ' + K3);
+    out += pth('M-132 -140 h50', 'stroke="#aab3ba" stroke-opacity=".7" stroke-width="2.5"');
+    /* hammer and a half-made blade */
+    out += ln(-52, -114, -8, -116, 'stroke="#8a6a44" stroke-width="5" stroke-linecap="round"');
+    out += rect(-62, -124, 13, 15, 'rx="2" fill="' + m + '" ' + K2);
+    out += pth('M4 -112 l44 -2 l8 2 l-8 2 z', 'fill="#b4bec6" ' + K2);
+    return out;
+  };
+
+  /* A harness of plate on its stand. It fills the tall slot beside the
+     door, and the socket is in the belt plate: the crank goes in where a
+     man's navel would be. */
+  PARTS.arArmourStand = function (o) {
+    var s = o.steel || '#98a3ac', d = o.dark || '#7b8791', dk = '#0e1114';
+    var out = ell(0, -2, 36, 6, 'fill="black" fill-opacity=".3"');
+    out += rect(-30, -9, 60, 9, 'rx="2" fill="' + (o.wood || '#5a442e') + '" ' + K2);
+    out += ln(0, -10, 0, -84, 'stroke="#3a2c1e" stroke-width="6"');
+    /* legs */
+    out += pth('M-22 -84 h17 l-1 66 l-3 9 h-15 l2 -9 z', 'fill="' + d + '" ' + K2);
+    out += pth('M22 -84 h-17 l1 66 l3 9 h15 l-2 -9 z', 'fill="' + d + '" ' + K2);
+    out += circ(-13.5, -50, 8, 'fill="' + s + '" ' + K2) + circ(13.5, -50, 8, 'fill="' + s + '" ' + K2);
+    out += pth('M-22 -22 h16 M6 -22 h16', 'stroke="black" stroke-opacity=".35" stroke-width="2"');
+    /* arms and gauntlets */
+    out += rect(-38, -152, 11, 46, 'rx="4" fill="' + d + '" ' + K2);
+    out += rect(27, -152, 11, 46, 'rx="4" fill="' + d + '" ' + K2);
+    out += circ(-32.5, -130, 6.5, 'fill="' + s + '" ' + K2) + circ(32.5, -130, 6.5, 'fill="' + s + '" ' + K2);
+    out += rect(-38, -108, 11, 14, 'rx="4" fill="' + s + '" ' + K2) + rect(27, -108, 11, 14, 'rx="4" fill="' + s + '" ' + K2);
+    /* fauld and tassets */
+    out += pth('M-25 -116 h50 l6 38 h-24 l-7 -9 l-7 9 h-24 z', 'fill="' + d + '" ' + K3);
+    out += pth('M-28 -90 h56 M-27 -103 h20 M7 -103 h20', 'stroke="black" stroke-opacity=".35" stroke-width="2" fill="none"');
+    /* breastplate */
+    out += pth('M-26 -160 q26 -9 52 0 l-2 36 q-24 16 -48 0 z', 'fill="' + s + '" ' + K3);
+    out += pth('M0 -162 v44', 'stroke="black" stroke-opacity=".3" stroke-width="2"');
+    out += pth('M-16 -152 q4 14 2 26', 'fill="none" stroke="#ffffff" stroke-opacity=".4" stroke-width="3" stroke-linecap="round"');
+    out += ell(-29, -156, 11, 9, 'fill="' + s + '" ' + K3) + ell(29, -156, 11, 9, 'fill="' + s + '" ' + K3);
+    /* helm and plume */
+    out += pth('M2 -196 q16 -10 24 8 q-12 -8 -22 0 z', 'fill="' + (o.plume || '#a12a30') + '" ' + K2);
+    out += rect(-10, -168, 20, 8, 'fill="' + d + '" ' + K2);
+    out += pth('M-15 -166 v-14 q0 -17 15 -17 q15 0 15 17 v14 z', 'fill="' + s + '" ' + K3);
+    out += rect(-11, -184, 22, 4, 'fill="' + dk + '"');
+    out += pth('M0 -180 v12 M-8 -174 v4 M-4 -174 v4 M4 -174 v4 M8 -174 v4', 'stroke="' + dk + '" stroke-opacity=".7" stroke-width="1.6"');
+    return out + cabInnards(o);
+  };
+
+  /* Dressed ashlar in long courses under a string course, a line of
+     pennons slung across the top of the wall, one cross-loop letting in a
+     slot of night, and big flagstones underfoot. */
+  BACKDROPS.arHall = function () {
+    var w = '', f = '', i, j;
+    var cols = ['#7a2228', '#8f98a2', '#3a4a6a', '#b99a50'];
+    for (j = 0; j < 5; j++) {
+      var y = 78 + j * 64;
+      w += ln(0, y, 800, y, 'stroke="black" stroke-opacity=".26" stroke-width="3"');
+      for (i = 0; i < 6; i++) {
+        var x = i * 150 + (j % 2 ? 75 : 20);
+        w += ln(x, y, x, y + 64, 'stroke="black" stroke-opacity=".2" stroke-width="3"');
+      }
+    }
+    w += rect(170, 146, 128, 60, 'fill="black" fill-opacity=".07"');
+    w += rect(545, 210, 148, 60, 'fill="black" fill-opacity=".08"');
+    w += rect(395, 274, 148, 60, 'fill="#ffffff" fill-opacity=".025"');
+    /* string course */
+    w += rect(0, 64, 800, 14, 'class="fWall2"');
+    w += ln(0, 64, 800, 64, 'stroke="#ffffff" stroke-opacity=".08" stroke-width="2"');
+    w += ln(0, 78, 800, 78, 'stroke="black" stroke-opacity=".45" stroke-width="3"');
+    w += rect(0, 0, 800, 64, 'fill="black" fill-opacity=".22"');
+    /* the frieze: a row of small shields, each with one plain charge */
+    for (i = 0; i < 9; i++) {
+      var cx = 40 + i * 90, fld = cols[i % 4], chg = cols[(i + 1) % 4];
+      w += pth('M' + (cx - 19) + ' 9 h38 v20 q0 18 -19 26 q-19 -8 -19 -26 z', 'fill="' + fld + '" ' + K3);
+      if (i % 4 === 0) w += pth('M' + (cx - 13) + ' 39 L' + cx + ' 25 L' + (cx + 13) + ' 39', 'fill="none" stroke="' + chg + '" stroke-width="6"');
+      else if (i % 4 === 1) w += rect(cx - 17.5, 23, 35, 9, 'fill="' + chg + '"');
+      else if (i % 4 === 2) w += rect(cx - 5, 10.5, 10, 42, 'fill="' + chg + '"');
+      else w += rect(cx - 17.5, 10.5, 35, 11, 'fill="' + chg + '"');
+      w += circ(cx, 5, 2.6, 'fill="#0e1114"');
+    }
+    /* cross-loop */
+    w += pth('M46 112 h44 l10 18 v118 l-10 18 h-44 l-10 -18 v-118 z', 'fill="black" fill-opacity=".3"');
+    w += rect(61, 126, 14, 126, 'fill="url(#ecNight)"');
+    w += rect(48, 178, 40, 13, 'fill="url(#ecNight)"');
+    w += pth('M61 126 h14 v52 h13 v13 h-13 v61 h-14 v-61 h-13 v-13 h13 z', 'fill="none" stroke="black" stroke-opacity=".5" stroke-width="2.5"');
+    w += circ(68, 150, 1.6, 'fill="#dfe6ef" fill-opacity=".8"');
+    w += rect(0, 344, 800, 48, 'fill="black" fill-opacity=".18"');
+    /* flagstones */
+    f += ln(0, 438, 800, 438, 'stroke="black" stroke-opacity=".32" stroke-width="3"');
+    f += ln(0, 490, 800, 490, 'stroke="black" stroke-opacity=".32" stroke-width="3"');
+    var rows = [[402, 438, 0], [438, 490, 62], [490, 560, 20]];
+    for (j = 0; j < 3; j++) {
+      for (i = -1; i < 8; i++) {
+        var x0 = i * 124 + rows[j][2];
+        var xa = 400 + (x0 - 400) * (1 + (rows[j][0] - 402) / 300);
+        var xb = 400 + (x0 - 400) * (1 + (rows[j][1] - 402) / 300);
+        f += ln(xa.toFixed(0), rows[j][0], xb.toFixed(0), rows[j][1], 'stroke="black" stroke-opacity=".28" stroke-width="3"');
+      }
+    }
+    f += pth('M150 438 L128 490 L262 490 L276 438 Z', 'fill="black" fill-opacity=".1"');
+    f += pth('M560 490 L585 560 L745 560 L712 490 Z', 'fill="black" fill-opacity=".1"');
+    f += pth('M430 402 L432 438 L560 438 L548 402 Z', 'fill="#ffffff" fill-opacity=".03"');
+    return base(w, f);
+  };
+
+  /* ---- THE TELEPHONE EXCHANGE ---- */
+
+  /* ---- THE TELEPHONE EXCHANGE ---- */
+
+  /* The runner the operators' chairs rolled on: a strip of drugget with a
+     woven border, worn through to the backing at one end. The middle is
+     left plain — the UV ink is written there. */
+  PARTS.txRunner = function (o) {
+    var c = o.cloth || '#4a3a30', b = o.border || '#b88a3e';
+    var out = pth('M-116 -4 l12 -62 h208 l12 62 z', 'fill="' + c + '" ' + K3);
+    out += pth('M-104 -12 l9 -46 h190 l9 46 z', 'fill="none" stroke="' + b + '" stroke-width="3" stroke-opacity=".8"');
+    var i;
+    for (i = -84; i <= 84; i += 24) {
+      out += pth('M' + i + ' -53 l5 -4 l5 4 l-5 4 z', 'fill="' + b + '" fill-opacity=".7"');
+      out += pth('M' + (i * 1.06).toFixed(0) + ' -17 l5 -4 l5 4 l-5 4 z', 'fill="' + b + '" fill-opacity=".7"');
+    }
+    out += pth('M70 -8 q16 -10 34 -4 l4 8 z', 'fill="#8a7a62" fill-opacity=".7"');
+    out += pth('M76 -9 l22 -2 M82 -5 l18 -1', 'stroke="black" stroke-opacity=".3" stroke-width="1.6"');
+    for (i = -112; i <= 112; i += 14) {
+      out += ln(i, -4, i + (i < 0 ? -2 : 2), 2, 'stroke="' + b + '" stroke-opacity=".6" stroke-width="2"');
+    }
+    return out;
+  };
+
+  /* The operator's stool: a round bentwood seat on four splayed legs with
+     a hoop stretcher, and nothing to lean back on. */
+  PARTS.txStool = function (o) {
+    var w = o.wood || '#7a5632', d = o.dark || '#5a3d22';
+    var out = ell(0, -2, 30, 6, 'fill="black" fill-opacity=".3"');
+    out += pth('M-16 -70 L-28 -2 M16 -70 L28 -2', 'stroke="' + d + '" stroke-width="7" stroke-linecap="round" fill="none"');
+    out += pth('M-8 -70 L-12 -6 M8 -70 L12 -6', 'stroke="' + w + '" stroke-width="6" stroke-linecap="round" fill="none"');
+    out += ell(0, -34, 23, 7, 'fill="none" stroke="' + w + '" stroke-width="5"');
+    out += ell(0, -34, 23, 7, 'fill="none" stroke="black" stroke-opacity=".3" stroke-width="1.6"');
+    out += ell(0, -74, 30, 10, 'fill="' + d + '" ' + K3);
+    out += ell(0, -79, 30, 10, 'fill="' + w + '" ' + K3);
+    out += ell(0, -79, 20, 6, 'fill="none" stroke="black" stroke-opacity=".22" stroke-width="2"');
+    out += pth('M-18 -84 q10 -5 22 -3', 'fill="none" stroke="#ffffff" stroke-opacity=".25" stroke-width="3" stroke-linecap="round"');
+    return out;
+  };
+
+  /* The call bell: two brass gongs on a walnut ringer box with the
+     clapper standing between them. */
+  PARTS.txBell = function (o) {
+    var b = o.brass || '#c9a24a', w = o.wood || '#4a3324';
+    var out = rect(-30, -8, 60, 42, 'rx="4" fill="' + w + '" ' + K4);
+    out += rect(-22, 4, 44, 22, 'rx="2" fill="none" stroke="black" stroke-opacity=".35" stroke-width="2"');
+    out += circ(-14, 15, 2.4, 'fill="' + b + '"') + circ(14, 15, 2.4, 'fill="' + b + '"');
+    out += ln(0, -8, 0, -22, 'stroke="#2a2420" stroke-width="3.5"');
+    out += circ(0, -24, 4.5, 'fill="#2a2420" ' + K2);
+    out += circ(-18, -18, 17, 'fill="' + b + '" ' + K4);
+    out += circ(18, -18, 17, 'fill="' + b + '" ' + K4);
+    out += circ(-18, -18, 10, 'fill="none" stroke="black" stroke-opacity=".25" stroke-width="2"');
+    out += circ(18, -18, 10, 'fill="none" stroke="black" stroke-opacity=".25" stroke-width="2"');
+    out += circ(-18, -18, 3, 'fill="#6a5324"') + circ(18, -18, 3, 'fill="#6a5324"');
+    out += pth('M-28 -26 q4 -7 11 -8 M8 -26 q4 -7 11 -8', 'fill="none" stroke="#fff3c8" stroke-opacity=".6" stroke-width="2.5" stroke-linecap="round"');
+    return out;
+  };
+
+  /* The operator's set, hung up for the night: a sprung steel headband, one
+     black earpiece, and the horn mouthpiece on its breastplate. The board
+     behind it is plain and dark; the UV ink is written across it. */
+  PARTS.txHeadset = function (o) {
+    var s = o.steel || '#aab2b8', k = o.black || '#17171a';
+    var out = rect(-50, -42, 94, 84, 'rx="5" fill="' + (o.board || '#2c211a') + '" ' + K4);
+    out += rect(-44, -36, 82, 72, 'rx="3" fill="none" stroke="black" stroke-opacity=".3" stroke-width="2"');
+    out += circ(-22, -30, 4, 'fill="#c9a24a" ' + K2) + ln(-22, -30, -22, -22, 'stroke="#c9a24a" stroke-width="3"');
+    out += pth('M-40 4 a19 22 0 0 1 36 -6', 'fill="none" stroke="black" stroke-opacity=".5" stroke-width="7" stroke-linecap="round"');
+    out += pth('M-40 4 a19 22 0 0 1 36 -6', 'fill="none" stroke="' + s + '" stroke-width="4" stroke-linecap="round"');
+    out += rect(-48, 0, 15, 24, 'rx="6" fill="' + k + '" ' + K3);
+    out += rect(-45, 5, 9, 14, 'rx="4" fill="#3a3a40"');
+    out += circ(-4, -2, 4, 'fill="' + s + '" ' + K2);
+    out += pth('M30 -34 v20 q0 8 -8 10', 'fill="none" stroke="' + k + '" stroke-width="5" stroke-linecap="round"');
+    out += pth('M12 -30 h30 l-4 14 h-22 z', 'fill="' + k + '" ' + K3);
+    out += pth('M18 -6 l-10 -4 l-9 12 l12 8 z', 'fill="' + k + '" ' + K3);
+    out += ell(1, 4, 7, 9, 'fill="#3a3a40" ' + K2 + ' transform="rotate(-34 1 4)"');
+    out += pth('M-40 24 q8 18 30 12 q14 -4 20 6', 'fill="none" stroke="#6a3a2a" stroke-width="3.5" stroke-linecap="round"');
+    return out;
+  };
+
+  /* The board itself: an oak panel of drop-flaps over rows of jacks, with
+     three cords plugged across it and two signal lamps showing. The centre
+     band is bare oak so the UV ink has somewhere to sit. */
+  PARTS.txBoard = function (o) {
+    var w = o.wood || '#5a3d24', d = o.dark || '#1c1512', b = o.brass || '#c9a24a';
+    var out = rect(-106, -73, 212, 146, 'rx="4" fill="' + w + '" ' + K5);
+    out += rect(-98, -66, 196, 34, 'rx="2" fill="' + d + '"');
+    var i, j, x, y;
+    for (j = 0; j < 2; j++) {
+      for (i = 0; i < 12; i++) {
+        x = -91 + i * 16; y = -62 + j * 15;
+        var down = ((i * 5 + j * 3) % 7 === 0);
+        out += rect(x, y, 11, 11, 'rx="1.5" fill="#2e2620" stroke="' + b + '" stroke-opacity=".6" stroke-width="1.2"');
+        out += down ? pth('M' + x + ' ' + (y + 11) + ' l11 0 l-2 6 l-7 0 z', 'fill="' + b + '"')
+                    : rect(x + 2, y + 2, 7, 7, 'rx="1" fill="' + b + '" fill-opacity=".85"');
+      }
+    }
+    out += rect(-98, 20, 196, 46, 'rx="2" fill="' + d + '"');
+    for (j = 0; j < 3; j++) {
+      for (i = 0; i < 12; i++) {
+        out += circ(-88 + i * 16, 28 + j * 14, 4.2, 'fill="#0a0808" stroke="' + b + '" stroke-opacity=".75" stroke-width="1.6"');
+      }
+    }
+    out += circ(-88, -24, 4, 'fill="#58c070" ' + K2) + circ(-72, -24, 4, 'fill="#2a3a2c" ' + K2);
+    out += circ(88, -24, 4, 'fill="#e8a84c" ' + K2) + circ(72, -24, 4, 'fill="#3a3020" ' + K2);
+    out += pth('M-56 28 q14 44 48 14', 'fill="none" stroke="#7a2f2a" stroke-width="4" stroke-linecap="round"');
+    out += pth('M8 42 q26 34 48 -14', 'fill="none" stroke="#2f5a4a" stroke-width="4" stroke-linecap="round"');
+    out += pth('M-24 56 q40 26 96 0', 'fill="none" stroke="#3a3a40" stroke-width="4" stroke-linecap="round"');
+    out += rect(-59, 23, 6, 10, 'rx="2" fill="' + b + '" ' + K2) + rect(-11, 37, 6, 10, 'rx="2" fill="' + b + '" ' + K2);
+    out += rect(5, 37, 6, 10, 'rx="2" fill="' + b + '" ' + K2) + rect(53, 23, 6, 10, 'rx="2" fill="' + b + '" ' + K2);
+    out += rect(-27, 51, 6, 10, 'rx="2" fill="' + b + '" ' + K2) + rect(69, 51, 6, 10, 'rx="2" fill="' + b + '" ' + K2);
+    out += ln(-98, -28, 98, -28, 'stroke="black" stroke-opacity=".3" stroke-width="2"');
+    out += ln(-98, 16, 98, 16, 'stroke="black" stroke-opacity=".3" stroke-width="2"');
+    return out;
+  };
+
+  /* The battery rack: a row of glass Leclanché jars, each with its zinc
+     rod, its dark charge and a strap of wire to the next. */
+  PARTS.txBatteries = function (o) {
+    var out = rect(-76, 14, 152, 10, 'rx="2" fill="' + (o.wood || '#4a3324') + '" ' + K3);
+    var i, x;
+    out += pth('M-58 -18 q12 -12 24 0 q12 -12 24 0 q12 -12 24 0 q12 -12 24 0', 'fill="none" stroke="#b0703a" stroke-width="2.5"');
+    for (i = 0; i < 5; i++) {
+      x = -70 + i * 29;
+      out += rect(x, -14, 24, 28, 'rx="3" fill="#9fd8e8" fill-opacity=".16" stroke="#cfe6ea" stroke-opacity=".7" stroke-width="2"');
+      out += rect(x + 2, -2, 20, 15, 'rx="2" fill="#3a5a52" fill-opacity=".6"');
+      out += rect(x + 8, -8, 8, 18, 'rx="2" fill="#1c1a18"');
+      out += rect(x + 3, -20, 4, 22, 'fill="#aab2b8" ' + K2);
+      out += rect(x + 6, -17, 12, 5, 'rx="1.5" fill="#2a2420" ' + K2);
+      out += ln(x + 3, -8, x + 3, 8, 'stroke="#ffffff" stroke-opacity=".3" stroke-width="1.6"');
+    }
+    return out;
+  };
+
+  /* The lineman's box: a dovetailed oak tool box with a rope handle and a
+     brass corner on each end. Open, it is pliers, a coil of wire and a
+     test set, all in the dark. */
+  PARTS.txToolBox = function (o) {
+    var w = o.wood || '#6a4a2c', l = o.lid || '#7a5632', b = o.brass || '#c9a24a';
+    var out = rect(-60, -52, 120, 52, 'rx="3" fill="' + w + '" ' + K4);
+    var i;
+    for (i = 0; i < 4; i++) {
+      out += rect(-60, -48 + i * 12, 7, 6, 'fill="black" fill-opacity=".25"');
+      out += rect(53, -48 + i * 12, 7, 6, 'fill="black" fill-opacity=".25"');
+    }
+    out += pth('M-58 -26 h116', 'stroke="black" stroke-opacity=".28" stroke-width="2.5"');
+    out += pth('M-60 -12 v12 h14 z M60 -12 v12 h-14 z', 'fill="' + b + '" ' + K2);
+    out += pth('M-22 -20 q22 16 44 0', 'fill="none" stroke="#c8b68a" stroke-width="5" stroke-linecap="round"');
+    out += circ(-22, -20, 3.5, 'fill="#2a2420"') + circ(22, -20, 3.5, 'fill="#2a2420"');
+    var open = rect(-62, -88, 124, 26, 'rx="3" fill="' + l + '" ' + K3) +
+      pth('M-58 -76 h116', 'stroke="black" stroke-opacity=".28" stroke-width="2.5"') +
+      rect(-56, -62, 112, 16, 'fill="#0b0a09"');
+    open += pth('M-40 -46 l6 -16 M-30 -46 l-2 -16', 'stroke="#aab2b8" stroke-width="4" stroke-linecap="round"');
+    open += circ(0, -54, 8, 'fill="none" stroke="#b0703a" stroke-width="4"');
+    open += rect(22, -62, 22, 14, 'rx="2" fill="#2a2420" stroke="' + b + '" stroke-width="1.6"');
+    out += grp('id="chestOpenG" style="display:none"', open);
+    out += grp('id="chestLid"',
+      rect(-63, -68, 126, 18, 'rx="3" fill="' + l + '" ' + K3) +
+      pth('M-58 -59 h116', 'stroke="black" stroke-opacity=".25" stroke-width="2"') +
+      rect(-9, -58, 18, 14, 'rx="2" class="fAccent" stroke="black" stroke-opacity=".5" stroke-width="2"'));
+    return out;
+  };
+
+  /* The operator's position: a keyshelf with a row of ringing keys and a
+     rank of plugs standing in it, a candlestick telephone at the left, and
+     two pedestals of oak. The right of the top is kept bare for the lamp. */
+  PARTS.txDesk = function (o) {
+    var w = o.wood || '#5a3d24', d = o.dark || '#3e2a19', b = o.brass || '#c9a24a', k = '#17171a';
+    var out = rect(-140, -92, 62, 92, 'fill="' + d + '" ' + K2);
+    out += rect(78, -92, 62, 92, 'fill="' + d + '" ' + K2);
+    out += rect(-132, -82, 46, 34, 'rx="2" fill="none" stroke="black" stroke-opacity=".35" stroke-width="2.5"');
+    out += rect(-132, -42, 46, 34, 'rx="2" fill="none" stroke="black" stroke-opacity=".35" stroke-width="2.5"');
+    out += rect(86, -82, 46, 34, 'rx="2" fill="none" stroke="black" stroke-opacity=".35" stroke-width="2.5"');
+    out += rect(86, -42, 46, 34, 'rx="2" fill="none" stroke="black" stroke-opacity=".35" stroke-width="2.5"');
+    out += circ(-109, -65, 3, 'fill="' + b + '"') + circ(-109, -25, 3, 'fill="' + b + '"');
+    out += circ(109, -65, 3, 'fill="' + b + '"') + circ(109, -25, 3, 'fill="' + b + '"');
+    out += rect(-78, -30, 156, 8, 'fill="' + d + '" fill-opacity=".85"');
+    /* the sloping keyshelf behind the top */
+    out += pth('M-96 -110 l8 -22 h108 l8 22 z', 'fill="' + d + '" ' + K3);
+    var i;
+    for (i = 0; i < 7; i++) {
+      out += rect(-80 + i * 15, -128, 7, 12, 'rx="2" fill="' + k + '" ' + K2);
+      out += circ(-76.5 + i * 15, -131, 3, 'fill="' + (i % 3 ? '#d8d2c4' : '#c8483a') + '"');
+    }
+    /* plugs standing in the shelf, cords dropping behind */
+    for (i = 0; i < 5; i++) {
+      out += rect(-58 + i * 16, -121, 6, 11, 'rx="2" fill="' + b + '" ' + K2);
+      out += rect(-57 + i * 16, -126, 4, 6, 'fill="#8a7a5a"');
+    }
+    /* the top */
+    out += rect(-150, -110, 300, 20, 'rx="2" fill="' + w + '" ' + K3);
+    out += pth('M-146 -100 h292', 'stroke="black" stroke-opacity=".22" stroke-width="2"');
+    /* candlestick telephone */
+    out += ell(-122, -111, 16, 5, 'fill="' + k + '" ' + K2);
+    out += rect(-125, -152, 6, 42, 'rx="2" fill="' + k + '" ' + K2);
+    out += pth('M-130 -152 h16 l4 -12 h-24 z', 'fill="' + k + '" ' + K2);
+    out += ell(-122, -166, 9, 4, 'fill="#3a3a40" ' + K2);
+    out += pth('M-119 -140 h10', 'stroke="' + b + '" stroke-width="3" stroke-linecap="round"');
+    out += rect(-108, -150, 8, 24, 'rx="3" fill="' + k + '" ' + K2);
+    out += pth('M-104 -126 q6 14 -10 14', 'fill="none" stroke="#6a3a2a" stroke-width="2.5"');
+    return out;
+  };
+
+  /* The half-glazed office door: oak, a pane of frosted glass with the
+     corridor's gaslight dim behind it, a brass finger plate and a kick
+     board. */
+  PARTS.txDoor = function (o) {
+    var w = o.wood || '#4a3324', b = o.brass || '#c9a24a';
+    var out = rect(-70, -282, 140, 282, 'rx="4" fill="' + w + '" ' + K4);
+    out += rect(-54, -264, 108, 136, 'rx="3" fill="#0f1416" ' + K3);
+    out += rect(-54, -264, 108, 136, 'rx="3" fill="url(#ecGlass)"');
+    out += pth('M-34 -138 L10 -260 M-6 -138 L38 -260', 'stroke="#ffffff" stroke-opacity=".06" stroke-width="10"');
+    out += ln(0, -264, 0, -128, 'stroke="' + w + '" stroke-width="5"');
+    out += ln(0, -264, 0, -128, 'stroke="black" stroke-opacity=".3" stroke-width="1.6"');
+    out += rect(-54, -112, 108, 60, 'rx="3" fill="none" stroke="black" stroke-opacity=".4" stroke-width="3"');
+    out += rect(-70, -34, 140, 34, 'fill="' + b + '" fill-opacity=".28" ' + K2);
+    out += rect(-62, -150, 14, 46, 'rx="3" fill="' + b + '" ' + K2);
+    out += circ(-55, -116, 8, 'class="fAccent" stroke="black" stroke-opacity=".5" stroke-width="2"');
+    out += rect(-57, -100, 5, 10, 'rx="2" fill="black" fill-opacity=".6"');
+    return out + sigilBadge();
+  };
+
+  /* The distributing frame: an iron rack of terminal strips with the cable
+     combed down both sides, a fuse panel at the top, and the test socket
+     in the middle where the crank goes. */
+  PARTS.txFrame = function (o) {
+    var m = o.iron || '#2c2a28', b = o.brass || '#c9a24a';
+    var out = rect(-38, -198, 76, 198, 'rx="3" fill="' + m + '" ' + K4);
+    out += rect(-31, -190, 62, 50, 'rx="2" fill="#141210"');
+    var i, j;
+    for (j = 0; j < 3; j++) {
+      for (i = 0; i < 6; i++) {
+        out += rect(-27 + i * 9.4, -185 + j * 15, 6, 10, 'rx="1.5" fill="' + (((i + j) % 4) ? '#d8d2c4' : '#c8483a') + '" fill-opacity=".85"');
+      }
+    }
+    out += rect(-18, -118, 36, 36, 'rx="4" fill="#1c1a18" ' + K2);
+    out += rect(-31, -70, 62, 62, 'rx="2" fill="#141210"');
+    for (j = 0; j < 5; j++) {
+      out += rect(-26, -64 + j * 11, 52, 6, 'rx="1.5" fill="#4a4038"');
+      for (i = 0; i < 6; i++) out += circ(-21 + i * 8.4, -61 + j * 11, 1.6, 'fill="' + b + '"');
+    }
+    out += pth('M-34 -138 q-4 60 0 130 M34 -138 q4 60 0 130', 'fill="none" stroke="#6a3a2a" stroke-width="4"');
+    out += pth('M-30 -138 q-3 60 1 130 M30 -138 q3 60 -1 130', 'fill="none" stroke="#2f5a4a" stroke-width="3"');
+    out += rect(-42, -8, 84, 8, 'rx="2" fill="#1c1a18" ' + K2);
+    return out + cabInnards(o);
+  };
+
+  /* A green-shaded desk lamp. The shade throws the light down and the
+     bulb shows under its lip. */
+  PARTS.txLamp = function (o) {
+    var b = o.brass || '#c9a24a', g = o.shade || '#2f6a4e';
+    return glow(0, -40, 100) +
+      ell(0, -2, 20, 5, 'fill="' + b + '" ' + K2) +
+      rect(-3, -44, 6, 42, 'rx="2" fill="' + b + '" ' + K2) +
+      circ(0, -24, 5, 'fill="' + b + '" ' + K2) +
+      ell(0, -46, 15, 7, 'id="flame" fill="#fff0c0" stroke="#ffd98a" stroke-width="2"') +
+      pth('M-34 -44 q4 -26 34 -26 q30 0 34 26 z', 'fill="' + g + '" ' + K3) +
+      pth('M-26 -50 q6 -14 22 -16', 'fill="none" stroke="#ffffff" stroke-opacity=".3" stroke-width="3" stroke-linecap="round"') +
+      rect(-36, -46, 72, 5, 'rx="2" fill="' + b + '" ' + K2);
+  };
+
+  /* Oak panelling to the dado, dark distemper above it, and the exchange's
+     nervous system across the top of the wall: an iron cable tray with the
+     trunks sagging between its hangers and a rank of small signal lamps
+     under it. Herringbone block floor. */
+  BACKDROPS.txHall = function () {
+    var w = '', f = '', i, j;
+    w += rect(0, 0, 800, 60, 'fill="black" fill-opacity=".25"');
+    /* cable tray and sagging trunks */
+    w += rect(0, 40, 800, 10, 'fill="#2a2622" ' + K2);
+    for (i = 0; i < 6; i++) {
+      var x0 = i * 150 - 20;
+      w += pth('M' + x0 + ' 50 q75 34 150 0', 'fill="none" stroke="#17171a" stroke-width="9"');
+      w += pth('M' + x0 + ' 50 q75 26 150 0', 'fill="none" stroke="#6a3a2a" stroke-width="4"');
+      w += pth('M' + x0 + ' 50 q75 44 150 0', 'fill="none" stroke="#2f5a4a" stroke-width="3" stroke-opacity=".8"');
+      w += rect(x0 - 5, 26, 10, 30, 'rx="2" fill="#3a3632" ' + K2);
+    }
+    /* rank of signal lamps */
+    w += rect(0, 92, 800, 16, 'fill="black" fill-opacity=".22"');
+    for (i = 0; i < 20; i++) {
+      var lit = (i * 7) % 5 === 0, amber = (i * 3) % 7 === 0;
+      w += circ(20 + i * 40, 100, 4.5, 'fill="' + (lit ? '#58c070' : amber ? '#e8a84c' : '#1c1a18') + '" fill-opacity="' +
+        (lit || amber ? '.9' : '.8') + '" stroke="black" stroke-opacity=".4" stroke-width="1.6"');
+    }
+    /* a drop of cable down the left wall into a junction box */
+    w += pth('M34 50 q-6 80 2 150', 'fill="none" stroke="#17171a" stroke-width="7"');
+    w += pth('M40 50 q-4 80 0 150', 'fill="none" stroke="#6a3a2a" stroke-width="3"');
+    w += rect(18, 198, 40, 50, 'rx="3" fill="#2a2622" ' + K3);
+    w += circ(38, 214, 4, 'fill="#c9a24a"') + circ(38, 232, 4, 'fill="#c9a24a"');
+    /* dado and panels */
+    w += rect(0, 282, 800, 110, 'class="fWall2"');
+    w += rect(0, 276, 800, 9, 'fill="#5a3d24" ' + K2);
+    for (i = 0; i < 6; i++) {
+      w += rect(i * 136 + 10, 298, 116, 80, 'rx="2" fill="none" stroke="black" stroke-opacity=".3" stroke-width="3"');
+      w += rect(i * 136 + 20, 308, 96, 60, 'rx="2" fill="#ffffff" fill-opacity=".02"');
+    }
+    /* herringbone blocks */
+    for (j = 0; j < 4; j++) {
+      for (i = -1; i < 21; i++) {
+        var hx = i * 40 + (j % 2 ? 20 : 0), hy = 402 + j * 40;
+        f += pth('M' + hx + ' ' + hy + ' l20 20 l-20 20', 'fill="none" stroke="black" stroke-opacity=".22" stroke-width="2.5"');
+      }
+      f += ln(0, 402 + j * 40, 800, 402 + j * 40, 'stroke="black" stroke-opacity=".16" stroke-width="2"');
+    }
+    f += pth('M300 402 L250 560 L560 560 L500 402 Z', 'fill="#ffffff" fill-opacity=".025"');
+    return base(w, f);
+  };
+
+  /* ---- THE ORGAN LOFT ---- */
+
+  /* ---- THE ORGAN LOFT ---- */
+
+  /* The runner down the middle of the loft: fringed at both short ends,
+     gilt-bordered, and worn through to the backing where the organist's
+     heels have turned on it. The centre is left plain for the UV ink. */
+  PARTS.ogRunner = function (o) {
+    var c = o.fill || '#6a2636', g = o.trim || '#c9a24e';
+    var out = '', i, y, xl;
+    for (i = 0; i < 8; i++) {
+      y = -10 - i * 7;
+      xl = -112 + (-6 - y) * 10 / 58;
+      out += ln(xl.toFixed(1), y, (xl - 10).toFixed(1), y + 3, 'stroke="' + (o.fringe || '#b8a27a') + '" stroke-width="2.4" stroke-linecap="round"');
+      out += ln((-xl).toFixed(1), y, (-xl + 10).toFixed(1), y + 3, 'stroke="' + (o.fringe || '#b8a27a') + '" stroke-width="2.4" stroke-linecap="round"');
+    }
+    out += pth('M-112 -6 l10 -58 h204 l10 58 z', 'fill="' + c + '" ' + K3);
+    out += pth('M-99 -12 l8 -46 h182 l8 46 z', 'fill="none" stroke="' + g + '" stroke-width="2.5" stroke-opacity=".85"');
+    out += pth('M-76 -12 l6 -46 M76 -12 l-6 -46', 'fill="none" stroke="' + g + '" stroke-width="2" stroke-opacity=".7"');
+    for (i = 0; i < 3; i++) {
+      y = -22 - i * 13;
+      out += pth('M-90 ' + y + ' l6 -5 l6 5 l-6 5 z M78 ' + y + ' l6 -5 l6 5 l-6 5 z', 'fill="' + g + '" fill-opacity=".8"');
+    }
+    out += ell(34, -15, 24, 5, 'fill="#b8a27a" fill-opacity=".22"');
+    out += pth('M16 -15 h34 M22 -18 h24', 'stroke="#b8a27a" stroke-opacity=".35" stroke-width="1.6"');
+    return out;
+  };
+
+  /* Two stopped wooden pipes off the pedal rank, stood on the floor for
+     the tuner: square section, a mouth cut low in the face, a stopper
+     with a turned handle in the top. */
+  PARTS.ogWoodPipe = function (o) {
+    var w = o.wood || '#8a5e3c', d = o.dark || '#6b452b';
+    var out = ell(4, -2, 30, 5, 'fill="black" fill-opacity=".3"');
+    /* the short pipe, behind */
+    out += pth('M14 -4 l3 -12 h10 l3 12 z', 'fill="' + d + '" ' + K2);
+    out += rect(12, -66, 20, 50, 'fill="' + d + '" ' + K3);
+    out += rect(15, -30, 14, 6, 'fill="#120b08"');
+    out += pth('M15 -30 l3 -8 h8 l3 8 z', 'fill="black" fill-opacity=".3"');
+    out += rect(15, -72, 14, 7, 'rx="1" fill="#b08a5c" ' + K2);
+    out += rect(20, -78, 4, 7, 'fill="#b08a5c"');
+    /* the tall pipe */
+    out += pth('M-18 -2 l5 -18 h14 l5 18 z', 'fill="' + w + '" ' + K2);
+    out += rect(-22, -100, 32, 80, 'fill="' + w + '" ' + K3);
+    out += ln(-13, -94, -13, -50, 'stroke="black" stroke-opacity=".2" stroke-width="2"');
+    out += ln(2, -96, 2, -56, 'stroke="black" stroke-opacity=".2" stroke-width="2"');
+    out += rect(-17, -38, 22, 8, 'fill="#120b08"');
+    out += pth('M-17 -38 l4 -11 h14 l4 11 z', 'fill="black" fill-opacity=".32"');
+    out += rect(-22, -30, 32, 5, 'fill="' + d + '"');
+    out += rect(-18, -107, 24, 8, 'rx="1" fill="#b08a5c" ' + K2);
+    out += rect(-9, -112, 6, 6, 'rx="2" fill="#b08a5c"');
+    return out;
+  };
+
+  /* The rose vent: a round of pierced brass tracery over a hole in the
+     case, where the sound gets out and the dust gets in. */
+  PARTS.ogRose = function (o) {
+    var b = o.brass || '#c9a24e';
+    var out = circ(0, 0, 35, 'fill="' + b + '" ' + K4);
+    out += circ(0, 0, 28, 'fill="#0c070a"');
+    var i, a;
+    for (i = 0; i < 6; i++) {
+      a = i * Math.PI / 3;
+      out += circ((17 * Math.cos(a)).toFixed(1), (17 * Math.sin(a)).toFixed(1), 9.5,
+        'fill="none" stroke="' + b + '" stroke-width="3"');
+    }
+    for (i = 0; i < 6; i++) {
+      a = i * Math.PI / 3 + Math.PI / 6;
+      out += ln((8 * Math.cos(a)).toFixed(1), (8 * Math.sin(a)).toFixed(1),
+        (28 * Math.cos(a)).toFixed(1), (28 * Math.sin(a)).toFixed(1), 'stroke="' + b + '" stroke-width="2.6"');
+    }
+    out += circ(0, 0, 7.5, 'fill="#0c070a" stroke="' + b + '" stroke-width="3"');
+    out += circ(0, 0, 31.5, 'fill="none" stroke="black" stroke-opacity=".3" stroke-width="1.6"');
+    return out;
+  };
+
+  /* The hymn board. No numerals — the rooms are mirrored — so the cards
+     carry tally strokes and the rails carry pegs. The middle slat is left
+     bare, which is where the ink goes. */
+  PARTS.ogHymnBoard = function (o) {
+    var w = o.wood || '#4a2d3a', g = o.gilt || '#c9a24e';
+    var out = pth('M-50 -34 l50 -10 l50 10 z', 'fill="' + w + '" ' + K3);
+    out += rect(-46, -34, 92, 74, 'rx="2" fill="' + w + '" ' + K4);
+    out += rect(-40, -29, 80, 15, 'fill="#1c1118"');
+    out += rect(-40, -12, 80, 26, 'fill="#1c1118"');
+    out += rect(-40, 16, 80, 15, 'fill="#1c1118"');
+    var rows = [[-27, [2, 3, 1]], [18, [1, 2, 3]]];
+    var i, j, k, x, y, n;
+    for (j = 0; j < rows.length; j++) {
+      y = rows[j][0];
+      for (i = 0; i < 3; i++) {
+        x = -36 + i * 20;
+        n = rows[j][1][i];
+        out += rect(x, y, 16, 11, 'rx="1" fill="#e6dcc2"');
+        for (k = 0; k < n; k++) {
+          out += ln(x + 8 - (n - 1) * 2 + k * 4, y + 2.5, x + 8 - (n - 1) * 2 + k * 4, y + 8.5, 'stroke="#2a1a22" stroke-width="2"');
+        }
+      }
+      out += circ(30, y + 5.5, 3.4, 'fill="' + g + '" ' + K2);
+    }
+    out += rect(-50, 38, 100, 6, 'rx="1" fill="' + w + '" ' + K2);
+    out += circ(0, -38, 2.6, 'fill="' + g + '"');
+    return out;
+  };
+
+  /* The pipe front. Two storeys of pewter pipes with a dark impost between
+     them: the upper rank dips to the middle, the lower climbs to it, which
+     is what an organ case does and nothing else in the game does. */
+  PARTS.ogPipeRank = function (o) {
+    var p = o.pipe || '#a3abb5', w = o.wood || '#4a2d3a', g = o.gilt || '#c9a24e';
+    var out = rect(-106, -73, 212, 146, 'rx="3" fill="#170d13" ' + K5);
+    var i, x, top, a;
+    for (i = -6; i <= 6; i++) {
+      x = i * 14.6;
+      a = Math.abs(i);
+      /* upper rank: tall at the towers, short in the middle */
+      top = -42 - a * 4;
+      out += rect((x - 5.5).toFixed(1), top, 11, -22 - top, 'rx="2" fill="' + p + '" ' + K2);
+      out += pth('M' + (x - 3.4).toFixed(1) + ' -27 l3.4 -7 l3.4 7 z', 'fill="#170d13"');
+      /* lower rank: the other way up */
+      top = 22 + a * 3.4;
+      out += rect((x - 5.5).toFixed(1), top.toFixed(1), 11, (64 - top).toFixed(1), 'rx="2" fill="' + p + '" ' + K2);
+      out += pth('M' + (x - 3.4).toFixed(1) + ' 59 l3.4 -7 l3.4 7 z', 'fill="#170d13"');
+    }
+    out += rect(-106, -22, 212, 40, 'fill="#24141d"');
+    out += rect(-106, -24, 212, 4, 'fill="' + g + '" fill-opacity=".85"');
+    out += rect(-106, 16, 212, 4, 'fill="' + g + '" fill-opacity=".85"');
+    out += rect(-106, 63, 212, 10, 'fill="' + w + '" ' + K2);
+    out += rect(-106, -73, 9, 146, 'fill="' + w + '" ' + K2);
+    out += rect(97, -73, 9, 146, 'fill="' + w + '" ' + K2);
+    out += pth('M-97 -73 h194 v6 q-97 26 -194 0 z', 'fill="' + w + '" ' + K2);
+    out += pth('M-90 -66 q90 22 180 0', 'fill="none" stroke="' + g + '" stroke-width="2" stroke-opacity=".8"');
+    return out;
+  };
+
+  /* Hymnals on a shelf: a run of the same cloth book, banded in gilt, two
+     gone slack against the rest and three more laid flat at the end. */
+  PARTS.ogHymnals = function (o) {
+    var out = rect(-76, 14, 152, 10, 'rx="2" fill="' + (o.wood || '#4a2d3a') + '" ' + K3);
+    var cols = ['#6a2636', '#2a2a3a', '#6a2636', '#3a2a22', '#2f4038'];
+    var hs = [34, 30, 36, 32, 34, 28, 36, 30, 34];
+    var i, x;
+    for (i = 0; i < 9; i++) {
+      x = -70 + i * 10;
+      out += grp(i > 6 ? 'transform="rotate(' + (i === 7 ? 9 : 13) + ' ' + (x + 12) + ' 14)"' : '',
+        rect(x, 14 - hs[i], 9, hs[i], 'rx="1" fill="' + cols[i % cols.length] + '" ' + K2) +
+        rect(x, 20 - hs[i], 9, 2.4, 'fill="' + (o.gilt || '#c9a24e') + '"') +
+        rect(x, 6, 9, 2.4, 'fill="' + (o.gilt || '#c9a24e') + '"'));
+    }
+    for (i = 0; i < 3; i++) {
+      out += rect(32 + i * 2, 4 - i * 10, 38 - i * 3, 9, 'rx="1" fill="' + cols[i] + '" ' + K2);
+      out += rect(34 + i * 2, 6 - i * 10, 5, 5, 'fill="#e6dcc2"');
+      out += rect(60 - i, 4 - i * 10, 2.4, 9, 'fill="' + (o.gilt || '#c9a24e') + '"');
+    }
+    return out;
+  };
+
+  /* The music chest: flat-lidded, three lancets cut into the front, a
+     gilt lock plate. Open, it is full of rolled scores. */
+  PARTS.ogMusicChest = function (o) {
+    var w = o.wood || '#5a3644', d = o.dark || '#432733', g = o.gilt || '#c9a24e';
+    var out = rect(-56, -8, 14, 8, 'fill="' + d + '" ' + K2) + rect(42, -8, 14, 8, 'fill="' + d + '" ' + K2);
+    out += rect(-58, -64, 116, 58, 'rx="2" fill="' + w + '" ' + K4);
+    var i, x;
+    for (i = -1; i <= 1; i++) {
+      x = i * 36;
+      out += pth('M' + (x - 13) + ' -12 v-26 q0 -14 13 -20 q13 6 13 20 v26 z', 'fill="black" fill-opacity=".3" ' + K2);
+    }
+    out += rect(-58, -16, 116, 5, 'fill="' + d + '"');
+    out += rect(-8, -56, 16, 20, 'rx="2" fill="' + g + '" ' + K2);
+    out += circ(0, -49, 2.4, 'fill="#120b08"') + rect(-1.3, -49, 2.6, 8, 'fill="#120b08"');
+    out += rect(-60, -76, 120, 14, 'rx="3" id="chestLid" fill="' + d + '" ' + K3);
+    out += grp('id="chestOpenG" style="display:none"',
+      rect(-55, -74, 110, 14, 'fill="#0c070a"') +
+      rect(-40, -80, 34, 9, 'rx="4" fill="url(#ecParch)" ' + K2) +
+      circ(-40, -75.5, 4.5, 'fill="#cbb98f" ' + K2) +
+      rect(-2, -79, 40, 8, 'rx="4" fill="url(#ecParch)" ' + K2) +
+      circ(38, -75, 4, 'fill="#cbb98f" ' + K2) +
+      rect(-60, -104, 120, 13, 'rx="3" fill="' + d + '" ' + K3 + ' transform="rotate(-7 -60 -92)"'));
+    return out;
+  };
+
+  /* The console, as the organist sees it: pedalboard, knee panel, two
+     manuals, a ledge, the music desk, and a jamb of stop knobs either
+     side. The right-hand end of the ledge is kept bare for the candles. */
+  PARTS.ogConsole = function (o) {
+    var w = o.wood || '#4f303d', d = o.dark || '#3a222d', iv = '#e6dcc2', g = o.gilt || '#c9a24e';
+    var out = rect(-112, -100, 224, 92, 'fill="' + d + '" ' + K3);
+    var i, j, x;
+    /* pedalboard */
+    out += rect(-124, -12, 248, 12, 'rx="2" fill="#24141d" ' + K3);
+    for (i = 0; i < 15; i++) {
+      x = -116 + i * 15.6;
+      out += rect(x.toFixed(1), -9, 10, 8, 'rx="1" fill="#9a7450"');
+      if (i % 7 !== 2 && i % 7 !== 6 && i < 14) out += rect((x + 9).toFixed(1), -16, 6, 9, 'rx="1" fill="#1c1118"');
+    }
+    /* swell shoes */
+    out += rect(-16, -38, 13, 22, 'rx="2" fill="#7c848e" ' + K2) + rect(3, -38, 13, 22, 'rx="2" fill="#7c848e" ' + K2);
+    /* stop jambs */
+    for (j = -1; j <= 1; j += 2) {
+      out += rect(j < 0 ? -150 : 110, -150, 40, 150, 'rx="3" fill="' + w + '" ' + K3);
+      for (i = 0; i < 4; i++) {
+        out += circ(j * 139, -136 + i * 17, 5.6, 'fill="' + iv + '" ' + K2) + circ(j * 139, -136 + i * 17, 1.8, 'fill="' + g + '"');
+        out += circ(j * 122, -136 + i * 17, 5.6, 'fill="' + iv + '" ' + K2) + circ(j * 122, -136 + i * 17, 1.8, 'fill="' + g + '"');
+      }
+      out += rect(j < 0 ? -144 : 116, -62, 28, 50, 'fill="none" stroke="black" stroke-opacity=".35" stroke-width="2.5"');
+    }
+    /* manuals */
+    for (j = 0; j < 2; j++) {
+      var ky = -108 + j * 11;
+      out += rect(-108, ky, 216, 9, 'fill="' + iv + '" ' + K2);
+      for (i = 0; i < 35; i++) {
+        if (i % 7 !== 2 && i % 7 !== 6) out += rect(-104 + i * 6, ky, 3.2, 5.4, 'fill="#1c1118"');
+      }
+    }
+    /* ledge and music desk */
+    out += rect(-114, -117, 228, 8, 'rx="2" fill="' + w + '" ' + K3);
+    out += rect(-84, -160, 124, 44, 'rx="3" fill="' + w + '" ' + K3);
+    out += pth('M-70 -152 v32 q20 -6 40 0 v-32 q-20 -6 -40 0 z M-30 -152 v32 q20 -6 40 0 v-32 q-20 -6 -40 0 z',
+      'fill="url(#ecParch)" ' + K2);
+    for (i = 0; i < 3; i++) {
+      out += pth('M-65 ' + (-146 + i * 9) + ' q15 -4 30 0 M-25 ' + (-146 + i * 9) + ' q15 -4 30 0',
+        'fill="none" stroke="#5d4718" stroke-width="1.4"');
+    }
+    out += circ(-56, -140, 2, 'fill="#2a1a12"') + circ(-44, -131, 2, 'fill="#2a1a12"') +
+      circ(-14, -147, 2, 'fill="#2a1a12"') + circ(0, -138, 2, 'fill="#2a1a12"');
+    out += pth('M-84 -160 q62 -14 124 0', 'fill="none" stroke="' + g + '" stroke-width="2.5" stroke-opacity=".8"');
+    return out;
+  };
+
+  /* The blowing engine: a weighted reservoir over a feeder, and the
+     pumping handle somebody has to work for every note. The crank socket
+     is in the plate between them. */
+  PARTS.ogBellows = function (o) {
+    var w = o.wood || '#4f303d', l = o.leather || '#8a5a44', m = '#69707a';
+    var out = rect(-38, -198, 76, 198, 'rx="3" fill="' + w + '" ' + K4);
+    out += rect(-31, -191, 62, 70, 'fill="#140c11"');
+    out += rect(-19, -187, 15, 10, 'rx="1" fill="' + m + '" ' + K2) + rect(4, -187, 15, 10, 'rx="1" fill="' + m + '" ' + K2);
+    out += rect(-28, -177, 56, 6, 'fill="#9a7450" ' + K2);
+    var i;
+    for (i = 0; i < 4; i++) {
+      out += pth('M-26 ' + (-171 + i * 10) + ' h52 l-5 5 l5 5 h-52 l5 -5 z',
+        'fill="' + (i % 2 ? '#6e4534' : l) + '" ' + K2);
+    }
+    out += rect(-28, -131, 56, 6, 'fill="#9a7450" ' + K2);
+    out += rect(-18, -116, 36, 32, 'rx="4" fill="#24141d" ' + K2);
+    /* the feeder and its handle */
+    out += rect(-31, -76, 62, 68, 'fill="#140c11"');
+    out += pth('M-27 -12 h54 v-8 l-54 -22 z', 'fill="' + l + '" ' + K2);
+    out += pth('M-27 -22 l40 12 M-27 -32 l48 16', 'stroke="black" stroke-opacity=".35" stroke-width="2" fill="none"');
+    out += ln(-22, -44, -22, -70, 'stroke="' + m + '" stroke-width="3.5"');
+    out += rect(-28, -66, 56, 8, 'rx="3" fill="#9a7450" ' + K2 + ' transform="rotate(-16 -22 -62)"');
+    out += circ(-22, -62, 4, 'fill="' + m + '" ' + K2);
+    out += circ(27, -72, 5.5, 'class="fAccent" ' + K2);
+    return out + cabInnards(o);
+  };
+
+  /* A brass two-branch candlestick, standing on the console ledge. Both
+     candles burn; they are one path so they flicker as one flame. */
+  PARTS.ogCandleBranch = function (o) {
+    var b = o.brass || '#c9a24e';
+    return glow(0, -56) +
+      ell(0, -1, 15, 4.6, 'fill="' + b + '" ' + K2) +
+      rect(-2.6, -32, 5.2, 31, 'fill="' + b + '"') +
+      circ(0, -18, 4.4, 'fill="' + b + '" ' + K2) +
+      pth('M-17 -36 q17 14 34 0', 'fill="none" stroke="' + b + '" stroke-width="4"') +
+      rect(-22, -39, 10, 4, 'rx="1" fill="' + b + '"') + rect(12, -39, 10, 4, 'rx="1" fill="' + b + '"') +
+      rect(-20.5, -60, 7, 21, 'rx="1" fill="#e9dcc0"') + rect(13.5, -56, 7, 17, 'rx="1" fill="#e9dcc0"') +
+      pth('M-17 -82 q7 10 0 20 q-7 -10 0 -20 M17 -78 q7 10 0 20 q-7 -10 0 -20',
+        'id="flame" fill="#ffcf6e" stroke="#ff9d3c" stroke-width="2"');
+  };
+
+  /* The back of an organ case: a blind arcade of lancets in dark wood, a
+     few big bass pipes standing in the shadow at one end, a gallery rail,
+     and loft boards laid lengthwise. */
+  BACKDROPS.ogLoft = function () {
+    var w = '', f = '', i, x;
+    for (i = 0; i < 6; i++) {
+      x = -40 + i * 160;
+      w += pth('M' + (x + 12) + ' 392 V170 Q' + (x + 12) + ' 84 ' + (x + 80) + ' 34 Q' + (x + 148) + ' 84 ' + (x + 148) + ' 170 V392 z',
+        'fill="black" fill-opacity=".2" stroke="black" stroke-opacity=".3" stroke-width="3"');
+      w += circ(x + 80, 92, 13, 'fill="none" stroke="black" stroke-opacity=".28" stroke-width="3"');
+      w += rect(x - 12, 164, 24, 10, 'rx="2" class="fFloorB" ' + K2);
+      w += ln(x, 174, x, 392, 'stroke="black" stroke-opacity=".25" stroke-width="3"');
+    }
+    /* bass pipes in the dark of the first bay */
+    for (i = 0; i < 4; i++) {
+      x = 16 + i * 24;
+      w += rect(x, 150 + i * 26, 18, 240 - i * 26, 'rx="4" fill="#8a929c" fill-opacity=".2" stroke="black" stroke-opacity=".3" stroke-width="2"');
+      w += pth('M' + (x + 4) + ' 352 l5 -12 l5 12 z', 'fill="black" fill-opacity=".4"');
+    }
+    w += rect(0, 0, 800, 22, 'fill="black" fill-opacity=".3"');
+    w += rect(0, 346, 800, 9, 'class="fFloorB" ' + K2);
+    w += rect(0, 355, 800, 37, 'fill="black" fill-opacity=".24"');
+    for (i = 0; i < 20; i++) {
+      w += circ(i * 42 + 20, 374, 8, 'fill="none" stroke="black" stroke-opacity=".3" stroke-width="3"');
+    }
+    f += ln(0, 438, 800, 438, 'stroke="black" stroke-opacity=".3" stroke-width="3"');
+    f += ln(0, 482, 800, 482, 'stroke="black" stroke-opacity=".3" stroke-width="3"');
+    f += ln(0, 528, 800, 528, 'stroke="black" stroke-opacity=".3" stroke-width="3"');
+    var joints = [[150, 402, 438], [520, 402, 438], [330, 438, 482], [700, 438, 482], [90, 482, 528],
+                  [470, 482, 528], [260, 528, 560], [640, 528, 560]];
+    for (i = 0; i < joints.length; i++) {
+      f += ln(joints[i][0], joints[i][1], joints[i][0], joints[i][2], 'stroke="black" stroke-opacity=".28" stroke-width="3"');
+      f += circ(joints[i][0] - 7, joints[i][1] + 9, 2, 'fill="black" fill-opacity=".4"');
+      f += circ(joints[i][0] + 7, joints[i][1] + 9, 2, 'fill="black" fill-opacity=".4"');
+    }
+    return base(w, f);
+  };
+
+  /* ---- THE LOCKSMITH’S WORKSHOP ---- */
+
+  /* ---- THE LOCKSMITH'S WORKSHOP ---- */
+
+  /* One brass key as a single stroked path: a ring bow, a shank, a bit.
+     Local to this room's parts; hangs DOWN from (x, y). */
+  function lkKey(x, y, len, col, wide) {
+    return pth('M' + (x - 5) + ' ' + (y + 5) + ' a5 5 0 1 0 10 0 a5 5 0 1 0 -10 0 M' + x + ' ' + (y + 10) +
+      ' v' + len + ' M' + x + ' ' + (y + 10 + len - 2) + ' h5 M' + x + ' ' + (y + 10 + len - 7) + ' h4',
+      'fill="none" stroke="' + col + '" stroke-width="' + (wide || 3) + '"');
+  }
+
+  /* The leather apron, dropped where it was taken off: bib to the wall,
+     skirt toward you, ties trailing either side. */
+  PARTS.lkApron = function (o) {
+    var l = o.fill || '#6e4a2c', s = o.strap || '#3a2716';
+    var out = pth('M-17 -68 q17 -14 34 0', 'fill="none" stroke="' + s + '" stroke-width="4"');
+    out += pth('M-88 -44 q-24 -8 -30 10 M88 -44 q24 -8 30 10', 'fill="none" stroke="' + s + '" stroke-width="4" stroke-linecap="round"');
+    out += pth('M-40 -44 l7 -24 h66 l7 24 z', 'fill="' + l + '" ' + K3);
+    out += pth('M-104 -5 l16 -41 h176 l16 41 z', 'fill="' + l + '" ' + K3);
+    out += pth('M-98 -11 h196', 'fill="none" stroke="#c9a878" stroke-width="1.8" stroke-dasharray="5 4" stroke-opacity=".6"');
+    out += pth('M-88 -34 h28 l1 16 h-32 z M60 -34 h28 l3 16 h-32 z', 'fill="none" stroke="black" stroke-opacity=".4" stroke-width="2.5"');
+    out += circ(-33, -62, 2.6, 'fill="#c9a040"') + circ(33, -62, 2.6, 'fill="#c9a040"');
+    out += ell(-28, -14, 16, 3.4, 'fill="black" fill-opacity=".2"');
+    return out;
+  };
+
+  /* A stake anvil driven into a walnut block, and the hammer left
+     standing against it. */
+  PARTS.lkStake = function (o) {
+    var m = o.iron || '#59616a', w = o.wood || '#5a3c22';
+    var out = ell(0, -2, 31, 5, 'fill="black" fill-opacity=".3"');
+    out += rect(-27, -46, 54, 46, 'rx="3" fill="' + w + '" ' + K3);
+    out += rect(-29, -34, 58, 7, 'fill="#2b2f33" ' + K2);
+    out += ell(0, -46, 27, 7, 'fill="#7a5632" ' + K2);
+    out += ell(0, -46, 15, 3.6, 'fill="none" stroke="black" stroke-opacity=".3" stroke-width="1.6"');
+    out += rect(-6, -74, 12, 30, 'fill="' + m + '" ' + K2);
+    out += pth('M-33 -88 l22 -8 h34 v13 h-11 l-6 10 h-14 l-6 -10 h-5 z', 'fill="' + m + '" ' + K3);
+    out += ln(-8, -92, 20, -92, 'stroke="#aab2ba" stroke-width="2" stroke-opacity=".7"');
+    out += rect(22, -104, 6, 60, 'rx="2" fill="#9a7450" ' + K2 + ' transform="rotate(8 25 -46)"');
+    out += rect(10, -112, 22, 11, 'rx="2" fill="#3a4046" ' + K2 + ' transform="rotate(8 25 -46)"');
+    return out;
+  };
+
+  /* A ring of iron skeleton keys on a nail. Grey, not brass — these are
+     the ones that open other people's locks. */
+  PARTS.lkKeyRing = function (o) {
+    var m = o.iron || '#a4abb3';
+    var out = circ(0, -31, 3.4, 'fill="#3a4046" ' + K2);
+    out += circ(0, -12, 18, 'fill="none" stroke="black" stroke-opacity=".5" stroke-width="6"');
+    out += circ(0, -12, 18, 'fill="none" stroke="' + m + '" stroke-width="3.4"');
+    var angs = [42, 21, 0, -21, -42], i;
+    for (i = 0; i < angs.length; i++) {
+      out += grp('transform="rotate(' + angs[i] + ' 0 -12)"',
+        pth('M-5 10 a5 5 0 1 0 10 0 a5 5 0 1 0 -10 0 M0 15 v' + (i % 2 ? 14 : 17) +
+          ' M0 ' + (i % 2 ? 27 : 30) + ' h5 M0 ' + (i % 2 ? 22 : 25) + ' h4',
+          'fill="none" stroke="black" stroke-opacity=".45" stroke-width="5.4"') +
+        pth('M-5 10 a5 5 0 1 0 10 0 a5 5 0 1 0 -10 0 M0 15 v' + (i % 2 ? 14 : 17) +
+          ' M0 ' + (i % 2 ? 27 : 30) + ' h5 M0 ' + (i % 2 ? 22 : 25) + ' h4',
+          'fill="none" stroke="' + m + '" stroke-width="3"'));
+    }
+    return out;
+  };
+
+  /* A great rim lock with the cap off: the bolt and a lever above, the
+     drum, spring and stump below, and the dark of the case between. */
+  PARTS.lkOpenLock = function (o) {
+    var m = o.iron || '#4a5158', s = '#a4abb3', b = '#c9a040';
+    var out = rect(-52, -40, 104, 80, 'rx="4" fill="' + m + '" ' + K4);
+    out += rect(-45, -33, 90, 66, 'rx="2" fill="#121416"');
+    out += rect(-12, -30, 62, 11, 'rx="1" fill="' + s + '" ' + K2);
+    out += rect(2, -30, 6, 5, 'fill="#121416"') + rect(18, -30, 6, 5, 'fill="#121416"');
+    out += pth('M-42 -17 q10 -14 28 -9', 'fill="none" stroke="' + b + '" stroke-width="4" stroke-linecap="round"');
+    out += circ(-40, -17, 3.4, 'fill="' + b + '" ' + K2);
+    out += circ(-30, 22, 9.5, 'fill="' + b + '" ' + K2);
+    out += circ(-30, 20, 2.6, 'fill="#121416"') + rect(-31.4, 20, 2.8, 8, 'fill="#121416"');
+    out += pth('M-12 26 l4 -7 l4 7 l4 -7 l4 7 l4 -7 l4 7 l4 -7 l4 7', 'fill="none" stroke="' + b + '" stroke-width="2.4"');
+    out += rect(28, 15, 12, 14, 'rx="1" fill="' + s + '" ' + K2);
+    out += circ(34, 22, 2, 'fill="#121416"');
+    var i;
+    for (i = 0; i < 4; i++) {
+      out += circ(i % 2 ? 48.5 : -48.5, i < 2 ? -36.5 : 36.5, 2.2, 'fill="' + s + '"');
+    }
+    return out;
+  };
+
+  /* The wall of keys. Two full rows of brass on a walnut board and,
+     between them, a row of bare hooks: the ones already in use. */
+  PARTS.lkKeyWall = function (o) {
+    var w = o.wood || '#3d2a1a', b = o.brass || '#f2c44c', b2 = o.brass2 || '#dba63a';
+    var out = rect(-106, -73, 212, 146, 'rx="3" fill="' + w + '" ' + K5);
+    out += rect(-100, -69, 200, 5, 'fill="black" fill-opacity=".4"');
+    out += rect(-100, -23, 200, 5, 'fill="black" fill-opacity=".4"');
+    out += rect(-100, 21, 200, 5, 'fill="black" fill-opacity=".4"');
+    var i, x;
+    for (i = 0; i < 16; i++) {
+      x = -93 + i * 12.4;
+      out += lkKey(+x.toFixed(1), -65, 19 + ((i * 5) % 4) * 3, i % 3 ? b : b2, 2.8);
+      out += lkKey(+x.toFixed(1), 25, 19 + ((i * 7) % 4) * 3, i % 3 === 1 ? b2 : b, 2.8);
+    }
+    for (i = 0; i < 9; i++) {
+      x = -88 + i * 22;
+      out += pth('M' + x + ' -19 v4 q0 3 3 2', 'fill="none" stroke="#a88838" stroke-width="2" stroke-opacity=".8"');
+    }
+    return out;
+  };
+
+  /* A shelf of brass padlocks, every pattern he made. One has been left
+     sprung. */
+  PARTS.lkPadShelf = function (o) {
+    var b = o.brass || '#d9a93e', s = '#a4abb3', k = '#1a1408';
+    var out = rect(-76, 14, 152, 10, 'rx="2" fill="' + (o.wood || '#4a3220') + '" ' + K3);
+    /* square */
+    out += pth('M-66 -6 v-8 a8 8 0 0 1 16 0 v8', 'fill="none" stroke="' + s + '" stroke-width="3.6"');
+    out += rect(-70, -6, 24, 20, 'rx="2" fill="' + b + '" ' + K2);
+    out += circ(-58, 2, 2.2, 'fill="' + k + '"') + rect(-59.2, 2, 2.4, 6, 'fill="' + k + '"');
+    /* round */
+    out += pth('M-34 -4 v-6 a7 7 0 0 1 14 0 v6', 'fill="none" stroke="' + s + '" stroke-width="3.6"');
+    out += circ(-27, 3, 11, 'fill="' + b + '" ' + K2);
+    out += circ(-27, 3, 5, 'fill="none" stroke="black" stroke-opacity=".3" stroke-width="1.6"');
+    out += circ(-27, 2, 2, 'fill="' + k + '"');
+    /* the big one, sprung open */
+    out += pth('M-6 -8 v-8 a10 10 0 0 1 20 0 v2', 'fill="none" stroke="' + s + '" stroke-width="4.4"');
+    out += rect(-11, -10, 30, 24, 'rx="3" fill="' + b + '" ' + K2);
+    out += rect(-11, -3, 30, 3, 'fill="black" fill-opacity=".25"');
+    out += circ(4, 3, 2.6, 'fill="' + k + '"') + rect(2.6, 3, 2.8, 7, 'fill="' + k + '"');
+    /* heart */
+    out += pth('M32 -4 v-5 a7 7 0 0 1 14 0 v5', 'fill="none" stroke="' + s + '" stroke-width="3.6"');
+    out += pth('M27 -5 h24 v8 q0 8 -12 11 q-12 -3 -12 -11 z', 'fill="' + b + '" ' + K2);
+    out += circ(39, 2, 2.2, 'fill="' + k + '"') + rect(37.9, 2, 2.2, 6, 'fill="' + k + '"');
+    /* long */
+    out += pth('M58 0 v-10 a5.5 5.5 0 0 1 11 0 v10', 'fill="none" stroke="' + s + '" stroke-width="3.2"');
+    out += rect(55, -2, 17, 16, 'rx="2" fill="' + b + '" ' + K2);
+    out += circ(63.5, 5, 2, 'fill="' + k + '"');
+    return out;
+  };
+
+  /* The tool chest: walnut, iron corners, two shallow drawers under the
+     well. Open, the well shows files and a hammer handle. */
+  PARTS.lkToolChest = function (o) {
+    var w = o.wood || '#5a3c22', d = o.dark || '#432b17', m = '#3a4046';
+    var out = rect(-58, -62, 116, 62, 'rx="2" fill="' + w + '" ' + K4);
+    out += rect(-52, -26, 50, 20, 'rx="1" fill="' + d + '" ' + K2) + rect(2, -26, 50, 20, 'rx="1" fill="' + d + '" ' + K2);
+    out += rect(-34, -19, 14, 5, 'rx="2" class="fAccent"') + rect(20, -19, 14, 5, 'rx="2" class="fAccent"');
+    out += pth('M-58 -62 h14 v8 h-6 v8 h-8 z M58 -62 h-14 v8 h6 v8 h8 z M-58 0 h14 v-7 h-6 v-7 h-8 z M58 0 h-14 v-7 h6 v-7 h8 z',
+      'fill="' + m + '" ' + K2);
+    out += rect(-9, -56, 18, 22, 'rx="2" class="fAccent" ' + K2);
+    out += circ(0, -48, 2.6, 'fill="#1a1408"') + rect(-1.4, -48, 2.8, 8, 'fill="#1a1408"');
+    out += pth('M-36 -44 q-8 0 -8 6 M36 -44 q8 0 8 6', 'fill="none" stroke="' + m + '" stroke-width="3"');
+    out += rect(-60, -76, 120, 15, 'rx="2" id="chestLid" fill="' + d + '" ' + K3);
+    out += grp('id="chestOpenG" style="display:none"',
+      rect(-55, -74, 110, 14, 'fill="#0d0a07"') +
+      rect(-36, -88, 5, 26, 'fill="#a4abb3" ' + K2 + ' transform="rotate(-10 -34 -62)"') +
+      rect(-20, -84, 5, 22, 'fill="#a4abb3" ' + K2 + ' transform="rotate(6 -18 -62)"') +
+      rect(14, -92, 6, 30, 'rx="2" fill="#9a7450" ' + K2 + ' transform="rotate(12 17 -62)"') +
+      rect(-60, -108, 120, 14, 'rx="2" fill="' + d + '" ' + K3 + ' transform="rotate(-8 -60 -94)"'));
+    return out;
+  };
+
+  /* The bench everything was cut at: a leg vice with a blank still in the
+     jaws, a rack of uncut blanks, a file. The lamp's end is kept clear. */
+  PARTS.lkBench = function (o) {
+    var w = o.wood || '#5a3c22', d = o.dark || '#432b17', m = o.iron || '#59616a', b = o.brass || '#f2c44c';
+    var out = rect(-136, -92, 20, 92, 'fill="' + d + '"') + rect(116, -92, 20, 92, 'fill="' + d + '"');
+    out += rect(-136, -36, 272, 10, 'fill="' + d + '" ' + K2);
+    out += rect(-120, -92, 240, 12, 'fill="' + d + '"');
+    out += rect(-150, -110, 300, 20, 'rx="2" fill="' + w + '" ' + K3);
+    out += pth('M-140 -98 h280', 'stroke="black" stroke-opacity=".25" stroke-width="2"');
+    /* leg vice: one long leg to the floor, a jaw each side of the blank */
+    out += lkKey(-128, -172, 20, b, 3.4);
+    out += rect(-146, -140, 14, 140, 'rx="2" fill="' + m + '" ' + K3);
+    out += pth('M-124 -140 h12 v36 l-12 16 z', 'fill="' + m + '" ' + K3);
+    out += ln(-112, -124, -84, -124, 'stroke="#3a4046" stroke-width="6"');
+    out += ln(-88, -138, -88, -110, 'stroke="#a4abb3" stroke-width="3.4" stroke-linecap="round"');
+    out += circ(-88, -138, 3, 'fill="#a4abb3"') + circ(-88, -110, 3, 'fill="#a4abb3"');
+    /* rack of blanks: bows up, no bits yet */
+    out += rect(-62, -120, 86, 10, 'rx="2" fill="' + d + '" ' + K2);
+    var i, x;
+    for (i = 0; i < 6; i++) {
+      x = -52 + i * 13.4;
+      out += ln(x.toFixed(1), -120, x.toFixed(1), -132, 'stroke="' + b + '" stroke-width="3.4"');
+      out += circ(x.toFixed(1), -138, 5.4, 'fill="' + b + '" ' + K2);
+      out += circ(x.toFixed(1), -138, 1.8, 'fill="#1a1408"');
+    }
+    /* a file, and what it took off */
+    out += rect(34, -115, 26, 4, 'fill="#a4abb3" ' + K2) + rect(22, -117, 13, 7, 'rx="3" fill="#9a7450" ' + K2);
+    for (i = 0; i < 7; i++) {
+      out += circ(-108 + i * 5 + (i % 2) * 2, -112 + (i % 3), 1.3, 'fill="' + b + '"');
+    }
+    return out;
+  };
+
+  /* The last door: iron, and carrying one of everything he ever made.
+     The big wheel-lock near the top is where the sigil badge sits. */
+  PARTS.lkLockDoor = function (o) {
+    var m = o.metal || '#33383d', b = o.brass || '#c9a040', s = '#737b84', k = '#0d0e10';
+    var out = rect(-70, -282, 140, 282, 'rx="4" fill="' + m + '" ' + K4);
+    out += rect(-62, -274, 124, 266, 'rx="2" fill="none" stroke="black" stroke-opacity=".35" stroke-width="3"');
+    /* [x, y, type]  0 tall plate, 1 round, 2 shield, 3 bolt */
+    var P = [[-44, -252, 0], [0, -254, 1], [44, -252, 2],
+             [-44, -150, 1], [0, -148, 0], [44, -150, 1],
+             [-44, -112, 2], [44, -112, 0],
+             [-44, -70, 0], [0, -70, 1], [44, -70, 2],
+             [-44, -32, 1], [0, -32, 2], [44, -32, 0]];
+    var i, x, y, c;
+    for (i = 0; i < P.length; i++) {
+      x = P[i][0]; y = P[i][1];
+      c = (i % 3 === 1) ? s : b;
+      if (P[i][2] === 0) out += rect(x - 9, y - 13, 18, 26, 'rx="3" fill="' + c + '" ' + K2);
+      else if (P[i][2] === 1) out += circ(x, y, 12, 'fill="' + c + '" ' + K2);
+      else out += pth('M' + (x - 10) + ' ' + (y - 12) + ' h20 v12 q0 9 -10 13 q-10 -4 -10 -13 z', 'fill="' + c + '" ' + K2);
+      out += circ(x, y - 3, 2.6, 'fill="' + k + '"') + rect(x - 1.4, y - 3, 2.8, 8, 'fill="' + k + '"');
+    }
+    /* bolts */
+    var B = [[-40, -222], [40, -222], [0, -112], [-40, -178], [40, -178]];
+    for (i = 0; i < B.length; i++) {
+      x = B[i][0]; y = B[i][1];
+      out += rect(x - 20, y - 4, 40, 8, 'rx="2" fill="' + s + '" ' + K2);
+      out += rect(x - 12, y - 7, 7, 14, 'rx="1" fill="#22262a"') + rect(x + 6, y - 7, 7, 14, 'rx="1" fill="#22262a"');
+      out += circ(x - 1, y, 3.4, 'fill="' + b + '"');
+    }
+    /* the wheel lock */
+    out += circ(0, -200, 29, 'fill="#22262a" ' + K3);
+    out += circ(0, -200, 29, 'fill="none" stroke="' + b + '" stroke-width="3"');
+    for (i = 0; i < 8; i++) {
+      out += circ((23 * Math.cos(i * Math.PI / 4)).toFixed(1), (-200 + 23 * Math.sin(i * Math.PI / 4)).toFixed(1), 2.2, 'fill="' + b + '"');
+    }
+    out += circ(0, -203, 5, 'fill="' + k + '"') + pth('M-3 -202 l-3 14 h12 l-3 -14 z', 'fill="' + k + '"');
+    return out + sigilBadge();
+  };
+
+  /* The key-cutting lathe on its iron pedestal: a flywheel on the front,
+     a cutter on the bed, a blank in the clamp. The crank goes in the boss
+     between them. */
+  PARTS.lkLathe = function (o) {
+    var m = o.iron || '#3a4046', s = '#a4abb3', b = o.brass || '#f2c44c';
+    var out = rect(-38, -198, 76, 74, 'fill="black" fill-opacity="0"');
+    out += rect(-34, -8, 68, 8, 'rx="2" fill="#22262a" ' + K2);
+    out += rect(-29, -120, 58, 114, 'rx="3" fill="' + m + '" ' + K4);
+    out += rect(-38, -130, 76, 12, 'rx="2" fill="' + m + '" ' + K3);
+    out += rect(-16, -114, 32, 28, 'rx="4" fill="#22262a" ' + K2);
+    /* flywheel */
+    out += circ(0, -46, 25, 'fill="#1b1e21"');
+    out += circ(0, -46, 22, 'fill="none" stroke="' + s + '" stroke-width="5"');
+    var i, a;
+    for (i = 0; i < 6; i++) {
+      a = i * Math.PI / 3 + 0.3;
+      out += ln(0, -46, (20 * Math.cos(a)).toFixed(1), (-46 + 20 * Math.sin(a)).toFixed(1), 'stroke="' + s + '" stroke-width="3"');
+    }
+    out += circ(0, -46, 5, 'fill="' + s + '" ' + K2);
+    /* bed: headstock, cutter, clamp with a blank in it */
+    out += rect(-32, -160, 20, 30, 'rx="2" fill="' + m + '" ' + K3);
+    out += ln(-12, -146, 12, -146, 'stroke="' + s + '" stroke-width="4"');
+    out += circ(4, -146, 11, 'fill="' + s + '" stroke="black" stroke-opacity=".55" stroke-width="2.5" stroke-dasharray="3 2.4"');
+    out += circ(4, -146, 3, 'fill="#22262a"');
+    out += lkKey(26, -190, 16, b, 3.2);
+    out += rect(18, -158, 16, 28, 'rx="2" fill="' + m + '" ' + K3);
+    out += ln(34, -146, 38, -146, 'stroke="' + s + '" stroke-width="4"');
+    return out + cabInnards(o);
+  };
+
+  /* A brass bench lamp with a glass chimney. */
+  PARTS.lkLamp = function (o) {
+    var b = o.brass || '#c9a040';
+    return glow(0, -50) +
+      pth('M-15 0 h30 l-5 -9 h-20 z', 'fill="' + b + '" ' + K2) +
+      ell(0, -16, 14, 8.5, 'fill="' + b + '" ' + K2) +
+      rect(-6, -29, 12, 7, 'rx="1" fill="#8a6a2c" ' + K2) +
+      circ(12, -25, 3, 'fill="' + b + '" ' + K2) +
+      pth('M-8 -29 q-9 -14 -1 -28 q3 -8 3 -15 h12 q0 7 3 15 q8 14 -1 28 z',
+        'fill="#fff3d0" fill-opacity=".14" stroke="' + b + '" stroke-opacity=".75" stroke-width="2.5"') +
+      pth('M0 -58 q8 11 0 24 q-8 -13 0 -24', 'id="flame" fill="#ffcf6e" stroke="#ff9d3c" stroke-width="2"');
+  };
+
+  /* Dark boarded wall, a walnut rail of keys running the whole length
+     under the ceiling, a walnut dado, the working drawing of a great lock
+     pinned up at one end, and brass dust in the floorboards. */
+  BACKDROPS.lkShop = function () {
+    var w = '', f = '', i, x, len;
+    for (i = 1; i < 10; i++) w += ln(i * 82, 0, i * 82, 336, 'stroke="black" stroke-opacity=".24" stroke-width="3"');
+    w += rect(0, 0, 800, 18, 'fill="black" fill-opacity=".35"');
+    w += rect(0, 18, 800, 9, 'fill="#4a3220" ' + K2);
+    for (i = 0; i < 40; i++) {
+      x = 12 + i * 20;
+      len = 14 + ((i * 7) % 5) * 4;
+      w += pth('M' + (x - 4) + ' 35 a4 4 0 1 0 8 0 a4 4 0 1 0 -8 0 M' + x + ' 39 v' + len + ' M' + x + ' ' + (37 + len) + ' h4',
+        'fill="none" stroke="#b8923c" stroke-opacity="' + (i % 3 ? '.5' : '.34') + '" stroke-width="2.4"');
+    }
+    /* the drawing of the great lock */
+    w += grp('transform="rotate(-3 62 190)"',
+      rect(14, 118, 96, 142, 'fill="#cbbf9e" fill-opacity=".82" ' + K2) +
+      rect(26, 132, 72, 92, 'rx="3" fill="none" stroke="#3a3020" stroke-width="2.2"') +
+      circ(62, 168, 22, 'fill="none" stroke="#3a3020" stroke-width="2.2"') +
+      circ(62, 162, 6, 'fill="#3a3020"') + pth('M58 164 l-4 18 h16 l-4 -18 z', 'fill="#3a3020"') +
+      pth('M26 206 h72 M34 132 v-6 M90 132 v-6 M40 214 h44', 'fill="none" stroke="#3a3020" stroke-width="1.8"') +
+      pth('M26 236 h72 M26 236 v-5 M98 236 v-5 M50 236 v-3 M74 236 v-3', 'fill="none" stroke="#7a3a2a" stroke-width="1.6"') +
+      circ(62, 124, 3, 'fill="#c9a040"'));
+    /* walnut dado */
+    w += rect(0, 336, 800, 56, 'fill="#3a2717"');
+    w += rect(0, 332, 800, 9, 'fill="#4a3220" ' + K2);
+    for (i = 0; i < 9; i++) w += rect(i * 92 + 10, 350, 76, 34, 'rx="2" fill="none" stroke="black" stroke-opacity=".3" stroke-width="3"');
+    for (i = -1; i < 11; i++) f += ln(i * 80 + 40, 402, i * 80 - 10, 560, 'stroke="black" stroke-opacity=".3" stroke-width="3"');
+    f += ln(0, 458, 800, 458, 'stroke="black" stroke-opacity=".2" stroke-width="3"');
+    for (i = 0; i < 70; i++) {
+      f += circ((i * 149) % 790 + 5, 408 + ((i * 67) % 148), 1 + (i % 3) * 0.5, 'fill="#f2c44c" fill-opacity="' + (i % 2 ? '.55' : '.3') + '"');
+    }
+    return base(w, f);
+  };
+
+  /* =====================================================================
      THE SETTINGS
      ---------------------------------------------------------------------
      Palettes are HAND-PICKED, not generated. game.js:paletteFor() spreads
@@ -3910,6 +6784,354 @@
         obj('lockCrank',  'winchHousing',  'winding gear',     { metal: '#42403a', brass: '#a8843c' }),
         obj('light',      'lanternLight',  'hurricane lamp',   { metal: '#8d8478' })
       ]
+    },
+
+    /* ---------------- chambers 21-30 (1.7.0) ---------------- */
+    {
+      id: 'darkroom',
+      name: 'THE DARKROOM',
+      backdrop: 'dkRoom',
+      intro: ['The blackout curtain falls to behind you, and the only colour left in the world is red.',
+              'Something is still coming up in the developer. Nobody is here to lift it out.',
+              'The photographer kept one print back, and went to some trouble over where.'],
+      taunts: ['Fixer. It finds the cut on your thumb.', 'A test strip, fogged to nothing.',
+               'Blotting paper, still damp.', 'A silverfish, indifferent to the light.',
+               'Nothing. It develops into nothing.', 'A spoiled print. A blur, and a hand.',
+               'A bulldog clip, rusted shut.', 'Grit, and a smell of vinegar.'],
+      palette: {
+        '--bg': '#080405', '--wall': '#2b1517', '--wall2': '#1a0c0e', '--floor': '#33211f',
+        '--floor2': '#1e1213', '--panel': '#251214', '--line': '#532b2f',
+        '--accent': '#f0343c', '--soft': '#b39c98', '--glow': '#ff9c8a'
+      },
+      objects: [
+        /* Two glass vessels (carboy on the floor, bottles on the wall) and
+           two metal things (timer, tin) are the pairs; the negatives and the
+           prints are both pictures and only the material separates them.
+           The film tin is a CASE, not a vessel: it carries reels, it holds
+           no liquid — and that difference is what lets this room carry two
+           structural clues at tier 6. */
+        obj('floorSoft',  'dkMat',         'rubber mat',       {}, ['rubber', 'covering',  0, 0]),
+        obj('floorProp',  'dkCarboy',      'fixer carboy',     {}, ['glass',  'vessel',    1, 0]),
+        obj('wallSmall',  'dkTimer',       'darkroom timer',   {}, ['metal',  'mechanism', 0, 0]),
+        obj('wallMid',    'dkNegStrips',   'drying negatives', {}, ['film',   'picture',   0, 0]),
+        obj('wallLarge',  'dkPrintLine',   'line of prints',   {}, ['paper',  'picture',   0, 0]),
+        obj('storage',    'dkBottleShelf', 'developer bottles', {}, ['glass', 'vessel',    1, 0]),
+        obj('container',  'dkFilmTin',     'film tin',         {}, ['metal',  'case',      1, 0]),
+        obj('exit',       'dkCurtainDoor', 'curtained door',   {}),
+        obj('anchor',     'dkWetBench',    'wet bench',        {}),
+        drawerObj('drawerWood', 'bench drawer', { body: '#553734' }),
+        obj('lockCode',   'ironSafe',      'paper safe',       { body: '#3d2d31', dial: '#221518', rivets: 1 }),
+        obj('lockCrank',  'tallCabinet',   'drying cabinet',   { body: '#44292b', panel: 1 }),
+        obj('light',      'dkSafelight',   'safelight',        {})
+      ]
+    },
+    {
+      id: 'cellar',
+      name: 'THE WINE CELLAR',
+      backdrop: 'wcVault',
+      intro: ['The cellar door settles into its frame, and the candle leans away from it.',
+              'Forty years of vintages, laid down in the dark. One bin has been disturbed.',
+              'The cellarman kept his book in pencil, and kept one entry out of it.'],
+      taunts: ['Cobweb, and a cork gone to powder.', 'A spider. It was here first.',
+               'Lees. Black, and very old.', 'Straw, and the cold coming up through it.',
+               'Empty. Drunk long ago, by someone else.', 'A lead capsule, bitten flat.',
+               'Mould, the soft grey kind.', 'A wine fly, drowned and content.'],
+      palette: {
+        '--bg': '#070605', '--wall': '#32241d', '--wall2': '#1f1612', '--floor': '#37352e',
+        '--floor2': '#23211b', '--panel': '#261d17', '--line': '#4e3e31',
+        '--accent': '#e2b24c', '--soft': '#a99f8c', '--glow': '#ffe1a0'
+      },
+      objects: [
+        /* The demijohn and the rack are both green glass vessels, one on
+           the floor and one on the wall — the cup-and-bucket device. Wood
+           comes twice (duckboard, crate) and both are on the floor. */
+        obj('floorSoft',  'wcDuckboard',   'duckboard',        {}, ['wood',    'covering',  0, 0]),
+        obj('floorProp',  'wcDemijohn',    'demijohn',         {}, ['glass',   'vessel',    1, 0]),
+        obj('wallSmall',  'wcTastevin',    'brass tastevin',   {}, ['brass',   'vessel',    1, 0]),
+        obj('wallMid',    'wcSlate',       'bin slate',        {}, ['stone',   'marking',   0, 0]),
+        obj('wallLarge',  'wcBottleRack',  'bottle rack',      {}, ['glass',   'vessel',    1, 0]),
+        obj('storage',    'wcLedgers',     'cellar-books',     {}, ['leather', 'books',     0, 0]),
+        obj('container',  'wcCrate',       'bottle crate',     {}, ['wood',    'furniture', 1, 0]),
+        obj('exit',       'archDoor',      'cellar door',      { wood: '#4c3a28', iron: '#2c2824' }),
+        obj('anchor',     'wcTastingTable', 'tasting table',   {}),
+        drawerObj('drawerWood', 'cork drawer', { body: '#5a442c' }),
+        obj('lockCode',   'wcCaskSafe',    'sealed cask',      {}),
+        obj('lockCrank',  'wcPress',       'wine press',       {}),
+        obj('light',      'wcBottleCandle', 'bottle candle',   {})
+      ]
+    },
+    {
+      id: 'submarine',
+      name: 'THE CONTROL ROOM',
+      backdrop: 'sbHull',
+      intro: ['The door wheel spins home, and the depth gauge has stopped exactly where it stopped.',
+              'Forty fathoms of sea are leaning on this hull. It complains about it, quietly.',
+              'The crew went out by the escape trunk. One of them left something behind on purpose.'],
+      taunts: ['Condensation, and a cold rivet.', 'A cockroach. It has outlived the crew.',
+               'Diesel reek and nothing else.', 'Empty. The sea, however, is not.',
+               'A sardine tin, long since opened.', 'Grease. The grey kind.',
+               'A pencil stub, chewed flat.', 'Something drips. Not here.'],
+      palette: {
+        '--bg': '#05090a', '--wall': '#1d2b2e', '--wall2': '#131d1f', '--floor': '#2a3639',
+        '--floor2': '#1a2325', '--panel': '#182427', '--line': '#3a5257',
+        '--accent': '#e0463a', '--soft': '#9ab0ae', '--glow': '#ffb4a0'
+      },
+      objects: [
+        obj('floorSoft',  'sbDeckMat',       'rubber mat',       {}, ['rubber', 'covering',  0, 0]),
+        obj('floorProp',  'sbOxyFlask',      'oxygen flask',     {}, ['metal',  'vessel',    1, 0]),
+        obj('wallSmall',  'sbDepthGauge',    'depth gauge',      {}, ['brass',  'mechanism', 0, 0]),
+        obj('wallMid',    'sbManifold',      'valve manifold',   {}, ['metal',  'mechanism', 0, 0]),
+        obj('wallLarge',  'sbSoundingChart', 'sounding chart',   {}, ['paper',  'map',       0, 0]),
+        obj('storage',    'sbFlareRack',     'flare rack',       {}, ['brass',  'signal',    0, 0]),
+        obj('container',  'sbToolLocker',    'tool locker',      {}, ['metal',  'tools',     1, 0]),
+        obj('exit',       'sbWheelDoor',     'watertight door',  {}),
+        obj('anchor',     'sbPlotTable',     'plot table',       {}),
+        drawerObj('drawerSteel', 'chart drawer', { body: '#3c4f53' }),
+        obj('lockCode',   'ironSafe',        'code-book safe',   { body: '#2b3a3e', dial: '#18272a', rivets: 1 }),
+        obj('lockCrank',  'winchHousing',    'periscope hoist',  { metal: '#34474b', brass: '#9fb3af' }),
+        obj('light',      'sbBattleLamp',    'battle lamp',      {})
+      ]
+    },
+    {
+      id: 'apothecary',
+      name: 'THE APOTHECARY',
+      backdrop: 'apShop',
+      intro: ['The shop bell rings once as the door shuts, and nobody comes through from the front.',
+              'Every drawer is labelled in a careful hand. Not one label says what you hope.',
+              'The chemist kept two registers. The second one never left this room.'],
+      taunts: ['Camphor, and a moth it failed to deter.', 'A cork, bitten.',
+               'Liquorice powder. You sneeze.', 'Empty. Faintly medicinal.',
+               'A leech, dry as a bootlace.', 'One pill, rolled and never sold.',
+               'Sealing wax and a snapped thread.', 'A prescription, for somebody past needing it.'],
+      palette: {
+        '--bg': '#060906', '--wall': '#1f2d24', '--wall2': '#141e18', '--floor': '#4a3f2c',
+        '--floor2': '#2e271b', '--panel': '#1a261e', '--line': '#3d5343',
+        '--accent': '#e0b85a', '--soft': '#b3b79e', '--glow': '#ffe2a8'
+      },
+      objects: [
+        obj('floorSoft',  'apOilcloth',      'oilcloth',         {}, ['cloth', 'covering',  0, 0]),
+        obj('floorProp',  'apMortar',        'great mortar',     {}, ['brass', 'vessel',    1, 0]),
+        obj('wallSmall',  'apBalance',       'pill scales',      {}, ['brass', 'mechanism', 0, 0]),
+        obj('wallMid',    'apHerbs',         'dried herbs',      {}, ['herb',  'remedy',    0, 0]),
+        obj('wallLarge',  'apDrawerWall',    'drug drawers',     {}, ['wood',  'furniture', 1, 0]),
+        obj('storage',    'apJarShelf',      'shop bottles',     {}, ['glass', 'vessel',    1, 0]),
+        obj('container',  'apMedChest',      'medicine chest',   {}, ['wood',  'furniture', 1, 0]),
+        obj('exit',       'glazedDoor',      'yard door',        { frame: '#44644e' }),
+        obj('anchor',     'apCounter',       'dispensing counter', {}),
+        drawerObj('drawerWood', 'till drawer', { body: '#33503d' }),
+        obj('lockCode',   'strongBox',       'cash box',         { wood: '#4a2c1e', metal: '#2a2620' }),
+        obj('lockCrank',  'apPoisonCupboard', 'poison cupboard', {}),
+        obj('light',      'apOilLamp',       'paraffin lamp',    {})
+      ]
+    },
+    {
+      id: 'projection',
+      name: 'THE PROJECTION BOOTH',
+      backdrop: 'pjBooth',
+      intro: ['The fire door drops into its frame, and the house lights below go down.',
+              'The arc is struck and the last reel is running. There is nobody in the stalls.',
+              'The operator left before the end. He left something threaded up for you.'],
+      taunts: ['Carbon dust, and a burnt-out stub.', 'A moth, circling the beam.',
+               'Film cement, gone hard in the bottle.', 'Sand. Dry, clean and useless.',
+               'Empty. Hot tin, and empty.', 'One trimmed frame of somebody’s face.',
+               'Splicing tape, curled to a ring.', 'A cue sheet, the last cue struck out.'],
+      palette: {
+        '--bg': '#0b0806', '--wall': '#30261d', '--wall2': '#1f1812', '--floor': '#3b3128',
+        '--floor2': '#27201a', '--panel': '#2a211a', '--line': '#54463a',
+        '--accent': '#a9d6f5', '--soft': '#b5a898', '--glow': '#dcefff'
+      },
+      objects: [
+        /* Bucket and cans are both metal vessels with room inside; only
+           `place` separates them. Shutter and rewinder are both metal
+           mechanisms on the wall; only `hollow` separates them. */
+        obj('floorSoft',  'pjBlanket',     'fire blanket',     {}, ['cloth', 'covering',  0, 0]),
+        obj('floorProp',  'pjSandBucket',  'sand bucket',      {}, ['metal', 'vessel',    1, 0]),
+        obj('wallSmall',  'pjRewinder',    'rewinder',         {}, ['metal', 'mechanism', 0, 0]),
+        obj('wallMid',    'pjLobbyCard',   'lobby card',       {}, ['paper', 'picture',   0, 0]),
+        obj('wallLarge',  'pjShutter',     'fire shutter',     {}, ['metal', 'mechanism', 1, 0]),
+        obj('storage',    'pjCanShelf',    'film cans',        {}, ['metal', 'case',      1, 0]),
+        obj('container',  'pjTransitCase', 'transit case',     {}, ['wood',  'case',      1, 0]),
+        obj('exit',       'ironDoor',      'fire door',        { metal: '#4a4037', rivet: '#8a7a66' }),
+        obj('anchor',     'pjProjector',   'projector',        {}),
+        drawerObj('drawerSteel', 'carbon drawer', { body: '#4a443d' }),
+        obj('lockCode',   'ironSafe',      'takings safe',     { body: '#3b3530', dial: '#221c18', rivets: 1 }),
+        obj('lockCrank',  'winchHousing',  'curtain winch',    { metal: '#40382f', brass: '#b8913f' }),
+        obj('light',      'pjLamphouse',   'arc lamp',         {})
+      ]
+    },
+    {
+      id: 'printshop',
+      name: 'THE PRINTING HOUSE',
+      backdrop: 'prShop',
+      intro: ['The shop door locks behind you, and the blind is already down.',
+              'The forme on the stone is locked up and inked. The job was never run.',
+              'Somebody set a notice here last night, then pied the type to hide it.'],
+      taunts: ['Lampblack, to the elbow.', 'A spider, at home in the lower case.',
+               'Paper dust, and one bent sort.', 'An offcut. Blank, both sides.',
+               'Empty. Inky, and empty.', 'A wooden quoin, split down the grain.',
+               'Spoiled sheets, set off on each other.', 'A proof, every line struck through.'],
+      palette: {
+        '--bg': '#070708', '--wall': '#24252a', '--wall2': '#16171a', '--floor': '#47443f',
+        '--floor2': '#2e2c29', '--panel': '#1f2024', '--line': '#47484e',
+        '--accent': '#e8472b', '--soft': '#aaa9a4', '--glow': '#ffd9c8'
+      },
+      objects: [
+        /* Three woods, three metals, one paper. The type case and the trunk
+           are both furniture that opens; the woodcut and the drying sheets
+           are both pictures and only the material separates them. */
+        obj('floorSoft',  'prDuckboard',   'duckboard',        {}, ['wood',  'covering',  0, 0]),
+        obj('floorProp',  'prInkDrum',     'ink drum',         {}, ['metal', 'vessel',    1, 0]),
+        obj('wallSmall',  'prInkDisc',     'ink disc',         {}, ['metal', 'tools',     0, 0]),
+        obj('wallMid',    'prWoodcut',     'woodcut block',    {}, ['wood',  'picture',   0, 0]),
+        obj('wallLarge',  'prTypeCase',    'type case',        {}, ['wood',  'furniture', 1, 0]),
+        obj('storage',    'prDryLine',     'drying sheets',    {}, ['paper', 'marking',   0, 0]),
+        obj('container',  'prTrunk',       'type trunk',       {}, ['metal', 'furniture', 1, 0]),
+        obj('exit',       'glazedDoor',    'shop door',        { frame: '#5e5b55' }),
+        obj('anchor',     'prStone',       'composing stone',  {}),
+        drawerObj('drawerWood', 'sorts drawer', { body: '#4a3d30' }),
+        obj('lockCode',   'strongBox',     'wages box',        { wood: '#3b3733', metal: '#222224' }),
+        obj('lockCrank',  'prPress',       'hand press',       {}),
+        obj('light',      'prLamp',        'paraffin lamp',    {})
+      ]
+    },
+    {
+      id: 'armoury',
+      name: 'THE ARMOURY',
+      backdrop: 'arHall',
+      intro: ['The bar drops on the far side of the door, and forty blades do not so much as rattle.',
+              'Everything in here was made to open a man. Nothing in here was made to open a door.',
+              'The armourer kept one key back, and kept it where a thief must reach past steel.'],
+      taunts: ['Rust, and the smell of sweet oil.', 'A rivet, sheared clean off.',
+               'Cold steel. Colder stone.', 'A mouse nest of old bowstring.',
+               'Empty. Scoured, and empty.', 'A whetstone, worn hollow.',
+               'One goose feather, and nothing else.', 'A buckle off somebody’s harness.'],
+      palette: {
+        '--bg': '#06080d', '--wall': '#273044', '--wall2': '#192030', '--floor': '#3a3d44',
+        '--floor2': '#25282e', '--panel': '#1f2738', '--line': '#3f4c66',
+        '--accent': '#e0525a', '--soft': '#a2adbd', '--glow': '#ffd9b0'
+      },
+      objects: [
+        /* The chest and the quench tub are both wood, both hollow, both on
+           the floor; only what they ARE separates them. The buckler and the
+           helmets are both iron armour on the wall; only `hollow` does. */
+        obj('floorSoft',  'arBanner',      'fallen banner',    {}, ['cloth', 'covering',  0, 0]),
+        obj('floorProp',  'arQuench',      'quench tub',       {}, ['wood',  'vessel',    1, 0]),
+        obj('wallSmall',  'arBuckler',     'buckler',          {}, ['iron',  'shield',    0, 0]),
+        obj('wallMid',    'arSwords',      'crossed swords',   {}, ['iron',  'weapon',    0, 0]),
+        obj('wallLarge',  'arBowRack',     'bow rack',         {}, ['wood',  'weapon',    0, 0]),
+        obj('storage',    'arHelmShelf',   'helmet shelf',     {}, ['iron',  'armour',    1, 0]),
+        obj('container',  'arArrowChest',  'arrow chest',      {}, ['wood',  'furniture', 1, 0]),
+        obj('exit',       'archDoor',      'postern door',     { wood: '#4a3a2a', iron: '#262a31' }),
+        obj('anchor',     'arBench',       'armourer’s bench', {}),
+        drawerObj('drawerWood', 'rivet drawer', { body: '#6a5036' }),
+        obj('lockCode',   'strongBox',     'pay chest',        { wood: '#4f3a26', metal: '#2c3138' }),
+        obj('lockCrank',  'arArmourStand', 'suit of plate',    {}),
+        obj('light',      'candleLight',   'tallow candle',    {})
+      ]
+    },
+    {
+      id: 'exchange',
+      name: 'THE TELEPHONE EXCHANGE',
+      backdrop: 'txHall',
+      intro: ['The night bell is off its hook, and every line on the board has gone dead at once.',
+              'Somebody rang off in the middle of a sentence, and then locked the door on the rest of it.',
+              'Forty subscribers, and tonight not one of them can be put through to you.'],
+      taunts: ['Lint, and a blown fuse.', 'A cord, perished right through.',
+               'Dust in the jacks. Years of it.', 'A pencil stub and a dead moth.',
+               'Empty. Not even a dial tone.', 'Somebody’s cold tea, with a skin on it.',
+               'A plug with nothing to go into.', 'A hairpin, bent for a purpose.'],
+      palette: {
+        '--bg': '#090705', '--wall': '#2f2620', '--wall2': '#201914', '--floor': '#3a2e22',
+        '--floor2': '#261d15', '--panel': '#251d18', '--line': '#4a3c30',
+        '--accent': '#e8a84c', '--soft': '#b0a290', '--glow': '#ffe2a8'
+      },
+      objects: [
+        /* The stool, the board and the tool box are all oak; what they ARE
+           tells them apart. The bell and the headset both carry a signal on
+           the wall; what they are MADE of tells those apart. */
+        obj('floorSoft',  'txRunner',     'carpet runner',     {}, ['cloth', 'covering',  0, 0]),
+        obj('floorProp',  'txStool',      'operator’s stool',  {}, ['wood',  'furniture', 0, 0]),
+        obj('wallSmall',  'txBell',       'call bell',         {}, ['brass', 'signal',    0, 0]),
+        obj('wallMid',    'txHeadset',    'operator’s headset', {}, ['metal', 'signal',    0, 0]),
+        obj('wallLarge',  'txBoard',      'switchboard',       {}, ['wood',  'mechanism', 0, 0]),
+        obj('storage',    'txBatteries',  'battery jars',      {}, ['glass', 'vessel',    1, 0]),
+        obj('container',  'txToolBox',    'lineman’s box',     {}, ['wood',  'furniture', 1, 0]),
+        obj('exit',       'txDoor',       'office door',       {}),
+        obj('anchor',     'txDesk',       'operator’s desk',   {}),
+        drawerObj('drawerWood', 'docket drawer', { body: '#6a4a2c' }),
+        obj('lockCode',   'ironSafe',     'coin-box safe',     { body: '#2c2a28', rivets: 1 }),
+        obj('lockCrank',  'txFrame',      'distributing frame', {}),
+        obj('light',      'txLamp',       'desk lamp',         {})
+      ]
+    },
+    {
+      id: 'organ',
+      name: 'THE ORGAN LOFT',
+      backdrop: 'ogLoft',
+      intro: ['The loft door shuts, and the stair it shut on was the only stair.',
+              'The reservoir is still full. Somebody was playing a moment ago, and stopped in the middle of a bar.',
+              'The organist kept one thing from the choir for forty years. It is still up here.'],
+      taunts: ['Dust, and a dead moth in the reeds.', 'A pencil stub, chewed flat.',
+               'Candle grease, long cold.', 'A hymn slip for a Sunday long gone.',
+               'Empty. Reverently empty.', 'A mouse has been at the leather.',
+               'One ivory key cap, come unglued.', 'Cold air, breathing out of a pipe.'],
+      palette: {
+        '--bg': '#0c070a', '--wall': '#2f1d28', '--wall2': '#20131b', '--floor': '#3d2a2c',
+        '--floor2': '#2a1b1e', '--panel': '#281922', '--line': '#4d3644',
+        '--accent': '#d9b45c', '--soft': '#b3a4aa', '--glow': '#ffe4b0'
+      },
+      objects: [
+        /* The two ranks of pipes — pewter on the wall, wood on the floor —
+           are the pair: same nature, same build, different stuff. */
+        obj('floorSoft',  'ogRunner',      'worn runner',      {}, ['cloth', 'covering',  0, 0]),
+        obj('floorProp',  'ogWoodPipe',    'wooden pipes',     {}, ['wood',  'sound',     1, 0]),
+        obj('wallSmall',  'ogRose',        'rose vent',        {}, ['brass', 'opening',   1, 0]),
+        obj('wallMid',    'ogHymnBoard',   'hymn board',       {}, ['wood',  'marking',   0, 0]),
+        obj('wallLarge',  'ogPipeRank',    'pipe front',       {}, ['metal', 'sound',     1, 0]),
+        obj('storage',    'ogHymnals',     'hymnal shelf',     {}, ['paper', 'books',     0, 0]),
+        obj('container',  'ogMusicChest',  'music chest',      {}, ['wood',  'furniture', 1, 0]),
+        obj('exit',       'archDoor',      'loft door',        { wood: '#4f303d', iron: '#2a1c24' }),
+        obj('anchor',     'ogConsole',     'organ console',    {}),
+        drawerObj('drawerWood', 'tuner’s drawer', { body: '#5a3644' }),
+        obj('lockCode',   'strongBox',     'alms box',         { wood: '#5a3644', metal: '#2e2028' }),
+        obj('lockCrank',  'ogBellows',     'blowing engine',   {}),
+        obj('light',      'ogCandleBranch', 'console candles', {})
+      ]
+    },
+    {
+      id: 'locksmith',
+      name: 'THE LOCKSMITH’S WORKSHOP',
+      backdrop: 'lkShop',
+      intro: ['The iron door closes on more bolts than you can count, and every one of them goes home.',
+              'Twenty-nine doors, and every lock on them was cut at this bench. The filings are still bright.',
+              'A locksmith always keeps one key back. This is the room it was kept in.'],
+      taunts: ['Brass dust, and a broken file.', 'A key. Not that key.',
+               'A spring, uncoiled and spiteful.', 'Oil, and the smell of hot brass.',
+               'Empty. Precisely empty.', 'A blank, never cut.',
+               'A lever, worn to a sliver.', 'A pattern card for a lock you have met.'],
+      palette: {
+        '--bg': '#060708', '--wall': '#1f2428', '--wall2': '#15191c', '--floor': '#3c2a1b',
+        '--floor2': '#281b10', '--panel': '#1b1f23', '--line': '#3d454c',
+        '--accent': '#f0c046', '--soft': '#a8a59c', '--glow': '#ffe6a8'
+      },
+      objects: [
+        /* Two sets of keys (iron on the nail, brass on the board) and two
+           lock mechanisms (iron on the wall, brass on the shelf): each pair
+           shares a nature and splits on its metal. */
+        obj('floorSoft',  'lkApron',       'leather apron',    {}, ['leather', 'covering',  0, 0]),
+        obj('floorProp',  'lkStake',       'stake anvil',      {}, ['iron',    'tools',     0, 0]),
+        obj('wallSmall',  'lkKeyRing',     'ring of keys',     {}, ['iron',    'keys',      0, 0]),
+        obj('wallMid',    'lkOpenLock',    'gutted lock',      {}, ['iron',    'mechanism', 1, 0]),
+        obj('wallLarge',  'lkKeyWall',     'wall of keys',     {}, ['brass',   'keys',      0, 0]),
+        obj('storage',    'lkPadShelf',    'padlock shelf',    {}, ['brass',   'mechanism', 1, 0]),
+        obj('container',  'lkToolChest',   'tool chest',       {}, ['wood',    'furniture', 1, 0]),
+        obj('exit',       'lkLockDoor',    'iron door',        {}),
+        obj('anchor',     'lkBench',       'cutting bench',    {}),
+        drawerObj('drawerWood', 'drawer of blanks', { body: '#4a3220' }),
+        obj('lockCode',   'ironSafe',      'pattern safe',     { body: '#2b3035', dial: '#1a1d20', rivets: 1 }),
+        obj('lockCrank',  'lkLathe',       'key lathe',        {}),
+        obj('light',      'lkLamp',        'bench lamp',       {})
+      ]
     }
   ];
 
@@ -3997,11 +7219,11 @@
   var BY_ID = {};
   for (si = 0; si < SETTINGS.length; si++) BY_ID[SETTINGS[si].id] = SETTINGS[si];
 
-  /* Twenty chambers over ten settings. `i % 10` and NOT `floor(i/2)`:
-     modulo means the first ten chambers a new player sees are ten
-     different places, which is the entire point of this file. The repeat
-     on 11-20 lands at a higher difficulty tier, so the room is familiar
-     while the puzzle is not. */
+  /* ONE SETTING PER CHAMBER. The number of chambers in the game IS the
+     length of SETTINGS — game.js and save.js both read it from here — so
+     adding a chamber means adding a setting (and its sign and lore line
+     in puzzle.js) and nothing else. The modulo only matters to the daily
+     chamber, whose seeds run far past the end of the list. */
   function themeFor(i) { return SETTINGS[((i % SETTINGS.length) + SETTINGS.length) % SETTINGS.length]; }
 
   /* =====================================================================

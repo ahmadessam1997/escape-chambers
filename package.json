@@ -8,13 +8,18 @@
     "open": "cap open android",
     "serve": "node test/serve.js",
     "test": "node test/e2e.js",
+    "test:all": "node test/e2e.js && node test/uv-audit.js && node test/rate-sim.js && node test/native-sim.js",
+    "test:uv": "node test/uv-audit.js",
     "screenshots": "node test/gen-screenshots.js"
   },
   "dependencies": {
-    "@capacitor-community/admob": "^8.0.0",
+    "@capacitor-community/admob": "^8.1.0",
+    "@capacitor-firebase/analytics": "^8.5.2",
     "@capacitor/android": "^8.5.0",
     "@capacitor/app": "^8.0.0",
     "@capacitor/core": "^8.5.0",
+    "@capacitor/ios": "^8.5.3",
+    "@capacitor/local-notifications": "^8.3.1",
     "@capacitor/preferences": "^8.0.1",
     "@revenuecat/purchases-capacitor": "^13.3.0"
   },

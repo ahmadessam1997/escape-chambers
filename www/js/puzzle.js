@@ -1,5 +1,5 @@
 /* =====================================================================
-   Escape: 20 Chambers — puzzles
+   Escape Chambers — puzzles
    ---------------------------------------------------------------------
    TWO puzzles live in this file, and the newer one comes FIRST in play.
 
@@ -58,8 +58,13 @@
    useless until the rule on the note combines them. Same three-part
    contract as above; see the notes on each rule.
 
-   Adding a fifth safe rule, or a new clue kind, means adding its solver
+   Adding another safe rule, or a new clue kind, means adding its solver
    here too, or the suite will correctly fail to escape the chamber.
+
+   Chambers 21-30 (tiers 6 and 7, added in 1.7.0) bring three more safe
+   rules — `mirror`, `chain` and `weave` — a five-digit code at tier 7,
+   and two key-hunt profiles that demand TWO structural clues. Same
+   contract throughout: one answer, solvable from the room, solver below.
    ===================================================================== */
 (function (global) {
   'use strict';
@@ -207,7 +212,18 @@
     books:     'is a row of books',
     map:       'is a chart of somewhere',
     seam:      'is a vein in the rock',
-    heap:      'is a loose heap'
+    heap:      'is a loose heap',
+
+    /* Added with chambers 21-30 (1.7.0). */
+    film:      'is photographic film',
+    herb:      'is dried leaf and stalk',
+    remedy:    'is a remedy, or the makings of one',
+    armour:    'is worn or carried as armour',
+    weapon:    'is a weapon',
+    sound:     'is made to give a note',
+    keys:      'is a set of keys',
+    case:      'is a case made to carry something',
+    shield:    'is a shield'
   };
 
   /* Boolean traits need both polarities spelled out; "is not hollow" is
@@ -233,6 +249,33 @@
     return 'is ' + v;                       /* generic, still unambiguous */
   }
   function traitNoun(t) { return TRAIT_NOUN[t] || t; }
+
+  /* AN OBJECT'S PROPERTIES, IN THE CLUES' OWN WORDS (1.7.1).
+     A 1-star review: "u can't tell what the items are so u don't know if
+     they're flat or made of metal". The clues reason over these traits, and
+     until now the only place a player could learn them was the drawing —
+     and tapping an object to look at it costs a move. So the notebook and
+     the search message print every axis a clue can talk about, using
+     exactly the phrase a clue uses ("is metal", "opens, or has room inside
+     it"), so a clue and an object can be matched word for word.
+     Order is fixed: position, material, nature, build, alive. */
+  var DESCRIBE_AXES = [
+    { axis: 'place',  label: 'Position' },
+    { axis: 'made',   label: 'Material' },
+    { axis: 'kind',   label: 'Nature' },
+    { axis: 'hollow', label: 'Build' },
+    { axis: 'living', label: 'Alive' }
+  ];
+  function describeTraits(traits) {
+    var out = [];
+    traits = traits || {};
+    DESCRIBE_AXES.forEach(function (d) {
+      var v = traits[d.axis];
+      if (v === undefined || v === null) return;
+      out.push({ axis: d.axis, label: d.label, phrase: says(d.axis, v), value: v });
+    });
+    return out;
+  }
 
   /* One physical medium per chamber, in the same order as THEMES in
      game.js. Pure phrasing — it decides what the dust IS, never what the
@@ -276,7 +319,17 @@
     'sawdust',       /* 17 toy workshop        */
     'carbolic',      /* 18 operating theatre   */
     'valve dust',    /* 19 radio station       */
-    'belfry grime'   /* 20 bell tower          */
+    'belfry grime',   /* 20 bell tower          */
+    'dried fixer',     /* 21 darkroom */
+    'cellar mould',    /* 22 wine cellar */
+    'condensation',    /* 23 control room */
+    'liquorice powder', /* 24 apothecary */
+    'carbon dust',     /* 25 projection booth */
+    'lampblack',       /* 26 printing house */
+    'grinding dust',   /* 27 armoury */
+    'switchboard dust', /* 28 telephone exchange */
+    'candle grease',   /* 29 organ loft */
+    'brass dust'       /* 30 locksmith’s workshop */
   ];
 
   /* Normalise whatever the caller passed into full descriptors.
@@ -564,7 +617,14 @@
     2: { min: 2, max: 2, weakAlone: true,  wantNeg: false, wantAbstract: false, allowDirect: false },
     3: { min: 2, max: 3, weakAlone: true,  wantNeg: true,  wantAbstract: false, allowDirect: false },
     4: { min: 3, max: 3, weakAlone: true,  wantNeg: true,  wantAbstract: true,  allowDirect: false },
-    5: { min: 3, max: 4, weakAlone: true,  wantNeg: true,  wantAbstract: true,  allowDirect: false }
+    5: { min: 3, max: 4, weakAlone: true,  wantNeg: true,  wantAbstract: true,  allowDirect: false },
+    /* Chambers 21-30. `minAbstract: 2` is the step up: two of the clues
+       must be about the room's STRUCTURE ("alone in its material", "a set
+       of three", the long shadow), so the player has to count and compare
+       across all seven objects twice over, not once. Tier 7 also insists
+       on four clues, every one of them load-bearing. */
+    6: { min: 3, max: 4, weakAlone: true,  wantNeg: true,  wantAbstract: true,  minAbstract: 2, allowDirect: false },
+    7: { min: 4, max: 4, weakAlone: true,  wantNeg: true,  wantAbstract: true,  minAbstract: 2, allowDirect: false }
   };
 
   /* Enumerate combinations by index, capped. The pool is shuffled before
@@ -629,9 +689,9 @@
       if (!neg) return false;
     }
     if (prof.wantAbstract) {
-      var abs = false;
-      for (i = 0; i < set.length; i++) if (ABSTRACT[set[i].pred.k]) abs = true;
-      if (!abs) return false;
+      var abs = 0;
+      for (i = 0; i < set.length; i++) if (ABSTRACT[set[i].pred.k]) abs++;
+      if (abs < (prof.minAbstract || 1)) return false;
     }
     return true;
   }
@@ -640,19 +700,32 @@
      relaxation costs flavour, never correctness — the uniqueness and
      minimality checks are in `validSet` and are never relaxed. */
   function chooseClues(all, answer, pool, prof, R) {
-    var relax = [
-      prof,
-      { min: prof.min, max: prof.max, weakAlone: prof.weakAlone, wantNeg: prof.wantNeg,
+    var relax = [prof];
+    /* The tier 6-7 demands give way one at a time before anything a tier-5
+       room would keep: first the fourth clue, then the second structural
+       clue. A room that lands here is still at least a full tier-5 room. */
+    var step = function (min, minAbs) {
+      relax.push({ min: min, max: prof.max, weakAlone: prof.weakAlone, wantNeg: prof.wantNeg,
+                   wantAbstract: prof.wantAbstract, minAbstract: minAbs,
+                   allowDirect: prof.allowDirect });
+    };
+    if (prof.min > 3) step(3, prof.minAbstract);
+    if ((prof.minAbstract || 1) > 1) {
+      step(prof.min, 1);
+      if (prof.min > 3) step(3, 1);
+    }
+    relax = relax.concat([
+      { min: Math.min(prof.min, 3), max: prof.max, weakAlone: prof.weakAlone, wantNeg: prof.wantNeg,
         wantAbstract: false, allowDirect: prof.allowDirect },
-      { min: prof.min, max: prof.max, weakAlone: prof.weakAlone, wantNeg: false,
+      { min: Math.min(prof.min, 3), max: prof.max, weakAlone: prof.weakAlone, wantNeg: false,
         wantAbstract: false, allowDirect: prof.allowDirect },
-      { min: prof.min, max: prof.max, weakAlone: false, wantNeg: false,
+      { min: Math.min(prof.min, 3), max: prof.max, weakAlone: false, wantNeg: false,
         wantAbstract: false, allowDirect: prof.allowDirect },
       { min: 1, max: Math.max(4, prof.max), weakAlone: false, wantNeg: false,
         wantAbstract: false, allowDirect: prof.allowDirect },
       { min: 1, max: Math.max(4, prof.max), weakAlone: false, wantNeg: false,
         wantAbstract: false, allowDirect: true }
-    ];
+    ]);
 
     /* 16 is plenty: the whole point of the pool is variety, and beyond
        this the combination count grows faster than the interest does. */
@@ -671,7 +744,7 @@
         if (found.length) break;
       }
       if (found.length) {
-        return { clues: found[Math.floor(R() * found.length)], relaxed: r > 0, degraded: false };
+        return { clues: found[Math.floor(R() * found.length)], relaxed: r > 0, level: r, degraded: false };
       }
     }
     return null;
@@ -736,13 +809,15 @@
     VALUE_WORDS: VALUE_WORDS,
     BOOL_WORDS: BOOL_WORDS,
     TRAIT_NOUN: TRAIT_NOUN,
+    describeTraits: describeTraits,
+    says: says,
     CLUE_KINDS: ['is', 'not', 'unique', 'group', 'extreme', 'nearest', 'direct'],
 
     /* ==================================================================
        generateKeyHunt(seed, tier, spots)
 
          seed   chamber index — reproducible, same contract as generate()
-         tier   1..5, see TIER_PROFILE
+         tier   1..7, see TIER_PROFILE
          spots  candidate list; ids, descriptors, or omitted for the
                 built-in seven
 
@@ -774,12 +849,33 @@
       if (all.length < 2) throw new Error('key hunt needs at least 2 candidate spots');
 
       var sign = SIGNS[((seed % SIGNS.length) + SIGNS.length) % SIGNS.length];
-      var answer = all[Math.floor(R() * all.length)];
-      var prof = TIER_PROFILE[tier] || TIER_PROFILE[5];
+      var first = Math.floor(R() * all.length);
+      var answer = all[first];
+      var prof = TIER_PROFILE[tier] || TIER_PROFILE[7];
 
       var pool = buildPool(all, answer, sign, R);
       var got = chooseClues(all, answer, pool, prof, R);
       var degraded = false;
+
+      /* TIERS 6-7 CHOOSE THE HIDING PLACE TO SUIT THE PUZZLE.
+         Not every spot can carry four load-bearing clues with two
+         structural ones among them — an object that is the only glass
+         thing in the room is given away by a single sentence — and for
+         tiers 1-5 that is accepted: the profile relaxes and the room is a
+         little easier than its tier. The last ten chambers are the top of
+         the curve, so there the generator walks on round the room from the
+         spot it first drew until it finds one that supports the full
+         profile, and keeps the least-relaxed it saw if none does.
+         Tiers 1-5 never enter this loop, so the twenty shipped chambers
+         (and every daily) generate exactly as before. */
+      if (tier >= 6 && (!got || got.relaxed)) {
+        for (var t = 1; t < all.length; t++) {
+          var alt = all[(first + t) % all.length];
+          var altGot = chooseClues(all, alt, buildPool(all, alt, sign, R), prof, R);
+          if (altGot && (!got || altGot.level < got.level)) { got = altGot; answer = alt; }
+          if (got && !got.relaxed) break;
+        }
+      }
 
       if (!got) {
         /* Nothing in the trait table isolates this spot — two candidates
@@ -848,38 +944,59 @@
        puzzle in all twenty rooms. "Seven dead stars marked on the chart"
        is the Observatory.
 
-       One entry per chamber, in the same order as THEMES in game.js.
+       One entry per SETTING, in themes.js SETTINGS order.
          unit   what the numbers are counted in
          vessel where a written rule is found
          verb   how the number is recorded
        Nothing here changes a single answer — it is pure phrasing — so a
        bad entry can never make a chamber unsolvable. */
     LORE: [
-      { unit: 'ink-stained page numbers', vessel: 'a bookplate',        verb: 'inked' },
-      { unit: 'chalk marks on the casks',  vessel: 'a cellar ledger',    verb: 'chalked' },
-      { unit: 'seed trays',                vessel: 'a planting card',    verb: 'pencilled' },
-      { unit: 'dead stars on the chart',   vessel: 'a star-chart margin', verb: 'plotted' },
-      { unit: 'nails in the rafter',       vessel: 'a luggage tag',      verb: 'scratched' },
-      { unit: 'apothecary measures',       vessel: 'a prescription slip', verb: 'written' },
-      { unit: 'leagues on the map scale',  vessel: 'a map cartouche',    verb: 'ruled' },
-      { unit: 'panes of cracked glass',    vessel: 'a glazier’s docket', verb: 'cut' },
-      { unit: 'catalogue volumes',         vessel: 'an index card',      verb: 'typed' },
-      { unit: 'cogs on the gear train',    vessel: 'a maintenance plate', verb: 'stamped' },
-      { unit: 'copper pans',               vessel: 'a kitchen slate',    verb: 'scrawled' },
-      { unit: 'empty perches',             vessel: 'a keeper’s notebook', verb: 'noted' },
-      { unit: 'hanging negatives',         vessel: 'a developing log',   verb: 'grease-pencilled' },
-      { unit: 'orange trees in the row',   vessel: 'a gardener’s tally', verb: 'notched' },
-      { unit: 'sealed deeds',              vessel: 'a wax seal',         verb: 'embossed' },
-      { unit: 'pressure dials',            vessel: 'a boiler plate',     verb: 'riveted' },
-      { unit: 'portraits in the run',      vessel: 'a gallery label',    verb: 'lettered' },
-      { unit: 'ice blocks in the stack',   vessel: 'a delivery chit',    verb: 'frozen into' },
-      { unit: 'bell ropes',                vessel: 'a ringer’s board',   verb: 'painted' },
-      { unit: 'strongbox tumblers',        vessel: 'a bank docket',      verb: 'engraved' }
+      /* ONE ENTRY PER SETTING, in themes.js SETTINGS order — the same rule
+         as SIGNS above, and until 1.7.0 broken in the same way: this table
+         was still in the order of game.js's long-dead THEME NAMES, so the
+         sealed tomb counted "seed trays" on "a planting card" and the cell
+         block read its rule off "a bookplate". ECPuzzle.LORE.length MUST
+         equal ECThemes.list.length; the suite asserts it. */
+      { unit: 'tally strokes on the wall',  vessel: 'a warder’s charge sheet', verb: 'scratched' },      /*  1 cell block        */
+      { unit: 'knots on the log-line',      vessel: 'a page of the ship’s log', verb: 'inked' },         /*  2 captain's cabin   */
+      { unit: 'offering jars',              vessel: 'a priest’s ostracon',   verb: 'incised' },          /*  3 sealed tomb       */
+      { unit: 'graduated measures',         vessel: 'a specimen label',      verb: 'pencilled' },        /*  4 laboratory        */
+      { unit: 'cogs on the gear train',     vessel: 'a maintenance plate',   verb: 'stamped' },          /*  5 clockworks        */
+      { unit: 'seed trays',                 vessel: 'a planting card',       verb: 'pencilled' },        /*  6 glasshouse        */
+      { unit: 'catalogue volumes',          vessel: 'an index card',         verb: 'typed' },            /*  7 locked library    */
+      { unit: 'ore tubs on the tally',      vessel: 'a shift ticket',        verb: 'chalked' },          /*  8 deep working      */
+      { unit: 'dead stars on the chart',    vessel: 'a star-chart margin',   verb: 'plotted' },          /*  9 observatory       */
+      { unit: 'pressure dials',             vessel: 'a boiler plate',        verb: 'riveted' },          /* 10 boiler room       */
+      { unit: 'flashes of the lamp',        vessel: 'a keeper’s log',        verb: 'noted' },            /* 11 lamp room         */
+      { unit: 'strongbox tumblers',         vessel: 'a bank docket',         verb: 'engraved' },         /* 12 vault             */
+      { unit: 'ruled lines on the vellum',  vessel: 'a copyist’s margin',    verb: 'lettered' },         /* 13 scriptorium       */
+      { unit: 'glass eyes in the tray',     vessel: 'a specimen tag',        verb: 'written' },          /* 14 taxidermist's     */
+      { unit: 'sacks on the waybill',       vessel: 'a guard’s docket',      verb: 'punched' },          /* 15 guard's van       */
+      { unit: 'ice blocks in the stack',    vessel: 'a delivery chit',       verb: 'frozen into' },      /* 16 icehouse          */
+      { unit: 'painted soldiers in the box', vessel: 'a price ticket',       verb: 'pencilled' },        /* 17 toy workshop      */
+      { unit: 'ligatures on the tray',      vessel: 'a case note',           verb: 'written' },          /* 18 operating theatre */
+      { unit: 'valves in the rack',         vessel: 'a cue card',            verb: 'grease-pencilled' }, /* 19 radio station     */
+      { unit: 'bell ropes',                 vessel: 'a ringer’s board',      verb: 'painted' },          /* 20 bell tower        */
+      { unit: 'frames on the test roll', vessel: 'an exposure card', verb: 'pencilled' }, /* 21 darkroom */
+      { unit: 'bottles left in the last bin', vessel: 'a bin label', verb: 'inked' }, /* 22 wine cellar */
+      { unit: 'soundings on the chart', vessel: 'a page of the trim log', verb: 'logged' }, /* 23 control room */
+      { unit: 'leeches in the jar', vessel: 'a page of the poison register', verb: 'entered' }, /* 24 apothecary */
+      { unit: 'frames in the leader', vessel: 'a cue sheet', verb: 'pencilled' }, /* 25 projection booth */
+      { unit: 'sorts in the type case', vessel: 'a galley proof', verb: 'set' }, /* 26 printing house */
+      { unit: 'rivets on the breastplate', vessel: 'an armourer’s tally stick', verb: 'notched' }, /* 27 armoury */
+      { unit: 'plugs left in the board', vessel: 'a trunk-call docket', verb: 'pencilled' }, /* 28 telephone exchange */
+      { unit: 'pipes in the front rank', vessel: 'a tuner’s slip', verb: 'pencilled' }, /* 29 organ loft */
+      { unit: 'levers in the great lock', vessel: 'a pattern card', verb: 'scribed' } /* 30 locksmith’s workshop */
     ],
 
     FAMILIES: ['arith', 'logic', 'order'],
+    /* The rules chambers 21-30 draw from (game.js picks by chamber, so
+       the ten rooms rotate through them rather than leaving it to chance).
+       They are never chosen at random for tiers 3-5: FAMILIES above is the
+       random pool, and changing it would re-roll every shipped chamber. */
+    HARD_FAMILIES: ['mirror', 'chain', 'weave'],
 
-    /* len is 3 for tiers 1-3, 4 for tiers 4-5, matching the keypad.
+    /* len is 3 for tiers 1-3, 4 for tiers 4-6, 5 for tier 7, matching the keypad.
        `avoid` is the spot already holding the brass key. It MUST be
        excluded here rather than filtered by the caller: dropping a fact
        after generation leaves a puzzle whose rule needs a number that
@@ -893,6 +1010,9 @@
       family = family || this.FAMILIES[Math.floor(R() * this.FAMILIES.length)];
       var p = (family === 'arith') ? this._arith(R, len)
             : (family === 'logic') ? this._logic(R, len)
+            : (family === 'mirror') ? this._mirror(R, len)
+            : (family === 'chain') ? this._chain(R, len)
+            : (family === 'weave') ? this._weave(R, len)
             : this._order(R, len);
       /* The generator, not the caller, decides the final family: _logic
          falls back to _arith when it cannot isolate a unique code, and
@@ -994,24 +1114,34 @@
         var td = digits(target);
         var sum = td.reduce(function (x, y) { return x + y; }, 0);
 
+        /* `s` is the WALL form (1.7.1). The full sentences ran to 170
+           characters and were drawn as one line across the wall — off both
+           edges of the screen and behind the furniture. The wall now carries
+           this compact form; the full sentences (`t`, which the solver
+           parses) are in the notebook. Neither form ever contains the code. */
+        var evens = td.filter(function (x) { return x % 2 === 0; }).length;
         var pool = [
-          { t: 'The digits add up to ' + sum + '.',
+          { t: 'The digits add up to ' + sum + '.', s: 'digit sum ' + sum,
             f: function (d) { return d.reduce(function (x, y) { return x + y; }, 0) === sum; } },
           { t: 'The first digit is ' + (td[0] % 2 ? 'odd' : 'even') + '.',
+            s: '1st digit ' + (td[0] % 2 ? 'odd' : 'even'),
             f: function (d) { return (d[0] % 2) === (td[0] % 2); } },
           { t: 'The last digit is ' + (td[len - 1] % 2 ? 'odd' : 'even') + '.',
+            s: 'last digit ' + (td[len - 1] % 2 ? 'odd' : 'even'),
             f: function (d) { return (d[len - 1] % 2) === (td[len - 1] % 2); } },
-          { t: 'No digit is repeated.',
+          { t: 'No digit is repeated.', s: 'no digit repeats',
             f: function (d) { return new Set(d).size === d.length; } },
           { t: 'The first digit is ' + (td[0] > td[len - 1] ? 'larger' : 'smaller') +
                ' than the last.',
+            s: '1st digit ' + (td[0] > td[len - 1] ? '>' : '<') + ' last',
             f: function (d) {
               return td[0] > td[len - 1] ? d[0] > d[d.length - 1] : d[0] < d[d.length - 1];
             } },
           { t: 'The largest digit is ' + Math.max.apply(null, td) + '.',
+            s: 'max digit ' + Math.max.apply(null, td),
             f: function (d) { return Math.max.apply(null, d) === Math.max.apply(null, td); } },
-          { t: 'Exactly ' + td.filter(function (x) { return x % 2 === 0; }).length +
-               ' of the digits are even.',
+          { t: 'Exactly ' + evens + ' of the digits are even.',
+            s: evens + (evens === 1 ? ' even digit' : ' even digits'),
             f: function (d) {
               return d.filter(function (x) { return x % 2 === 0; }).length ===
                      td.filter(function (x) { return x % 2 === 0; }).length;
@@ -1043,7 +1173,7 @@
               family: 'logic',
               code: target,
               ruleText: chosen.map(function (c) { return c.t; }).join(' '),
-              shortRule: chosen.map(function (c) { return c.t; }).join(' '),
+              shortRule: chosen.map(function (c) { return c.s; }).join(' · '),
               hintText: 'The marks on the note describe one number and only one. ' +
                         'Work through the digits that fit all of them.',
               /* Logic needs no scattered numbers — the note carries it all.
@@ -1082,6 +1212,77 @@
       };
     },
 
+    /* ---------------- mirror (chambers 21-30) ----------------
+       Every number is found, then turned into what it LACKS: nine minus
+       the number, set down in the order found. One step per digit, but a
+       step — the numbers in the room are never the digits on the dials,
+       which is the first time in the game that is true of every digit. */
+    _mirror: function (R, len) {
+      var vals = [];
+      while (vals.length < len) vals.push(1 + Math.floor(R() * 9));
+      return {
+        family: 'mirror',
+        code: vals.map(function (v) { return 9 - v; }).join(''),
+        ruleText: 'Take each number you find away from nine, and set the answers down ' +
+                  'in the order the numbers are numbered.',
+        shortRule: '9 − each, in order',
+        hintText: 'Find every number. Subtract each one from nine, and enter the results ' +
+                  'first to last.',
+        facts: vals.map(function (v, i) { return { order: i + 1, value: v }; })
+      };
+    },
+
+    /* ---------------- chain (chambers 21-30) ----------------
+       A running total. The first digit is the first number; each digit
+       after it is the digit before plus the next number, keeping only the
+       last figure. A slip anywhere corrupts everything after it, so this
+       one rewards writing the working down. */
+    _chain: function (R, len) {
+      var vals = [], digits = [], run = 0;
+      while (vals.length < len) vals.push(1 + Math.floor(R() * 9));
+      vals.forEach(function (v, i) {
+        run = (i === 0) ? v : (run + v) % 10;
+        digits.push(run);
+      });
+      return {
+        family: 'chain',
+        code: digits.join(''),
+        ruleText: 'Begin with the first number. For each number after it, add it to the ' +
+                  'figure you last wrote down and keep only the final digit.',
+        shortRule: 'running total, last digit only',
+        hintText: 'Find every number. Write the first. Add the second to it and keep the ' +
+                  'last digit; add the third to THAT, and so on to the end.',
+        facts: vals.map(function (v, i) { return { order: i + 1, value: v }; })
+      };
+    },
+
+    /* ---------------- weave (chambers 21-30) ----------------
+       Ordering with a twist in the tail: sort the numbers, then exchange
+       the two ends. Reads like the tier-3 ordering rule, which is the
+       trap — a player who stops reading at the dash enters a code that is
+       wrong in exactly two places. */
+    _weave: function (R, len) {
+      var vals = [], used = {};
+      while (vals.length < len) {
+        var v = 1 + Math.floor(R() * 9);
+        if (!used[v]) { used[v] = true; vals.push(v); }
+      }
+      var asc = R() > 0.5;
+      var s = vals.slice().sort(function (a, b) { return asc ? a - b : b - a; });
+      var t = s[0]; s[0] = s[s.length - 1]; s[s.length - 1] = t;
+      return {
+        family: 'weave',
+        code: s.join(''),
+        ruleText: 'the numbers you find, ' + (asc ? 'smallest first' : 'largest first') +
+                  ' — then exchange the first and the last.',
+        shortRule: (asc ? 'smallest first' : 'largest first') + ', then swap the ends',
+        hintText: 'Find every number. Put them ' +
+                  (asc ? 'smallest to largest' : 'largest to smallest') +
+                  ', then swap the first digit with the last one.',
+        facts: vals.map(function (x, i) { return { order: i + 1, value: x }; })
+      };
+    },
+
     /* ------------------------------------------------------------------
        Solve from PUBLIC information only — the same rule text and facts
        the player can see. Used by the e2e auto-solver, which is why it
@@ -1105,6 +1306,22 @@
       if (family === 'order') {
         var asc = /smallest first/.test(ruleText);
         return vals.slice().sort(function (a, b) { return asc ? a - b : b - a; }).join('');
+      }
+      if (family === 'mirror') {
+        return vals.map(function (v) { return 9 - v; }).join('');
+      }
+      if (family === 'chain') {
+        var run = 0;
+        return vals.map(function (v, i) {
+          run = (i === 0) ? v : (run + v) % 10;
+          return run;
+        }).join('');
+      }
+      if (family === 'weave') {
+        var up = /smallest first/.test(ruleText);
+        var w = vals.slice().sort(function (a, b) { return up ? a - b : b - a; });
+        var e = w[0]; w[0] = w[w.length - 1]; w[w.length - 1] = e;
+        return w.join('');
       }
       /* logic: brute force the stated constraints, exactly as a player
          would reason through them, parsed back out of the rule text. */

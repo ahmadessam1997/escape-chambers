@@ -1,5 +1,5 @@
 /* =====================================================================
-   Escape: 20 Chambers — billing (RevenueCat)
+   Escape Chambers — billing (RevenueCat)
    ---------------------------------------------------------------------
    Three states, and which one we are in is never guessed:
 
@@ -32,6 +32,15 @@
 
   var Cfg = global.ECConfig;
   var MOCK_KEY = 'ec.mockPurchases';
+
+  /* Everything outside this file uses the game's product ids. The App Store
+     knows Remove Ads as `escapechambers_remove_ads`, so ids are translated
+     here and only here: toStore() on the way out (getProducts), fromStore()
+     on everything the SDK reports back (package products, purchased ids,
+     transactions). Both are the identity off iOS. Entitlement ids need no
+     mapping: the RevenueCat entitlement stays `remove_ads` on both stores. */
+  function toStore(id) { return Cfg.storeProductId ? Cfg.storeProductId(id) : id; }
+  function fromStore(sid) { return Cfg.productIdFromStore ? Cfg.productIdFromStore(sid) : sid; }
 
   var Billing = {
     state: 'unavailable',
@@ -83,7 +92,10 @@
         return Promise.resolve(self.state);
       }
 
-      var key = (Cfg.revenueCat.androidApiKey || '').trim();
+      /* Per-platform key (config.js): '' on iOS until the App Store app
+         exists in RevenueCat, which keeps billing failing closed there. */
+      var key = Cfg.revenueCatKey ? Cfg.revenueCatKey()
+                                  : (Cfg.revenueCat.androidApiKey || '').trim();
       if (!key) {
         self.state = 'unavailable';
         self.lastError = 'Store not configured';
@@ -151,10 +163,11 @@
           Object.keys(all).forEach(function (offId) {
             (all[offId].availablePackages || []).forEach(function (pkg) {
               if (pkg.product) {
-                self.prices[pkg.product.identifier] = pkg.product.priceString;
+                var pid = fromStore(pkg.product.identifier);
+                self.prices[pid] = pkg.product.priceString;
                 self._packages = self._packages || {};
-                self._packages[pkg.product.identifier] = pkg;
-                seen[pkg.product.identifier] = true;
+                self._packages[pid] = pkg;
+                seen[pid] = true;
               }
             });
           });
@@ -163,7 +176,7 @@
           /* One at a time: a single inactive SKU poisons a whole batch
              query and the store comes back empty (adaptive-chess). */
           return Promise.all(missing.map(function (id) {
-            return self._p.getProducts({ productIdentifiers: [id] })
+            return self._p.getProducts({ productIdentifiers: [toStore(id)] })
               .then(function (res) {
                 var p = (res.products || [])[0];
                 if (!p) return;
@@ -205,7 +218,13 @@
           return { ok: true, entitlements: self.entitlements };
         })
         .catch(function (e) {
-          return { ok: false, error: self._humanError(e) };
+          /* _humanError's fallback is worded for a purchase; on a restore
+             (seen offline on the emulator) it read as a failed payment. */
+          var msg = self._humanError(e);
+          if (/^Purchase failed/.test(msg)) {
+            msg = 'Could not restore purchases. Check your connection and try again.';
+          }
+          return { ok: false, error: msg };
         });
     },
 
@@ -221,13 +240,15 @@
           // Only mirror entitlements that name a NON-consumable product.
           // A consumable's entitlement would latch on after the first
           // pack and make every later pack look already-owned.
+          k = fromStore(k);  // entitlement ids are the game's; harmless either way
           if (Cfg.products[k] && !Cfg.products[k].consumable) next[k] = true;
         });
         /* A product imported without its entitlement attached would
            otherwise silently revoke a paid unlock, so trust the raw
            purchase list too. Safe for non-consumables, which never
            expire; consumables are excluded on purpose. */
-        (info.allPurchasedProductIdentifiers || []).forEach(function (pid) {
+        (info.allPurchasedProductIdentifiers || []).forEach(function (sid) {
+          var pid = fromStore(sid);
           if (Cfg.products[pid] && !Cfg.products[pid].consumable) next[pid] = true;
         });
         self._payOutConsumables(info.nonSubscriptionTransactions || []);
@@ -243,7 +264,7 @@
       var self = this;
       (txs || []).forEach(function (t) {
         if (!t) return;
-        var pid = t.productIdentifier || t.productId || t.product_identifier;
+        var pid = fromStore(t.productIdentifier || t.productId || t.product_identifier);
         var tid = t.transactionIdentifier || t.transactionId || t.revenueCatId ||
                   t.purchaseIdentifier || t.id;
         if (!pid || !tid) return;
@@ -320,7 +341,7 @@
         if (sp) {
           attempt = self._p.purchaseStoreProduct({ product: sp });
         } else {
-          attempt = self._p.getProducts({ productIdentifiers: [productId] })
+          attempt = self._p.getProducts({ productIdentifiers: [toStore(productId)] })
             .then(function (res) {
               var p = (res.products || [])[0];
               if (!p) throw new Error('Product not available: ' + productId);

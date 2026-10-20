@@ -1,0 +1,55 @@
+# Codemagic: builds the iOS app on a cloud Mac and uploads it to TestFlight.
+# There is no Mac on the development machine, so this is the iOS build path.
+#
+# One-time setup (see IOS-TODO.md): connect this GitHub repo in Codemagic,
+# add an App Store Connect API key under Team integrations and put its name
+# below, and (optional) add GOOGLE_SERVICE_INFO_PLIST as a base64 secret in an
+# environment group called "firebase_ios".
+workflows:
+  ios-app-store:
+    name: Escape Chambers - iOS App Store
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    integrations:
+      app_store_connect: Ahmed Afifi ASC
+    environment:
+      groups:
+        - firebase_ios
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.ahmadessam.escapechambers
+      vars:
+        XCODE_PROJECT: ios/App/App.xcodeproj
+        XCODE_SCHEME: App
+        # Apple build numbers only need to be unique per version. Starting
+        # above the Android versionCode keeps the two easy to compare.
+        BUILD_NUMBER_OFFSET: 18
+      node: 24
+      xcode: latest
+    scripts:
+      - name: Install npm dependencies
+        script: npm ci --ignore-scripts
+      - name: Copy www and plugins into the iOS project
+        script: npx cap sync ios
+      - name: Add GoogleService-Info.plist (optional)
+        script: |
+          if [ -n "$GOOGLE_SERVICE_INFO_PLIST" ]; then
+            echo "$GOOGLE_SERVICE_INFO_PLIST" | base64 --decode > ios/App/App/GoogleService-Info.plist
+          else
+            echo "No GOOGLE_SERVICE_INFO_PLIST - building without Firebase Analytics"
+          fi
+      - name: Set build number
+        script: |
+          NEW=$((BUILD_NUMBER + BUILD_NUMBER_OFFSET))
+          sed -i '' "s/CURRENT_PROJECT_VERSION = [0-9]*;/CURRENT_PROJECT_VERSION = $NEW;/" "$XCODE_PROJECT/project.pbxproj"
+      - name: Code signing
+        script: xcode-project use-profiles
+      - name: Build ipa
+        script: xcode-project build-ipa --project "$XCODE_PROJECT" --scheme "$XCODE_SCHEME"
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true

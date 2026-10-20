@@ -1,5 +1,5 @@
 /* =====================================================================
-   Escape: 20 Chambers — persistence
+   Escape Chambers — persistence
    ---------------------------------------------------------------------
    Capacitor Preferences on device, localStorage in the browser. One JSON
    blob under ec.save, plus a migration from the v1 'esc' key so anyone
@@ -38,7 +38,19 @@
     return Promise.resolve();
   }
 
-  var TOTAL = 20;
+  /* How many chambers exist. Read from the data (one chamber per setting
+     in themes.js) each time it is needed, never fixed here: this file
+     loads BEFORE themes.js, and a constant would have to be remembered
+     every time a chamber is added. When the number grows, load() below
+     carries an old save across by itself — a player who had finished the
+     old last chamber finds the next one unlocked, because "a finished
+     chamber always leaves the next one reachable" is clamped to the new
+     total. Without themes.js (a bare harness) nothing is clamped. */
+  function total() {
+    var T = global.ECThemes;
+    return (T && T.list && T.list.length) || 9999;
+  }
+  var DAY_RE = /^(\d{4})-(\d{2})-(\d{2})$/;
 
   var defaults = {
     unlocked: 1,          // how many chambers are selectable
@@ -48,7 +60,22 @@
     removeAds: false,     // mirror of the entitlement, for offline rendering
     unlimitedHints: false,// mirror of the entitlement
     chambersSinceAd: 0,
+    /* How many seam ads have been shown, ever. Picks the FORMAT of the
+       next one (every Nth is a rewarded interstitial). Saved for the same
+       reason chambersSinceAd is: sessions are short, and a counter that
+       restarted with the app would rarely reach N. */
+    seamAdsShown: 0,
     seenShop: false,
+    /* Local calendar day ('YYYY-MM-DD') the free daily hint was last
+       claimed, or '' for never. */
+    dailyHintDay: '',
+    /* Daily chamber: the last day it was escaped, the run of consecutive
+       days ending there, and the longest run ever. */
+    daily: { last: '', streak: 0, best: 0 },
+    /* Reminder notification: 'unasked' until the player first claims a
+       daily hint, then 'on' or 'off'. 'off' is final unless the player
+       flips it themselves — a refusal is never re-asked. */
+    notify: 'unasked',
     /* Best run per chamber: { "<index>": { stars, moves, seconds } }.
        Only ever improved, never overwritten by a worse run — a player who
        replays a chamber casually must not lose the record they earned. */
@@ -90,10 +117,12 @@
         }
 
         /* ---- repair every field ---- */
+        var TOTAL = total();
         if (!Array.isArray(self.data.done)) self.data.done = [];
         self.data.done = self.data.done
           .map(Number)
           .filter(function (n) { return isFinite(n) && n >= 0 && n < TOTAL; })
+          .map(Math.floor)
           .filter(function (n, i, a) { return a.indexOf(n) === i; });
 
         if (!Array.isArray(self.data.grantedTx)) self.data.grantedTx = [];
@@ -121,6 +150,26 @@
         self.data.removeAds = !!self.data.removeAds;
         self.data.unlimitedHints = !!self.data.unlimitedHints;
         self.data.seenShop = !!self.data.seenShop;
+
+        var sa = Number(self.data.seamAdsShown);
+        self.data.seamAdsShown = (isFinite(sa) && sa >= 0) ? Math.floor(sa) : 0;
+
+        if (!DAY_RE.test(self.data.dailyHintDay)) self.data.dailyHintDay = '';
+        var dl = self.data.daily;
+        if (!dl || typeof dl !== 'object') dl = {};
+        var ds = Number(dl.streak), db = Number(dl.best);
+        self.data.daily = {
+          last: DAY_RE.test(dl.last) ? dl.last : '',
+          streak: (isFinite(ds) && ds >= 0) ? Math.floor(ds) : 0,
+          best: (isFinite(db) && db >= 0) ? Math.floor(db) : 0
+        };
+        if (!self.data.daily.last) self.data.daily.streak = 0;
+        if (self.data.daily.best < self.data.daily.streak) {
+          self.data.daily.best = self.data.daily.streak;
+        }
+        if (['unasked', 'on', 'off'].indexOf(self.data.notify) < 0) {
+          self.data.notify = 'unasked';
+        }
 
         /* Repair the record book the same way every other field is
            repaired: a hand-edited or truncated blob must cost the player
@@ -151,6 +200,7 @@
        what the caller uses to decide whether to award a hint. Replaying a
        finished chamber must never pay out again. */
     markDone: function (i) {
+      var TOTAL = total();
       var first = !this.isDone(i);
       if (first) this.data.done.push(i);
       if (i + 2 > this.data.unlocked) this.data.unlocked = Math.min(TOTAL, i + 2);
@@ -170,6 +220,70 @@
       this.data.hints -= 1;
       this.save();
       return true;
+    },
+
+    /* ---- calendar days ----
+       Everything "daily" is keyed on the device's LOCAL calendar date as
+       'YYYY-MM-DD', which sorts as text, so "later day" is a plain string
+       comparison. dayNumber() turns a key into a whole count of days, for
+       "was that yesterday?" and for seeding the daily chamber. */
+    dayKey: function (d) {
+      d = d || new Date();
+      var p = function (n) { return (n < 10 ? '0' : '') + n; };
+      return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+    },
+    dayNumber: function (key) {
+      var m = DAY_RE.exec(key || '');
+      if (!m) return NaN;
+      return Math.round(Date.UTC(+m[1], +m[2] - 1, +m[3]) / 86400000);
+    },
+
+    /* ---- free daily hint ----
+       Claimable when today is LATER than the last claim day. "Later", not
+       "different": winding the clock back a day must not hand out a second
+       hint, and a clock wound forward and back simply waits to catch up. */
+    canClaimDailyHint: function (today) {
+      today = today || this.dayKey();
+      return !this.data.dailyHintDay || today > this.data.dailyHintDay;
+    },
+    /* Returns the number of hints granted (0 when already claimed). */
+    claimDailyHint: function (today) {
+      today = today || this.dayKey();
+      if (!this.canClaimDailyHint(today)) return 0;
+      var n = (global.ECConfig.hints.dailyFree | 0) || 1;
+      this.data.dailyHintDay = today;
+      this.data.hints = Math.max(0, this.data.hints + n);
+      this.save();
+      return n;
+    },
+
+    /* ---- daily chamber ---- */
+    dailyDone: function (key) {
+      return this.data.daily.last === (key || this.dayKey());
+    },
+    /* The streak as it stands TODAY: a run that ended before yesterday is
+       already broken, whatever the stored number says. */
+    dailyStreak: function (today) {
+      today = today || this.dayKey();
+      var d = this.data.daily;
+      if (!d.last) return 0;
+      var gap = this.dayNumber(today) - this.dayNumber(d.last);
+      return (gap === 0 || gap === 1) ? d.streak : 0;
+    },
+    /* Returns {first, streak}. `first` is false on a replay of a day that
+       is already done, which is what stops the daily being a hint farm. */
+    markDailyDone: function (key) {
+      var d = this.data.daily;
+      if (d.last === key) return { first: false, streak: d.streak };
+      /* An OLDER day than the last recorded one (a chamber started before
+         midnight on a clock that then moved back) counts for nothing. */
+      if (d.last && key < d.last) return { first: false, streak: d.streak };
+      var gap = d.last ? this.dayNumber(key) - this.dayNumber(d.last) : 0;
+      d.streak = (d.last && gap === 1) ? d.streak + 1 : 1;
+      d.last = key;
+      if (d.streak > d.best) d.best = d.streak;
+      this.save();
+      return { first: true, streak: d.streak };
     },
 
     /* Consumable hint packs are granted per transaction id. RevenueCat
@@ -242,6 +356,6 @@
     }
   };
 
-  Save.TOTAL = TOTAL;
+  Object.defineProperty(Save, 'TOTAL', { get: total });
   global.ECSave = Save;
 })(window);

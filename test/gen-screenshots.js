@@ -1,5 +1,5 @@
 /* =====================================================================
-   Escape: 20 Chambers — Play Store screenshot generator
+   Escape Chambers — Play Store screenshot generator
    ---------------------------------------------------------------------
    Captures REAL in-app frames — the actual SVG scene, the actual sigil
    lock, the actual shop — then composes each into a framed 1080x1920
@@ -37,7 +37,9 @@ const SCREEN_W = 770, SCREEN_H = 1180;
    evidence panel — that is the thing no competitor screenshot has. */
 const SHOTS = [
   { id: 'clues',   caption: 'THE ROOM TELLS YOU\nWHERE TO LOOK' },
-  { id: 'rooms',   caption: 'TWENTY ROOMS,\nTWENTY WORLDS' },
+  /* No count in a caption: chambers get added, and a screenshot that
+     says "twenty" goes stale the day they do. */
+  { id: 'rooms',   caption: 'EVERY ROOM,\nITS OWN WORLD' },
   { id: 'uv',      caption: 'DEDUCE IT —\nDON’T HUNT IT' },
   { id: 'sigil',   caption: 'CRACK SAFES\nBY REASONING' },
   { id: 'stars',   caption: 'FIVE STARS FOR A\nFLAWLESS ESCAPE' },
@@ -106,7 +108,7 @@ async function enterChamber(page, index, spots) {
   await page.evaluate(() => { localStorage.clear(); });
   await page.reload({ waitUntil: 'domcontentloaded' });
   await sleep(600);
-  await page.evaluate(() => { window.ECSave.data.unlocked = 20; window.ECSave.save(); });
+  await page.evaluate(() => { window.ECSave.data.unlocked = window.ECThemes.list.length; window.ECSave.save(); });
 
   console.log('Capturing raw frames…');
 
@@ -138,7 +140,7 @@ async function enterChamber(page, index, spots) {
   await grab('uv');
 
   /* --- 2. rooms: the sealed tomb. Sandstone and glyphs against shot 1's
-         stone cell proves the twenty settings are real, not recolours. --- */
+         stone cell proves the thirty settings are real, not recolours. --- */
   await enterChamber(page, 2, ['plant', 'shelf', 'pB', 'chest']);
   await page.evaluate(() => document.getElementById('obs').classList.remove('show'));
   await sleep(200);
@@ -190,7 +192,11 @@ async function enterChamber(page, index, spots) {
 
   /* --- 6. menu: the rooms grid, showing real progress --- */
   await page.evaluate(() => {
-    document.getElementById('shopOv').classList.remove('show');
+    /* Close the win card from shot 5 (and any other overlay) first, or it
+       sits on top of the rooms grid. */
+    ['symOv','padOv','winOv','hintOv','skipOv','moreOv','shopOv','rankOv'].forEach(id => {
+      const el = document.getElementById(id); if (el) el.classList.remove('show');
+    });
     window.ECSave.data.done = [0,1,2,3,4,5,6,7,8];
     window.ECSave.data.unlocked = 12;
     window.ECSave.data.hints = 6;

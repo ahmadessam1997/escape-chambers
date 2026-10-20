@@ -27,3 +27,13 @@ android/local.properties
 Thumbs.db
 .idea/
 *.iml
+
+# --- local only: never commit (logs, ad videos, Play reports, store keys) ---
+_logs/
+ad-campaign/video/
+*.mp4
+*.webm
+*.pdf
+*.p8
+*.p12
+*.mobileprovision

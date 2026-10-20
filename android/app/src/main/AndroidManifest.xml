@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -47,4 +48,20 @@
          "Advertising ID = YES" answer on the Play data-safety form, which
          the privacy policy must agree with or the release is rejected. -->
     <uses-permission android:name="com.google.android.gms.permission.AD_ID" />
+
+    <!-- The daily-hint reminder (@capacitor/local-notifications).
+
+         POST_NOTIFICATIONS, RECEIVE_BOOT_COMPLETED and WAKE_LOCK are merged
+         in from the plugin's own manifest; POST_NOTIFICATIONS is restated
+         here only so the permission the app asks for at runtime is visible
+         in the file a reviewer actually reads. It is requested the first
+         time the player claims a daily hint, never at launch (notify.js).
+
+         SCHEDULE_EXACT_ALARM is REMOVED on purpose. The plugin declares it
+         for alarms that must fire to the minute; a "your free hint is
+         ready" nudge does not, the plugin falls back to an inexact alarm
+         without it, and exact-alarm permissions draw Play policy questions
+         this game has no good answer to. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" tools:node="remove" />
 </manifest>

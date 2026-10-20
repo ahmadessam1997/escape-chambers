@@ -35,6 +35,230 @@
 
 ---
 
+## 2026-10-02 (late) — 1.7.0 / versionCode 16: thirty chambers, renamed "Escape Chambers"
+
+Debug APK only — nothing uploaded, nothing committed. 1.6.0 (vc 15) is the
+build in review; this sits on top of it.
+
+**Where it came from.** A first agent wrote most of it, was cut off by a
+usage limit, and its tree was parked in
+`../escape-chambers-WIP-30-chambers-2026-10-02/` while the repo went back to
+1.6.0 for upload. That WIP was a near-complete superset (themes.js art and
+traits for ten settings, puzzle.js rules, game.js/save.js count-from-data,
+rename, e2e coverage) and was ported whole; its e2e then ran **238 / 2
+failed**. The two failures were real:
+
+1. **Six of chambers 21-30 were not at their tier.** The trait tables of
+   the darkroom, projection booth, printing house, armoury (and the
+   exchange / locksmith) could not carry two structural clues, so the hunt
+   relaxed to a plain tier-5 hunt. Fixed in the DATA, truthfully to the
+   drawings: film tin, film cans and transit case are `kind: 'case'` (they
+   carry things, they hold no liquid); the printing house's drying sheets
+   are `marking` (printed); the buckler is a `shield`. Two new phrasings in
+   puzzle.js VALUE_WORDS. Now 8 of 10 are full strength and the other two
+   (exchange, locksmith, tier 7) drop only the 4th clue — every chamber
+   21-30 has 3+ clues with 2 structural ones, and the suite asserts that.
+   `scratchpad/diag.js`-style tooling (per-spot relax level, trait-edit
+   search) is how this was found; the art was checked by screenshot.
+2. **"some dailies use a spatial clue" went vacuous** — with thirty
+   settings in the walk, 60 dates held only 2. The picture-vs-generator
+   check now also runs over 240 further dailies (rendered, not played) and
+   the guard counts across all 300.
+
+**Design, in one place.**
+
+- The chamber count is `ECThemes.list.length`, read everywhere (grid,
+  final card, stars, unlock clamp, rankings, daily walk). Save.TOTAL is a
+  getter. A 1.6.0 save that finished XX loads with XXI unlocked; stars,
+  hints, purchases, ad counters, daily streak and rate state are untouched
+  (asserted).
+- Tiers: 21-25 are tier 6 (two structural clues, five sigils, rules mirror /
+  chain / logic, four digits); 26+ are tier 7 (four clues where the room
+  allows, five-digit safe, rules chain / weave / mirror, sigils read last to
+  first, marked ↶ in the ink). Rules rotate by chamber index, not by roll.
+  Tiers 1-5 generate exactly as before; the daily stays capped at tier 5.
+- New safe rules: `mirror` (9 − each), `chain` (running total, last
+  digit), `weave` (sorted, then swap the ends). Each has a solver in
+  `solveFromFacts`.
+- The LORE table was in the order of long-dead theme names (the tomb
+  counted "seed trays") — reordered to SETTINGS order; that changes the
+  rule's flavour line in some of chambers 1-20 but not a single code.
+- Menu grid is 6 across (5 rows of 30). Measured with the banner up and
+  Resume showing: the grid and daily row are fully visible at 360x640; the
+  buttons below scroll inside the card exactly as 1.6.0's did (+7..21 px
+  of scroll), and the card never runs under the banner.
+- Mirrored rooms no longer mirror the UV ink (the sigils read backwards in
+  half the rooms — a real 1.6.0-era bug the solver could not see).
+
+**The old name, still present on purpose inside this project:** console
+names quoted as facts (`config.js` comments, GO-LIVE.md, store-listing.md
+RevenueCat/AdMob tables), the GCP service-account JSON file and project id
+`escape-20-chambers` (an id, cannot be renamed), the privacy/deletion pages'
+"formerly Escape: 20 Chambers" line (so existing players recognise them),
+`rate.js` (byte-identical shared copy across three games), history in these
+notes, `docs/design-research.md`, `privacy-policy.md` (superseded, not
+hosted), and `ad-campaign/` (the live video and copy — needs a re-render).
+
+**Outside this project, still "Escape: 20 Chambers"** (not edited):
+Play Console store title (changes with this release's listing), Frost
+Tower's More-games row (`frost-tower/www/js/config.js:238`, blurb "20
+escape rooms", and its `test/features-sim.js:668`), Trap Jam's
+(`trap-jam/www/js/config.js:296`, `test/e2e.js:1015`), Adaptive Chess's
+(`adaptive-chess/app/src/promo/moreGames.ts:17`), the portfolio page
+`ahmadessam1997.github.io/index.html:38`, `ad-campaign-checklist.html`,
+the YouTube ad video (`BzwPXyyBiFY`, title cards "ESCAPE 20 CHAMBERS"),
+the Google Ads app campaign, AdMob app + both consent messages,
+RevenueCat project/app/offering, Play licence-testing list, the AdMob test
+device label, GCP project display name, and (probably) the Firebase app
+nickname.
+
+### 1.7.0 emulator check (2026-10-03) — four bugs fixed, still vc 16
+
+Upgrade over a seeded 1.6.0 save (XX finished, 84 ★) carried everything
+across; XXI, XXII, XXIII, XXVI, XXX, XX (replay) and a daily were played by
+real taps. Fixed in source, suite now e2e 241 / rate 25 / native 96:
+
+1. **Rug ink hid a sigil.** Five sigils at the four-sigil spacing ran under
+   the crate (XXII) / chest (XXV, XXIX); about 1 in 20 tier-5 dailies lost one
+   to the chest even in 1.6.0. game.js closes the spacing up (22/2 for five
+   or six glyphs, 24/4 for four). e2e's solver now fails any chamber whose rug
+   glyph is off the scene or under the room's own drawing.
+2. **Sigil lock said "four sigils"** over a five-slot door. Text now from
+   the data (`#symSub`); the solver checks it.
+3. **FailedToShow after Showed** (the SDK's own show timeout on a slow
+   device) ended the seam with the interstitial still up — the next chamber's
+   clock ran behind the ad. ads.js waits for the dismissal once an ad has
+   shown (interstitial and both rewarded formats; 90 s grace). native-sim
+   covers it.
+4. **Dialogs ignored the safe area.** Edge to edge (Android 15 + WebView
+   140+, which is the steady state on the emulator) the rooms card reached
+   under the status bar and 4px under the banner at 360x640. `.overlay` pads
+   by `max(20px, 8px + env(safe-area-inset-*))`; the 6x5 grid stays fully
+   visible with the banner up.
+
+Not changed: the UV rule on the wall is partly behind later-drawn furniture
+or off the edge in several rooms (also 1.6.0's XIV-XX); tapping the glowing
+spot under UV gives the full rule in a toast, so it is cosmetic. The candle
+`flick` animations keep the WebView GPU thread busy; on this emulator that
+produced repeated "isn't responding" dialogs under load — not seen as a
+fault of the app, but worth watching on a low-end real phone.
+
+---
+
+## 2026-10-02 — 1.6.0 / versionCode 15: retention + income batch
+
+Built and tested, **debug APK only** — no release bundle, nothing uploaded,
+nothing committed. `npm run test:all`: e2e **201**, rate-sim **25**,
+native-sim **91**, all passing. The app-open and native units are the
+LIVE ids (created 2026-10-02), not Google's test ones.
+
+**What went in** (tracker ids): E1 seam-ad counter fix · E2 banner on the
+first menu · E3 app-open + native ad formats · E4 daily free hint + local
+reminder notification · E5 Daily Chamber with streak · E6 skip chamber
+(video or 3 hints) · E7 rate-prompt back-off 2 / +5 / +10 · E8 false
+Remove-ads copy fixed, build line hidden (tap the menu title 5x) · X1
+Firebase Analytics custom events · X3 More games panel.
+
+### Three real bugs found on the way, all in shipped code
+
+1. **A rewarded ad closed early never settled its promise.** The AdMob
+   plugin resolves `showRewardVideoAd()` / `showRewardInterstitialAd()`
+   inside `onUserEarnedReward` and nowhere else. Close the video early and
+   the promise is pending for ever: the shop's busy flag stayed set (Buy,
+   Restore and Watch all dead until restart), and on the seam `then()` never
+   ran. It was masked for the rewarded interstitial only because E1 meant it
+   almost never fired — **fixing E1 alone would have shipped a seam that
+   strands the player.** ads.js now settles on the DISMISSED event
+   (`_awaitFullscreen`).
+2. **The interstitial's 8 s safety timeout fired under ads longer than
+   8 s**, starting the next chamber's clock behind the ad. The timeout is
+   now cancelled by `interstitialAdShowed`.
+3. **The shop was wired only after billing AND ads init had both settled**
+   (the audit's "could not verify" — it was real). With `getCustomerInfo()`
+   hung offline the shop opened with dead Back / Buy / Restore. `Shop.init`
+   now runs before either store starts, and Restore has a 15 s timeout.
+
+### Things worth knowing next time
+
+- **`test/native-sim.js` is new and is the only thing that exercises native
+  paths.** It injects a fake `window.Capacitor` before the page's scripts,
+  so the real `www/` takes its device branches against recording fakes. The
+  fakes copy the plugin's real contract (see bug 1) — keep them honest.
+- **The daily chamber is `genLevel(seed, tier)` with `seed = dayNumber*7`.**
+  Every per-chamber table indexes `seed % 20`, so a big seed lands on a real
+  setting with its own sign and lore. A date that would degrade steps the
+  seed by 20 (same setting, new room). The suite checks 120 dates x 5 tiers
+  through the generator and plays 60 end to end.
+- **Left-to-right order can differ between generator and drawing for
+  objects hung one above the other** (shelf under portrait, <10 units apart
+  in x). Harmless — the generator refuses an extreme inside a 40-unit
+  margin — but an exact-order assertion fails on it. The twenty pass the
+  strict version only by luck.
+- **`@capacitor-firebase/analytics` peer-depends on the `firebase` JS SDK**
+  (web only). `.npmrc` sets `legacy-peer-deps=true` so it is not installed.
+- **`@capacitor/local-notifications` declares `SCHEDULE_EXACT_ALARM`.** It
+  is stripped in the manifest (`tools:node="remove"`); the plugin falls back
+  to an inexact alarm, which is all a reminder needs.
+- The menu grid is now **5 x 4** (was 4 x 5) to make room for the daily row.
+  Store screenshot 6 (rooms menu) no longer matches exactly.
+- `www/js/ads.js.bak-20260927` was deleted on 2026-10-02 (it shipped inside
+  the APK assets).
+
+### Emulator check, same day (Pixel, Android 15) — three more fixes
+
+`npm run test:all` after these: e2e **201**, rate-sim **25**, native-sim **94**.
+
+1. **Claiming the daily hint and tapping Allow threw the player into
+   Android's "Alarms & reminders" settings page**, with the switch greyed
+   out, and nothing was ever scheduled. `@capacitor/local-notifications`
+   defaults `isExactNotification` to true and, without the exact-alarm
+   permission (stripped in the manifest), opens that page on every
+   `schedule()` and never settles the call. notify.js now passes
+   `isExactNotification: false`; verified on device (alarm queued, window
+   1 h, a 15 s test notification delivered). The browser suites could not
+   have caught this — the fake resolved.
+2. **The banner covered the bottom of the menu card.** It is a native view
+   over the WebView; with "Resume chamber" showing the card ended exactly at
+   its top edge on a 914 px-tall screen, so anything shorter lost "More
+   games". ads.js now sets `body.bannerUp` + `--banner-h` (real height from
+   `bannerAdSizeChanged`) and every overlay centres above the banner.
+3. **Restore offline said "Purchase failed. Please try again."** — the
+   purchase fallback text. It now says it could not restore.
+
+Known, not fixed: the emulator's Play account OWNS `remove_ads`, so every ad
+check needs `ECAds.setRemoveAds(false)` from the WebView console after
+billing settles. Rewarded and rewarded-interstitial TEST videos never play
+on this emulator (black frame, no close button, Google's player logs a
+TrustedTypePolicy error) — only a force-stop gets out, so those two formats
+were not verified on device. The native ad validator (test devices only)
+reports "MediaView not used" on ads that carry media: the card has no
+MediaView by design, same as Trap Jam's.
+
+---
+
+## 2026-09-07 — interstitial cadence halved; build string corrected
+
+**`interstitialEveryNChambers: 1` -> `2`** (`www/js/config.js`). At 1 the
+game could fire an ad after every one of 20 chambers, throttled only by the
+45s cooldown — which contradicts `ads.js`'s own header warning that "Play's
+ad policy penalises interruptive density". Max is now ~10 per full run.
+`interstitialCooldownMs` (45s) and `minChamberSecondsForAd` (12s) unchanged.
+Frost, for comparison, is every 3rd run with a 90s cooldown.
+
+**Build string was a version behind.** `build: '1.4.0 (9)'` while
+build.gradle shipped versionCode 10 — exactly the "you are still running
+last week's APK" confusion the field exists to prevent. Now `'1.4.1 (11)'`.
+
+**Build:** versionCode 10 -> **11**, versionName 1.4.0 -> **1.4.1**. Synced,
+`bundleRelease` with JDK 21, signed (`UPLOAD.RSA`), 11,774,738 bytes.
+
+Ads otherwise audited clean: real app id
+`ca-app-pub-7898882561225435~3223395835` in the merged release manifest, no
+Google test publisher anywhere outside node_modules, `isTest:false`, consent
+flow intact, RevenueCat entitlement fails closed so nobody gets ads
+suppressed by a missing key.
+
+
 ## 2026-08-18 — the purchase bug: one unticked checkbox
 
 Two days of "purchase completes, nothing happens" came down to a single

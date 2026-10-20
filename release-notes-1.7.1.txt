@@ -1,0 +1,5 @@
+Thanks for the feedback! This update:
+• Clues stay on screen until you tap them away — no more flashing messages.
+• UV wall writing is always fully readable: never behind furniture, never cut off.
+• New clue notebook: every clue, number, rule and sigil you find, plus what each object is made of, in one place. Free to read.
+• Clearer hints: see your goal and each step (nudge, narrow, reveal) and its price before you take it. The first nudge is still free.

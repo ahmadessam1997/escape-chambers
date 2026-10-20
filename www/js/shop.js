@@ -1,5 +1,5 @@
 /* =====================================================================
-   Escape: 20 Chambers — shop + the out-of-hints prompt
+   Escape Chambers — shop + the out-of-hints prompt
    ---------------------------------------------------------------------
    Two surfaces:
 
@@ -21,6 +21,10 @@
   var Save = global.ECSave;
   var Billing = global.ECBilling;
   var Ads = global.ECAds;
+  var Notify = global.ECNotify;
+  var track = function (name, params) {
+    if (global.ECAnalytics) global.ECAnalytics.log(name, params);
+  };
 
   var $ = function (id) { return document.getElementById(id); };
 
@@ -28,6 +32,10 @@
     _toast: function () {},
     _onChange: function () {},
     _busy: false,
+    /* How long Restore waits on the store before giving the shop back.
+       restorePurchases() can hang outright on an offline device, and the
+       busy flag it holds also gates Buy and the hint video. */
+    _restoreTimeoutMs: 15000,
 
     init: function (opts) {
       var self = this;
@@ -45,6 +53,29 @@
       $('hintOvWatch').addEventListener('click', function () { self.watchForHints(); });
       $('shopWatch').addEventListener('click', function () { self.watchForHints(); });
       $('shopPrivacy').addEventListener('click', function () { self.openPrivacyOptions(); });
+      $('shopNotify').addEventListener('click', function () { self.toggleReminder(); });
+    },
+
+    /* ---------------- daily reminder toggle ----------------
+       The one settings switch the game has. Turning it ON is the only
+       thing that can re-open Android's permission dialog after a refusal
+       — and only because the player asked. If Android still says no (it
+       stops showing the dialog after two refusals), say where the real
+       switch lives rather than leaving a toggle that will not move. */
+    toggleReminder: function () {
+      var self = this;
+      if (self._busy || !Notify) return;
+      self._busy = true;
+      var want = !Notify.enabled();
+      Notify.setEnabled(want).then(function (state) {
+        self._busy = false;
+        if (want && state !== 'on') {
+          self._toast('Notifications are blocked for this game in Android settings.');
+        } else {
+          self._toast(state === 'on' ? 'Daily reminder on.' : 'Daily reminder off.');
+        }
+        self.render();
+      }).catch(function () { self._busy = false; });
     },
 
     /* ---------------- ad-consent choices ----------------
@@ -74,10 +105,16 @@
     /* ---------------- out-of-hints prompt ---------------- */
     promptOutOfHints: function () {
       var canWatch = Ads.rewardedAvailable();
+      track('out_of_hints_shown', { can_watch: canWatch });
       $('hintOvWatch').style.display = canWatch ? '' : 'none';
+      /* Three different states, three different sentences. An owner of
+         Remove ads must NOT be told "no video is ready just now" - the
+         videos are gone for good and that reads as a bug. */
       $('hintOvWhy').textContent = canWatch
         ? 'Watch a short video for ' + Cfg.hints.rewardedAdHints + ' more, or stock up in the shop.'
-        : 'No video is ready just now. You can stock up in the shop, or escape a chamber to earn one.';
+        : Save.data.removeAds
+          ? 'You own Remove ads, so there are no videos. Stock up in the shop, or escape a chamber to earn one.'
+          : 'No video is ready just now. You can stock up in the shop, or escape a chamber to earn one.';
       $('hintOv').classList.add('show');
     },
 
@@ -88,7 +125,7 @@
       self._busy = true;
       var finish = function () { self._busy = false; };
 
-      Ads.showRewarded().then(function (res) {
+      Ads.showRewarded('hints').then(function (res) {
         if (res.earned) {
           Save.addHints(Cfg.hints.rewardedAdHints);
           self._toast('🎬 +' + Cfg.hints.rewardedAdHints + ' hints. Thank you!');
@@ -111,6 +148,7 @@
     openShop: function () {
       Save.data.seenShop = true;
       Save.save();
+      track('shop_open');
       this.render();
       $('shopOv').classList.add('show');
     },
@@ -128,11 +166,19 @@
       $('shopWatch').style.display = Ads.rewardedAvailable() ? '' : 'none';
       $('shopWatchLbl').textContent = '+' + Cfg.hints.rewardedAdHints + ' hints · free';
 
-      /* Only where Google actually has a form to show. Not gated on
-         removeAds: buying Remove ads silences the interstitial but the
-         rewarded videos — and therefore the ad SDK and its consent —
-         remain, so the choice must stay reachable. */
+      /* Only where Google actually has a form to show. Still NOT gated on
+         removeAds even though that purchase now silences every format:
+         the SDK is initialised and holds a consent decision either way,
+         and regulators require a persistent way to change it, so the
+         entry point has to stay reachable. */
       $('shopPrivacy').style.display = Ads.privacyOptionsRequired ? '' : 'none';
+
+      var canNotify = !!(Notify && Notify.available());
+      $('shopNotify').style.display = canNotify ? '' : 'none';
+      if (canNotify) {
+        $('shopNotify').textContent =
+          '🔔 Daily reminder: ' + (Notify.enabled() ? 'on' : 'off');
+      }
 
       /* "Never run out" is withdrawn, so its row is gone from the markup.
          hints_25 still reports "Included in Unlimited" for the few players
@@ -161,8 +207,12 @@
           : 'Store unavailable';
       });
 
+      /* Say what Remove ads REALLY does. It has silenced every format,
+         hint videos included, since 2026-09-20; the old line promised the
+         videos stayed, which a buyer would rightly call a broken promise. */
       $('shopNote').textContent = ready
-        ? 'Remove ads stops the between-chamber ads. Hint videos stay available — they’re the free way to top up.'
+        ? 'Remove ads turns off every ad, hint videos included. Free hints still come from ' +
+          'escaping chambers, the daily hint and the daily chamber.'
         : (Billing.lastError || 'The store isn’t reachable on this device right now.');
     },
 
@@ -171,6 +221,10 @@
       if (self._busy) return;
       if (!Billing.isReady()) { self._toast('The store isn’t available right now.'); return; }
       self._busy = true;
+      track('purchase_start', { product: productId });
+      /* The Play purchase sheet covers the app; coming back from it is
+         not "returning to the game" as far as the app-open ad goes. */
+      if (Ads.noteHandoff) Ads.noteHandoff();
 
       Billing.purchase(productId).then(function (res) {
         self._busy = false;
@@ -187,6 +241,7 @@
            THIS item, not that they own nothing else. Upgrade only. */
         Save.setEntitlements(function (id) { return Billing.owns(id); }, false);
         Ads.setRemoveAds(Save.data.removeAds);
+        track('purchase_done', { product: productId });
 
         if (productId === 'remove_ads') self._toast('Ads removed. Enjoy the quiet. 🕯️');
         else if (productId === 'hints_unlimited') self._toast('Unlimited hints unlocked. Never stranded again.');
@@ -205,9 +260,19 @@
       if (self._busy) return;
       self._busy = true;
       self._toast('Checking your purchases…');
-      Billing.restore().then(function (res) {
+      var timedOut = false;
+      var timer = setTimeout(function () {
+        timedOut = true;
         self._busy = false;
-        if (!res.ok) { self._toast(res.error || 'Could not reach the store.'); return; }
+        self._toast('Could not reach the store. Check your connection and try again.');
+      }, self._restoreTimeoutMs);
+      Billing.restore().then(function (res) {
+        clearTimeout(timer);
+        /* A late answer after the timeout is still applied below when it
+           is a success — the player asked for it — but must not touch the
+           busy flag, which may belong to something else by now. */
+        if (!timedOut) self._busy = false;
+        if (!res.ok) { if (!timedOut) self._toast(res.error || 'Could not reach the store.'); return; }
         /* Restore succeeded, so this IS a full picture of the account and
            may legitimately revoke something that was refunded. */
         Save.setEntitlements(function (id) { return Billing.owns(id); }, true);
@@ -217,6 +282,8 @@
         self._onChange();
         self.render();
       }).catch(function () {
+        clearTimeout(timer);
+        if (timedOut) return;
         self._busy = false;
         self._toast('Could not reach the store.');
       });
