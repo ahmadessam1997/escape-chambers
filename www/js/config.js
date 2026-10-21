@@ -138,7 +138,7 @@
          Apps -> + App Store app -> API keys. While it is the IOS_TODO
          placeholder, revenueCatKey() returns '' and billing FAILS CLOSED on
          iOS ("Store unavailable"), exactly like a blank Android key. */
-      iosApiKey: 'IOS_TODO_RC_IOS_KEY'
+      iosApiKey: 'appl_IxcstTFhYxmMoJfrxWlJIGhiYfx'
     },
 
     /* ---------------- Products ----------------
