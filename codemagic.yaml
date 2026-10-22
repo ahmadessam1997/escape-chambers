@@ -3,8 +3,7 @@
 #
 # One-time setup (see IOS-TODO.md): connect this GitHub repo in Codemagic,
 # add an App Store Connect API key under Team integrations and put its name
-# below, and (optional) add GOOGLE_SERVICE_INFO_PLIST as a base64 secret in an
-# environment group called "firebase_ios".
+# below, and (optional) GoogleService-Info.plist is committed in the repo.
 workflows:
   ios-app-store:
     name: Escape Chambers - iOS App Store
@@ -13,8 +12,6 @@ workflows:
     integrations:
       app_store_connect: Ahmed Afifi ASC
     environment:
-      groups:
-        - firebase_ios
       ios_signing:
         distribution_type: app_store
         bundle_identifier: com.ahmadessam.escapechambers
@@ -25,7 +22,7 @@ workflows:
         # above the Android versionCode keeps the two easy to compare.
         BUILD_NUMBER_OFFSET: 18
       node: 24
-      xcode: latest
+      xcode: 26.6
     scripts:
       - name: Install npm dependencies
         script: npm ci --ignore-scripts
